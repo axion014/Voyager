@@ -1,0 +1,1 @@
+varying vec2 a;varying float b;uniform sampler2D tExplosion;uniform float alpha;float f(vec3 c,float d){return fract(sin(dot(gl_FragCoord.xyz+d,c))*43758.5453+d);}void main(){float c=.01*f(vec3(12.9898,78.233,151.7182),0.);vec2 d=vec2(0,1.-1.3*b+c);vec4 e=texture2D(tExplosion,d);gl_FragColor=vec4(e.rgb,alpha);}
