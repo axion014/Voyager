@@ -11,6 +11,7 @@ phina.define('MainScene', {
 		// Variables
 		var threelayer = phina.display.ThreeLayer({width: SCREEN_WIDTH, height: SCREEN_HEIGHT});
 		threelayer.setOrigin(0, 0);
+		this.threelayer = threelayer;
 
 		var map = phina.display.CircleShape({x: SCREEN_WIDTH - 100, y: SCREEN_HEIGHT - 100,
 			radius: 75, fill: 'hsla(0, 0%, 30%, 0.5)', stroke: null});
@@ -20,7 +21,7 @@ phina.define('MainScene', {
 		var direction = [];
 
 		var gauge_h = phina.ui.Gauge({x: 80, y: SCREEN_HEIGHT - 100, fill: 'rgba(0, 0, 0, 0)',
-			gaugeColor: 'rgba(255, 64, 64, 0.3)', value: 1000, maxValue: 1000, strokeWidth: 1, width: 128, height: 16});
+			gaugeColor: 'rgba(255, 64, 64, 0.3)', value: 1000, maxValue: 100, strokeWidth: 1, width: 128, height: 16});
 		var gauge_e = phina.ui.Gauge({x: 80, y: SCREEN_HEIGHT - 80, fill: 'rgba(0, 0, 0, 0)',
 			gaugeColor: 'rgba(64, 64, 255, 0.3)', value: 2000, maxValue: 2000, strokeWidth: 1, width: 128, height: 16});
 		var gauge_boss_h = phina.ui.Gauge({x: this.gridX.center(), y: 20, fill: 'rgba(0, 0, 0, 0)',
@@ -41,12 +42,19 @@ phina.define('MainScene', {
 		var resulttitle = phina.display.Label({x: this.gridX.center(), text: 'Result', fontSize: 48, fill: 'hsla(0, 0%, 0%, 0.8)'});
 		var resulttext = phina.display.Label({x: this.gridX.center(), text: '', fontSize: 24, fill: 'hsla(0, 0%, 0%, 0.8)'});
 
-		var enemyManager = fly.EnemyManager(this, threelayer.scene, gauge_boss_h, message);
-		var effectManager = enemyManager.effectmanager;
-		var enmBulletManager = fly.BulletManager(threelayer.scene);
-		enemyManager.enmBulletManager = enmBulletManager;
-		var obstacleManager = fly.ObstacleManager(threelayer.scene);
-		var windManager = fly.WindManager(threelayer.scene);
+		var allyManager = AllyManager(this, threelayer.scene);
+		var enemyManager = EnemyManager(this, threelayer.scene, gauge_boss_h, message);
+		var effectManager = EffectManager(threelayer.scene);
+		allyManager.effectManager = effectManager;
+		enemyManager.effectManager = effectManager;
+		var allyBulletManager = BulletManager(this, threelayer.scene, false);
+		var enmBulletManager = BulletManager(this, threelayer.scene, true);
+		allyManager.bulletManager = allyBulletManager;
+		enemyManager.bulletManager = enmBulletManager;
+		allyManager.opponents = enemyManager;
+		enemyManager.opponents = allyManager;
+		var obstacleManager = ObstacleManager(threelayer.scene);
+		var windManager = WindManager(threelayer.scene);
 
 		var player = phina.asset.AssetManager.get('threejson', 'fighter').get();
 		var plane = new THREE.GridHelper(20400, 100);
@@ -55,12 +63,12 @@ phina.define('MainScene', {
 				player.position.y = 1000;
 				player.geometry.computeBoundingBox();
 				// console.log(player)
-				player.add(new THREE.AxisHelper(1000));
+				player.add(new THREE.AxesHelper(1000));
 				player.tweener.setUpdateType('fps');
 				player.$safe({ // Player control
-					myrot: {x: 0, y: 0, z1: 0, z2: 0},
-					pitch: 0, yo: 0, v: 0, s1c: 0, s2c: 0, e: 2000, hp: 1000, speed: 0.95,
-					av: new THREE.Vector3(), sub1id: 0, sub2id: 1,
+					myrot: {x: 0, y: 0, z1: 0, z2: 0}, pitch: 0, yo: 0, v: 0, av: new THREE.Vector3(),
+					maxenergy: 2000, maxhp: 100, speed: 0.95, armor: 1, rotspeed: 1,
+					summons: allyManager,
 					update: function(p, k, s) {
 						function normalizeAngle(t) {
 							t %= Math.PI * 2;
@@ -76,33 +84,26 @@ phina.define('MainScene', {
 
 						var rot = Math.atan2(p.y - SCREEN_CENTER_Y, p.x - SCREEN_CENTER_X) + this.myrot.y - this.yo + Math.PI / 2 + (reverse ? Math.PI : 0);
 						rot = normalizeAngle(rot);
-						var maxrot = 0.04 - this.v * 0.001;
-						if (Math.abs(rot) > 2.5) {
-							this.way = 'back';
-						} else {
+						var maxrot = (0.04 - this.v * 0.001) * this.rotspeed;
+						if (Math.abs(rot) > 2.5) this.way = 'back';
+						else {
 							rot = Math.max(Math.min(rot * 0.07, maxrot), -maxrot);
 							this.myrot.z1 += rot * 0.00008;
 							this.yo += rot;
 						}
 
 						if (enemyManager.elements.length !== 0) {
+							var h = player.geometry.boundingBox.max.x * 2;
 							var targetingEnemy = enemyManager.elements.reduce(function(o, enm) { // Select targeting enemy
 								var v = enm.position.clone().sub(this.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.v * 5 + 25));
+								var l = Math.clamp(Math.abs(v.y) / h * 5 - 4.5, 0, 1) * 0.8 + 0.2;
 								v.y = 0;
-								var d = v.angleTo(Axis.z.clone().applyQuaternion(new	 THREE.Quaternion().rotateY(this.myrot.y + this.yo * 0.5 + (this.way === 'back' ? Math.PI : 0))));
-								if (d > Math.PI / 2) return o;
-								d *= v.length();
-								if (d < o.d) return {d: d, enm: enm};
-								return o;
+								var d = v.angleTo(Axis.z.clone().applyQuaternion(new THREE.Quaternion().rotateY(this.myrot.y + this.yo * 0.5 + (this.way === 'back' ? Math.PI : 0))));
+								if (d > Math.PI / (this.way === 'back' ? 6 : 2)) return o;
+								d *= v.length() * l;
+								return d < o.d ? {d: d, enm: enm} : o;
 							}.bind(this), {d: Infinity, enm: null}).enm;
 						}
-						if (targetingEnemy) {
-							target.show();
-							var pos = targetingEnemy.position.clone().project(threelayer.camera);
-							target.x = (pos.x + 1) * s.width / 2;
-							target.y = (1 - pos.y) * s.height / 2;
-						} else target.hide();
-
 
 						var shift = k.getKey(16);
 
@@ -113,39 +114,47 @@ phina.define('MainScene', {
 							if (k.getKeyDown(83)) this.way = 'down'; // S Key
 						}
 
-						var maxrot = 0.02 - this.v * 0.0005;
+						this.targetingEnemy = targetingEnemy;
+						if (targetingEnemy) {
+							target.show();
+							var pos = targetingEnemy.position.clone().project(threelayer.camera);
+							target.x = (pos.x + 1) * s.width / 2;
+							target.y = (1 - pos.y) * s.height / 2;
+							target.stroke = this.way === 'back' ? "#a44" : "#444";
+						} else target.hide();
+
+						maxrot /= 2;
 
 						if (this.position.y < 100 || this.way === 'up') this.pitch -= maxrot * (1.55 - (reverse ? 1 : -1) * this.myrot.x);
 						else if (this.way === 'down') this.pitch += maxrot * (1.55 - (reverse ? -1 : 1) * this.myrot.x);
 						else if (targetingEnemy) {
 							var v = targetingEnemy.position.clone().add(targetingEnemy.geometry.boundingSphere.center).sub(this.position);
-							rot = Math.atan2(-v.y, Math.sqrt(v.x * v.x + v.z * v.z) * (this.way === 'back' && Math.abs(Math.atan2(v.z, v.x) + this.myrot.y) > Math.PI ? -1 : 1)) - this.myrot.x - this.pitch;
-							if (rot > Math.PI) rot -= Math.PI * 2;
-							if (rot < -Math.PI) rot += Math.PI * 2;
+							var b = this.way === 'back' && Math.abs(normalizeAngle(Math.atan2(v.z, v.x) + this.myrot.y)) > Math.PI / 2;
+							rot = normalizeAngle(Math.atan2(-v.y, Math.sqrt(v.x * v.x + v.z * v.z) * (b ? -1 : 1)) - this.myrot.x - this.pitch);
 							this.pitch += Math.clamp(rot * 0.15, -maxrot, maxrot);
 						}
 
-						// Move and Rotate
+						// Move and rotate
 						this.myrot.x += this.pitch * 0.1;
 						this.myrot.y -= this.yo * 0.1;
 						this.myrot.x = normalizeAngle(this.myrot.x);
 						this.myrot.y = normalizeAngle(this.myrot.y);
 						this.quaternion.copy(new THREE.Quaternion());
-						this.rotate(this.myrot.x, this.myrot.y);
+						// The order is important, even with quaternion.
+						this.rotateY(this.myrot.y)
+						this.rotateX(this.myrot.x);
 						this.rotateZ(this.myrot.z1 + this.myrot.z2);
 
-						if (p.getPointing()) { // Speed up
-							this.consumeEnergy(this.speed, function() {
-								if (s.space) {
-									this.av.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.speed);
-								} else {
-									this.v += this.speed;
-								}
-							});
-						}
+						if (p.getPointing()) this.consumeEnergy(this.speed * 3, function() { // Speed up
+							if (s.space) this.av.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.speed);
+							else this.v += this.speed;
+						});
 
 						if (!s.space) {
 							this.position.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.v + 5);
+							var angle = Math.randfloat(0, Math.PI * 2);
+							threelayer.camera.position.x += Math.sin(angle) * this.v / 20;
+							threelayer.camera.position.z += Math.cos(angle) * this.v / 20;
 						}
 						this.position.add(this.av);
 
@@ -153,39 +162,30 @@ phina.define('MainScene', {
 
 						this.yo *= 0.95 - (Math.PI / 2 - Math.abs(Math.abs(this.myrot.x) - Math.PI / 2)) * 0.1;
 						this.pitch *= 0.9;
-						if (s.space) { // Speed loss
-							this.av.multiplyScalar(0.996);
-						} else {
+						if (s.space) this.av.multiplyScalar(0.996); // Speed loss
+						else {
 							this.v *= 0.98 - Math.abs(rot) * 0.06;
 							this.av.multiplyScalar(0.98);
 						}
 
-						if (k.getKey(32)) { // Space Key
-							this.consumeEnergy(2, function() {
-								var rnd1 = this.quaternion.clone();
-								rnd1.rotate(Math.random() * 0.06 - 0.03, Math.random() * 0.06 - 0.03);
-								var rnd2 = this.quaternion.clone();
-								rnd2.rotate(Math.random() * 0.06 - 0.03, Math.random() * 0.06 - 0.03);
-								this.attack(rnd1, s);
-								this.attack(rnd2, s);
-							});
-						}
 
-						if (this.s1c > 0) this.s1c--;
-						else if (k.getKey(65)) this.s1c = this.sub[this.sub1id].call(this, s); // A Key
-						if (this.s2c > 0) this.s2c--;
-						else if (k.getKey(68)) this.s2c = this.sub[this.sub2id].call(this, s); // D Key
+						if (k.getKey(32)) this.consumeEnergy(1.5, function() { // Space Key
+							this.attack(6);
+							var angle = Math.randfloat(0, Math.PI * 2);
+							threelayer.camera.position.x += Math.sin(angle) * 2;
+							threelayer.camera.position.z += Math.cos(angle) * 2;
+						});
 
-						if (this.rgl > 0) {
-							this.rgl--;
-							this.beam(35, 2, 15, 0, s);
-						}
-						if (this.brl > 0) {
-							this.brl--;
-							this.beam(25, 3, 25, 30, s);
-						}
-						if (this.e < 2000) this.e += 4;
-						gauge_e.value = this.e;
+						this.sub.each(function(sub) {
+							if (sub.active === false) return;
+							sub.update();
+						});
+
+						if (k.getKey(65)) opt(opt(this.sub, shift ? 2 : 0), 'activate')(k.getKeyDown(65)); // A Key
+						if (k.getKey(68)) opt(opt(this.sub, shift ? 3 : 1), 'activate')(k.getKeyDown(68)); // D Key
+
+						this.energy = Math.min(this.energy + 2, this.maxenergy);
+						gauge_e.value = this.energy;
 						gauge_h.value = this.hp;
 
 						windManager.each(function(wind) {
@@ -195,91 +195,51 @@ phina.define('MainScene', {
 						// hit vs bullet
 						for (var i = 0; i < enmBulletManager.elements.length; i++) {
 							if (this.position.clone().sub(enmBulletManager.get(i).position).length() < 5 + enmBulletManager.get(i).size) {
-								effectManager.explode(enmBulletManager.get(i).position, enmBulletManager.get(i).size, 10);
-								this.hp -= enmBulletManager.get(i).atk * s.difficulty;
+								//effectManager.explode(enmBulletManager.get(i).position, enmBulletManager.get(i).size, 10);
+								var angle = Math.randfloat(0, Math.PI * 2);
+								threelayer.camera.position.x += Math.sin(angle) * enmBulletManager.get(i).atk;
+								threelayer.camera.position.z += Math.cos(angle) * enmBulletManager.get(i).atk;
+								this.hp -= enmBulletManager.get(i).atk * s.difficulty / this.armor;
 								s.score--;
 								enmBulletManager.removeBullet(i);
 							}
 						}
 						// hit vs enemy
-						for (var i = 0; i < enemyManager.elements.length; i++) {
-							var v = Axis.z.clone().applyQuaternion(this.quaternion)
-								.setLength(this.geometry.boundingBox.getSize().z);
+						enemyManager.elements.each(function(enemy) {
+							var v = Axis.z.clone().applyQuaternion(this.quaternion).setLength(this.geometry.boundingBox.getSize().z);
 							if (fly.colcupsphere(this.position.clone().sub(v.clone().multiplyScalar(-0.5)), v,
-									enemyManager.get(i).position.clone().add(enemyManager.get(i).geometry.boundingSphere.center),
-									this.geometry.boundingBox.max.x + enemyManager.get(i).geometry.boundingSphere.radius)) {
-								effectManager.explode(enemyManager.get(i).position, enemyManager.get(i).size, 30);
-								this.hp -= enemyManager.get(i).hp * 30 * s.difficulty / (this.v + 5);
-								s.score -= 3;
-								if (this.hp > 0) enemyManager.kill(i);
+									enemy.position.clone().add(enemy.geometry.boundingSphere.center),
+									this.geometry.boundingBox.max.x + enemy.geometry.boundingSphere.radius * enemy.scale.x)) {
+								var angle = Math.randfloat(0, Math.PI * 2);
+								threelayer.camera.position.x += Math.sin(angle) * this.v;
+								threelayer.camera.position.z += Math.cos(angle) * this.v;
+								this.hp -= Math.min(enemy.hp, 2.5) * s.difficulty * enemy.sharpness / this.armor;
+								if (enemy.size < 15) s.score--;
+								if (this.hp > 0) enemy.hp -= (this.v + 5) / s.difficulty / enemy.armor;
 							}
-						}
+						}, this);
 						// hit vs obstacle
 						obstacleManager.each(function(obstacle) {
 							if (fly.colobbsphere(obstacle.position, this.position, obstacle.size, obstacle.quaternion, this.geometry.boundingBox.max.x)) this.hp = 0;
 						}, this);
 					},
-					sub: [
-						/*
-						 * those skills receive the scene for the first argument.
-						 * should return cooldown time for frame. return 0 when the energy is insufficient.
-						 */
-						function() {
-							return this.consumeEnergy(250, function() {
-								this.rgl = 2;
-								effectManager.ray(this, [
-									{color: 0xffffff, opacity: 0.2, radius: 1},
-									{color: 0x00ffff, opacity: 0.2, radius: 2},
-									{color: 0x0000ff, opacity: 0.2, radius: 4}
-								], 7, function(t, m) {
-									return 1 - t / m;
-								});
-								return 20;
-							}, 0);
-						},
-						function(s) {
-							return this.consumeEnergy(1500, function() {
-								this.brl = 17;
-								// flash effect
-								var fade = new THREE.ShaderPass(phina.display.three.FadeShader);
-								fade.uniforms.color.value = new THREE.Vector4(1, 1, 1, 0.5);
-								s.app.composer.addPass(fade);
-								var frame = s.frame;
-								s.on('enterframe', function tmp() {
-									if (s.frame - frame > 1) {
-										s.app.composer.passes.erase(fade);
-										s.off('enterframe', tmp);
-									}
-								});
-								effectManager.ray(this, 0xffffff, 0.5, 500, 2);
-								effectManager.ray(this, [
-									{color: 0xffffff, opacity: 0.2, radius: 8},
-									{color: 0xffcccc, opacity: 0.2, radius: 12},
-									{color: 0xff8888, opacity: 0.2, radius: 18},
-									{color: 0xff4444, opacity: 0.2, radius: 24},
-									{color: 0xff0000, opacity: 0.2, radius: 30}
-								], 24, function(t, m) {
-									return t < 2 ? 2 : (t < 4 ? 0.5 : 1 - (t - 4) / (m - 4));
-								});
-								return 250;
-							}, 0);
-						}
-					],
-					attack: function(rot, s) {
-						var caster = new THREE.Raycaster();
-						caster.set(this.position.clone(), Axis.z.clone().applyQuaternion(rot).normalize());
-						var hit = caster.intersectObjects(enemyManager.elements);
-						if (hit.length !== 0) {
-							effectManager.explode(hit[0].point, 1, 10);
-							hit[0].object.hp -= 5 / s.difficulty;
-						}
+					getDamage: function(rawdmg) {
+						return rawdmg;
+					},
+					attack: function(atk) {
+						var a = Math.random() * Math.PI * 2;
+						allyBulletManager.createBullet('bullet', {
+							position: this.position.clone().add(Axis.z.clone().applyQuaternion(this.quaternion).normalize().multiplyScalar(this.geometry.boundingBox.max.z)),
+							quaternion: this.quaternion.clone().rotate(new THREE.Vector3(Math.sin(a), Math.cos(a), 0), Math.sqrt(Math.random() * 0.0009)),
+							v: 15, atk: this.getDamage(atk)
+						});
 					},
 					beam: function(atk, exps, expt, radius, s) {
 						var vec = Axis.z.clone().applyQuaternion(this.quaternion).normalize();
 						if (radius === 0) {
-							var hit = new THREE.Raycaster(this.position.clone(), vec).intersectObjects(enemyManager.elements);
+							var hits = new THREE.Raycaster(this.position.clone(), vec).intersectObjects(enemyManager.elements);
 						} else {
-							var hit = [];
+							var hits = [];
 							for (var i = 0; i < enemyManager.elements.length; i++) {
 								if (fly.colcupsphere(
 									this.position.clone().add(vec.clone().multiplyScalar(this.geometry.boundingBox.max.z + radius)),
@@ -287,41 +247,56 @@ phina.define('MainScene', {
 									enemyManager.get(i).position,
 									radius + enemyManager.get(i).size * 5
 								)) {
-									hit.push({point: enemyManager.get(i).position.clone(), object: enemyManager.get(i)});
+									hits.push({point: enemyManager.get(i).position.clone(), object: enemyManager.get(i)});
 								}
 							}
 						}
-						for (var i = 0; i < hit.length; i++) {
-							effectManager.explode(hit[i].point, exps, expt);
-							hit[i].object.hp -= atk / s.difficulty;
-						}
+						hits.each(function(hit) {
+							effectManager.explode(hit.point, exps, expt);
+							hit.object.hp -= this.getDamage(atk) / s.difficulty;
+						}, this);
 					},
 					consumeEnergy: function(amount, f, defaultreturn) {
-						if (this.e >= amount) {
-							this.e -= amount;
+						if (this.energy >= amount) {
+							this.energy -= amount;
 							return f.call(this);
 						}
 						return defaultreturn;
 					}
 				});
+				player.hp = player.maxhp;
+				player.energy = player.maxenergy;
+				allyManager.player = player;
 				enemyManager.player = player;
-				resolve();
-			}
-		], [
-			function(resolve) { // Stage loading
+				var load = function() {
+					player.sub = options.skills.map(function(sub) {
+						return sub.klass(player, this, sub.level);
+					}, this);
+					resolve();
+				}.bind(this);
+				var asset = {threejson: {}};
+				var loadany = false;
+				options.skills.each(function(sub) {
+					sub.klass.usingModels && sub.klass.usingModels.each(function(name) {
+						loadany = true;
+						if (!phina.asset.AssetManager.get('threejson', UnitManager.units[name].filename)) asset.threejson[name] = 'data/models/' + UnitManager.units[name].filename + '.min.json';
+					});
+				});
+				if (loadany) phina.asset.AssetLoader().load(asset).then(load);
+				else load();
+			}, function(resolve) { // Stage loading
 				if (this.stage !== 'arcade') {
 					var load = function() {
 						var stage = phina.asset.AssetManager.get('stage', this.stage).get();
 						name.label.text = stage.name;
 						stage.enemys.each(function(enemy) {
-							if (!enemyManager.loadedenemy[enemy.name]) enemyManager.loadEnemy(enemy.name);
-							enemyManager.createEnemyMulti(enemy.name, enemy.option, enemy.autospawn, enemy.killmes);
+							enemyManager.createMulti(enemy.name, enemy.option, enemy.autospawn, enemy.killmes);
 						});
 						stage.obstacles.each(function(obstacle) {
-							obstacleManager.createObstacle(obstacle.position, obstacle.quaternion, obstacle.scale);
+							obstacleManager.create(obstacle.position, obstacle.quaternion, obstacle.scale);
 						});
 						stage.winds.each(function(wind) {
-							windManager.createWind({v: wind.v, position: wind.position, size: wind.size}, wind.color);
+							windManager.create({v: wind.v, position: wind.position, size: wind.size}, wind.color);
 						});
 						stage.messages.each(function(imessage) {
 							if (!imessage.progress || imessage.progress < 0.00001) {
@@ -393,11 +368,10 @@ phina.define('MainScene', {
 							if (stage.enemys.length !== 0) {
 								stage.enemys.each(function(enemy) {
 									if (!phina.asset.AssetManager.get('threejson', enemy.name)) {
-										asset.threejson[enemy.name] = 'data/models/' + enemyManager.enemys[enemy.name].filename + '.min.json';
+										asset.threejson[enemy.name] = 'data/models/' + UnitManager.units[enemy.name].filename + '.min.json';
 									}
 								});
-								loader.onload = load;
-								loader.load(asset);
+								loader.load(asset).then(load);
 							} else {
 								load();
 							}
@@ -407,19 +381,11 @@ phina.define('MainScene', {
 					}
 				} else {
 					name.label.text = 'Free play';
-					var loader = phina.asset.AssetLoader();
 					var asset = {threejson: {}};
-					enemyManager.enemys.forIn(function(key, value) {
-						if (!phina.asset.AssetManager.get('threejson', key)) {
-							asset.threejson[key] = 'data/models/' + value.filename + '.min.json';
-						}
+					UnitManager.units.forIn(function(key, value) {
+						if (!phina.asset.AssetManager.get('threejson', key)) asset.threejson[key] = 'data/models/' + value.filename + '.min.json';
 					});
-					loader.load(asset).then(function() {
-						enemyManager.enemys.forIn(function(key) {
-							if (!enemyManager.loadedenemy[key]) {enemyManager.loadEnemy(key);}
-						});
-					}.bind(this));
-					resolve();
+					phina.asset.AssetLoader().load(asset).then(resolve);
 				}
 			}
 		], [
@@ -485,7 +451,11 @@ phina.define('MainScene', {
 				resulttitle.alpha = 0;
 				resulttext.alpha = 0;
 
+				allyManager.addChildTo(this);
 				enemyManager.addChildTo(this);
+				effectManager.addChildTo(this);
+				this.effectManager = effectManager;
+				allyBulletManager.addChildTo(this);
 				enmBulletManager.addChildTo(this);
 				windManager.addChildTo(this);
 				resolve();
@@ -510,7 +480,8 @@ phina.define('MainScene', {
 				threelayer.camera.fov = 100;
 				threelayer.camera.radiuses = [-100, 10, 28];
 				threelayer.camera.radius = 0;
-				threelayer.camera.rotate(-Math.PI / 2, Math.PI);
+				threelayer.camera.rotateY(Math.PI)
+				threelayer.camera.rotateX(-Math.PI / 2);
 				resolve();
 			}, function(resolve) {
 				threelayer.update = function(app) { // Update routine
@@ -541,7 +512,7 @@ phina.define('MainScene', {
 									{weight: 2, target: 'enem2'},
 									{weight: 1, target: 'enem3'},
 								]);
-								enemyManager.createEnemyMulti(enmname, params, {random: {x: 50, y: 10, z: 50}});
+								enemyManager.createMulti(enmname, params, {random: {x: 50, y: 10, z: 50}});
 							}
 							this.difficulty += 0.0001;
 							if (enemyManager.count() > 50) {enemyManager.removeEnemy(0);}
@@ -557,10 +528,21 @@ phina.define('MainScene', {
 							this.progress = player.position.clone().dot(goals.last.position) / goals.last.position.clone().dot(goals.last.position);
 							enemyManager.flare('frame', {progress: this.progress});
 						}
-						if (this.frame % 10 === 0) for (var i = 0; i < enmBulletManager.elements.length; i++) {
-							if (enmBulletManager.get(i).position.clone().sub(player.position).length > 800) enmBulletManager.removeBullet(i);
+						if (this.frame % 10 === 0) {
+							for (var i = 0; i < allyBulletManager.elements.length; i++) {
+								if (allyBulletManager.get(i).position.clone().sub(player.position).length > 800) allyBulletManager.removeBullet(i);
+							}
+							for (var i = 0; i < enmBulletManager.elements.length; i++) {
+								if (enmBulletManager.get(i).position.clone().sub(player.position).length > 800) enmBulletManager.removeBullet(i);
+							}
 						}
+						if (allyBulletManager.count() > 1050) {for(; allyBulletManager.count() > 1000;) {allyBulletManager.removeBullet(0);}}
 						if (enmBulletManager.count() > 1600) {for(; enmBulletManager.count() > 1550;) {enmBulletManager.removeBullet(0);}}
+
+						// Camera control
+
+						threelayer.camera.position.copy(player.position.clone().add(new THREE.Vector3(0, 650, -200)));
+						threelayer.camera.lookAt(player.position);
 
 						this.flare('frame' + this.frame);
 						enemyManager.flare('frame' + this.frame);
@@ -571,20 +553,14 @@ phina.define('MainScene', {
 
 						playerpos.rotation = Math.radToDeg(-player.myrot.y) + (Math.abs(player.myrot.x) > Math.PI / 2 && Math.abs(player.myrot.x) < Math.PI * 1.5 ? 0 : 180);
 
-
-						// Camera control
-
-						threelayer.camera.position.copy(player.position.clone().add(new THREE.Vector3(0, 650, -200)));
-						threelayer.camera.lookAt(player.position);
-
 						/*if (k.getKeyDown(53)) { // 5 Key
 							threelayer.camera.radius++;
 							threelayer.camera.radius %= threelayer.camera.radiuses.length;
 						}
 						threelayer.camera.quaternion.copy(new THREE.Quaternion());
-						threelayer.camera.rotate(new THREE.Quaternion().setFromAxisAngle(Axis.z, -player.myrot.z2 + (threelayer.camera.radius !== 0 ? -player.myrot.z1 : 0)));
-						threelayer.camera.rotate(new THREE.Quaternion().setFromAxisAngle(Axis.x, -player.myrot.x));
-						threelayer.camera.rotate(new THREE.Quaternion().setFromAxisAngle(Axis.y, player.myrot.y + Math.PI));
+						threelayer.camera.rotateZ(-player.myrot.z2 + (threelayer.camera.radius !== 0 ? -player.myrot.z1 : 0));
+						threelayer.camera.rotateX(-player.myrot.x);
+						threelayer.camera.rotateY(player.myrot.y + Math.PI);
 						var vec = Axis.z.clone().applyQuaternion(threelayer.camera.quaternion).negate().setLength(threelayer.camera.radiuses[threelayer.camera.radius]);
 						threelayer.camera.position.copy(player.position.clone().add(vec));*/
 
@@ -615,7 +591,7 @@ phina.define('MainScene', {
 						if (k.getKeyDown(32)) {message.text = '';} // Space Key
 
 						if (player.hp <= 0) {
-							enemyManager.effectmanager.explode(player.position, 10, 30);
+							effectManager.explode(player.position, 10, 30);
 							threelayer.scene.remove(player);
 							player = null;
 							resultbg.tweener.to({alpha: 1, height: SCREEN_HEIGHT, y: SCREEN_CENTER_Y}, 5).play();

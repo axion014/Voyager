@@ -76,13 +76,14 @@ phina.define('fly.asset.Stage', {
 			stage.$safe({enemys: [], obstacles: [], winds: [], messages: [], goals: []});
 			for(var i = 0; i < stage.enemys.length; i++) {
 				stage.enemys[i].$safe({position: {}, rotation: {}, option: {}, autospawn: {}, random: {}, killmes: {}});
+				stage.enemys[i].rotation.$safe({a: {}});
 				stage.enemys[i].autospawn.$safe({time: 0, progress: 0, random: {}});
 				stage.enemys[i].autospawn.random.$safe({x: 0, y: 0, z: 0});
 				stage.enemys[i].killmes.$safe({time: 0, text: '', offkill: false});
 				stage.enemys[i].option.$safe({
 					position: new THREE.Vector3(stage.enemys[i].position.x || 0, stage.enemys[i].position.y || 0, stage.enemys[i].position.z || 0),
-					quaternion: new THREE.Quaternion().rotate(stage.enemys[i].rotation.x || 0, stage.enemys[i].rotation.y || 0, stage.enemys[i].rotation.z || 0),
-					c: new THREE.Quaternion().rotate(stage.enemys[i].rotation.cx || 0, stage.enemys[i].rotation.cy || 0, stage.enemys[i].rotation.cz || 0)
+					quaternion: new THREE.Quaternion().rotate(new THREE.Vector3(stage.enemys[i].rotation.a.x || 0, stage.enemys[i].rotation.a.y || 0, stage.enemys[i].rotation.a.z || 0), stage.enemys[i].rotation.r || 0),
+					c: new THREE.Quaternion().rotate(new THREE.Vector3(stage.enemys[i].rotation.a.cx || 0, stage.enemys[i].rotation.a.cy || 0, stage.enemys[i].rotation.a.cz || 0), stage.enemys[i].rotation.cr || 0)
 				});
 			}
 			for(var i = 0; i < stage.winds.length; i++) {
@@ -92,8 +93,9 @@ phina.define('fly.asset.Stage', {
 			}
 			for(var i = 0; i < stage.obstacles.length; i++) {
 				stage.obstacles[i].$safe({position: {}, rotation: {}, scale: {}});
+				stage.obstacles[i].rotation.$safe({a: {}});
 				stage.obstacles[i].position = new THREE.Vector3(stage.obstacles[i].position.x || 0, stage.obstacles[i].position.y || 0, stage.obstacles[i].position.z || 0);
-				stage.obstacles[i].quaternion = new THREE.Quaternion().rotate(stage.obstacles[i].rotation.x || 0, stage.obstacles[i].rotation.y || 0, stage.obstacles[i].rotation.z || 0);
+				stage.obstacles[i].quaternion = new THREE.Quaternion().rotate(new THREE.Vector3(stage.obstacles[i].rotation.a.x || 0, stage.obstacles[i].rotation.a.y || 0, stage.obstacles[i].rotation.a.z || 0), stage.obstacles[i].rotation.r || 0);
 				stage.obstacles[i].scale = new THREE.Vector3(stage.obstacles[i].scale.x || 100, stage.obstacles[i].scale.y || 100, stage.obstacles[i].scale.z || 100);
 			}
 			for(var i = 0; i < stage.messages.length; i++) {stage.messages[i].$safe({time: 0, text: ''});}

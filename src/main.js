@@ -10,10 +10,11 @@ phina.define('MainSequence', {
 						assets: {
 							threejson: {
 								fighter: 'data/models/fighter-1.min.json',
-								bullet: 'data/models/bullet.min.json'
+								bullet: 'data/models/bullet-lq.min.json',
+								enem1: 'data/models/enem-1.min.json',
 							},
 							threetexture: {
-								fighter: 'data/models/fighter-1.png',
+								//fighter: 'data/models/fighter-1.png',
 								plane: 'data/images/3.png',
 								explode: 'data/images/explosion.png'
 							},

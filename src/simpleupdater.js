@@ -1,4 +1,4 @@
-phina.define('fly.SimpleUpdater', {
+phina.define('SimpleUpdater', {
 	superClass: 'phina.app.Element',
 
 	init: function() {

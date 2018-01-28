@@ -1,5 +1,5 @@
-phina.define('fly.WindManager', {
-	superClass: 'fly.SimpleUpdater',
+phina.define('WindManager', {
+	superClass: 'SimpleUpdater',
 
 	time: 0, flyerposy: 0,
 
@@ -8,7 +8,7 @@ phina.define('fly.WindManager', {
 		this.threescene = ts;
 	},
 
-	createWind: function(r, c) {
+	create: function(r, c) {
 		var wind = {
 			v: 0.2, size: 100,
 			position: new THREE.Vector2(),
@@ -19,7 +19,7 @@ phina.define('fly.WindManager', {
 		})), {position: new THREE.Vector3(wind.position.x, 0, wind.position.y)});
 		for (var i = -10000 * Math.sign(wind.v); Math.abs(i) <= 10000; i += wind.v * 300) {
 			wind.winds.push(wind.mesh.clone());
-			wind.winds.last.rotate(Math.PI / 2, 0, 0);
+			wind.winds.last.rotateX(Math.PI / 2);
 			wind.winds.last.position.y = this.flyerposy + i;
 			this.threescene.add(wind.winds.last);
 		}
@@ -31,7 +31,7 @@ phina.define('fly.WindManager', {
 		this.each(function(wind) {
 			if (this.time % 30 === 0) {
 				wind.winds.push(wind.mesh.clone());
-				wind.winds.last.rotate(Math.PI / 2, 0, 0);
+				wind.winds.last.rotateX(Math.PI / 2);
 				wind.winds.last.position.y = this.flyerposy - 10000 * Math.sign(wind.v);
 				this.threescene.add(wind.winds.last);
 			}

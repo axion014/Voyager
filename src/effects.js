@@ -1,10 +1,10 @@
-phina.define('fly.EffectManager', {
-	superClass: 'fly.SimpleUpdater',
+phina.define('EffectManager', {
+	superClass: 'SimpleUpdater',
 
 	init: function(ts) {
 		this.superInit();
-		this.explodeManager = fly.ExplodeManager(ts).addChildTo(this);
-		this.rayManager = fly.RayManager(ts).addChildTo(this);
+		this.explodeManager = ExplodeManager(ts).addChildTo(this);
+		this.rayManager = RayManager(ts).addChildTo(this);
 		this.threescene = ts;
 	},
 
@@ -12,8 +12,8 @@ phina.define('fly.EffectManager', {
 	ray: function(g, c, o, w, mw, t) {return this.rayManager.ray(g, c, o, w, mw, t);},
 });
 
-phina.define('fly.ExplodeManager', {
-	superClass: 'fly.SimpleUpdater',
+phina.define('ExplodeManager', {
+	superClass: 'SimpleUpdater',
 
 	init: function(ts) {
 		this.superInit();
@@ -59,8 +59,8 @@ phina.define('fly.ExplodeManager', {
 	}
 });
 
-phina.define('fly.RayManager', {
-	superClass: 'fly.SimpleUpdater',
+phina.define('RayManager', {
+	superClass: 'SimpleUpdater',
 
 	init: function(ts) {
 		this.superInit();
@@ -90,7 +90,8 @@ phina.define('fly.RayManager', {
 					this.move(this.generator.position.clone().add(Axis.z.clone().applyQuaternion(
 							this.generator.quaternion).setLength(this.offset)));
 					this.quaternion.copy(new THREE.Quaternion());
-					this.rotate(Math.PI / 2, Math.PI);
+					this.rotateY(Math.PI);
+					this.rotateX(Math.PI / 2);
 					this.quaternion.premultiply(this.generator.quaternion);
 				}
 			});
@@ -119,7 +120,8 @@ phina.define('fly.RayManager', {
 					ray.move(this.generator.position.clone().add(Axis.z.clone().applyQuaternion(
 						this.generator.quaternion).setLength(this.offset)));
 					ray.quaternion.copy(new THREE.Quaternion());
-					ray.rotate(Math.PI / 2, Math.PI);
+					ray.rotateY(Math.PI);
+					ray.rotateX(Math.PI / 2);
 					ray.quaternion.premultiply(this.generator.quaternion);
 					ray.scale.x = ray.scale.z = scale;
 				}, this);

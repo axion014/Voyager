@@ -52,7 +52,7 @@ phina.define('phina.display.ThreeApp', {
     this.renderer.setPixelRatio(devicePixelRatio);
 
     this.camera = new THREE.OrthographicCamera(0, options.width, 0, -options.height, 1, 10000);
-    this.camera.position.z = 5;
+    this.camera.position.z = 5000;
 
     this.gridX = phina.util.Grid({
       width: options.width,
@@ -76,7 +76,7 @@ phina.define('phina.display.ThreeApp', {
   _draw: function() {
     this.renderer.setClearColor(new THREE.Color(this.currentScene.backgroundColor || this.backgroundColor), 1);
 
-    var updateObject = function(obj) {
+    var updateObject = function(obj, z) {
 
       obj._calcWorldMatrix && obj._calcWorldMatrix();
 
@@ -108,25 +108,31 @@ phina.define('phina.display.ThreeApp', {
       obj._calcWorldAlpha && obj._calcWorldAlpha();
       obj.updateThreeMesh && obj.updateThreeMesh(obj.mesh, obj._worldAlpha, this);
       if (obj.mesh.material) {
-        obj.mesh.material.transparent = obj.className === "phina.display.Label" || obj._worldAlpha !== 1;
+        obj.mesh.material.transparent = obj.className === "phina.display.Label" || obj.className === "phina.ui.LabelArea" || obj._worldAlpha !== 1;
         obj.mesh.material.opacity = obj._worldAlpha;
       }
       obj.mesh.quaternion.copy(obj.mesh.initialQuaternion.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.degToRad(-obj.rotation))));
 
-      obj.mesh.position.set(obj.x - obj.width * (obj.origin.x - 0.5), -obj.y + obj.height * (obj.origin.y - 0.5), 0);
+      obj.mesh.position.set(obj.x - obj.width * (obj.origin.x - 0.5), -obj.y + obj.height * (obj.origin.y - 0.5), z.index);
 
+			var z2 = {index: 0};
       if (obj.renderChildBySelf === false && obj.children.length > 0) {
         var tempChildren = obj.children.slice();
         for (var i=0,len=tempChildren.length; i<len; ++i) {
-          updateObject(tempChildren[i]);
+					z2.index += 0.01;
+          updateObject(tempChildren[i], z2);
         }
       }
+			z.index += z2.index;
     }.bind(this);
+
+		var z = {index: 0};
 
     if (this.currentScene.children.length > 0) {
       var tempChildren = this.currentScene.children.slice();
       for (var i=0,len=tempChildren.length; i<len; ++i) {
-        updateObject(tempChildren[i]);
+        updateObject(tempChildren[i], z);
+				z.index += 0.01;
       }
     }
 
@@ -193,7 +199,7 @@ phina.namespace(function() {
         geometry,
         new THREE.MeshBasicMaterial({side: THREE.DoubleSide})
       );
-      group.fill.position.z = 1;
+      group.fill.position.z = 0.001;
       group.stroke = new THREE.Mesh(
         geometry,
         new THREE.MeshBasicMaterial()
@@ -218,7 +224,7 @@ phina.namespace(function() {
         geometry,
         new THREE.MeshBasicMaterial({side: THREE.DoubleSide})
       );
-      group.fill.position.z = 1;
+      group.fill.position.z = 0.001;
       group.stroke = new THREE.Mesh(
         geometry,
         new THREE.MeshBasicMaterial()
@@ -278,7 +284,7 @@ phina.namespace(function() {
         geometry,
         new THREE.MeshBasicMaterial({side: THREE.DoubleSide})
       );
-      group.fill.position.z = 1;
+      group.fill.position.z = 0.001;
       group.stroke = new THREE.Mesh(
         geometry,
         new THREE.MeshBasicMaterial()
@@ -287,7 +293,7 @@ phina.namespace(function() {
         geometry,
         new THREE.MeshBasicMaterial()
       );
-      group.gauge.position.z = 2;
+      group.gauge.position.z = 0.002;
       group.add(group.stroke);
       group.add(group.fill);
       group.add(group.gauge);
@@ -299,7 +305,40 @@ phina.namespace(function() {
       setColor(group.stroke.material, this.stroke, alpha);
       group.stroke.scale.set((1 + this.strokeWidth / this.width) * this.width * this.scaleX, (1 +   this.strokeWidth / this.height) * this.height * this.scaleY, 1);
       setColor(group.gauge.material, this.gaugeColor, alpha);
+			group.gauge.position.x = -this.width * this.scaleX * (1 - this.getRate()) / 2;
       group.gauge.scale.set(this.width * this.scaleX * this.getRate(), this.height * this.scaleY, 1);
+    }
+  });
+
+	phina.display.Sprite.prototype.$extend({
+		initThreeMesh: function() {
+     	var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), new THREE.MeshBasicMaterial({map: new THREE.Texture(this.canvas.domElement)}));
+			return mesh;
+    },
+    updateThreeMesh: function(mesh) {
+      mesh.scale.set(this.width * this.scaleX, this.height * this.scaleY, 1);
+			if (this.watchDraw && this._dirtyDraw === true) {
+        // render
+        this.render(this.canvas);
+				mesh.material.map.needsUpdate = true;
+        this._dirtyDraw = false;
+      }
+    }
+  });
+
+	phina.ui.LabelArea.prototype.$extend({
+    initThreeMesh: function() {
+     	var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), new THREE.MeshBasicMaterial({map: new THREE.Texture(this.canvas.domElement)}));
+			return mesh;
+    },
+    updateThreeMesh: function(mesh) {
+      mesh.scale.set(this.width * this.scaleX, this.height * this.scaleY, 1);
+			if (this.watchDraw && this._dirtyDraw === true) {
+        // render
+        this.render(this.canvas);
+				mesh.material.map.needsUpdate = true;
+        this._dirtyDraw = false;
+      }
     }
   });
 });

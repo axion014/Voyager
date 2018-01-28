@@ -13,8 +13,11 @@ loaders.js
 collision.js
 popup.js
 effects.js
+ally.js
 enemy.js
+units.js
 bullet.js
+skills.js
 obstacle.js
 wind.js
 loadingscene.js

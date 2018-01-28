@@ -35,8 +35,11 @@ threeext.$method('extention', function() {
 		if (Array.isArray(m)) m.each(f);
 		else f(m);
 	});
-	THREE.Object3D.prototype.$method('rotate', function(x, y, z) {
-		this.quaternion.rotate(x, y, z);
+	THREE.Object3D.prototype.$method('rotate', function(a, r) {
+		this.quaternion.rotate(a, r);
+	});
+	THREE.Object3D.prototype.$method('rotateAbs', function(a, r) {
+		this.quaternion.rotateAbs(a, r);
 	});
 	THREE.Object3D.prototype.$method('move', function(d) {
 		this.position.x = d.x;
@@ -81,29 +84,29 @@ threeext.$method('extention', function() {
 	THREE.Vector3.prototype._listeners = {};
 	THREE.Vector3.prototype.className = 'THREE.Vector3';
 	THREE.Quaternion.prototype.className = 'THREE.Quaternion';
-	THREE.Quaternion.prototype.$method('rotate', function(x, y, z) {
-		x && this.rotateAbsX(x);
-		y && this.rotateAbsY(y);
-		z && this.rotateAbsZ(z);
-		return this;
+	THREE.Quaternion.prototype.$method('rotate', function(a, r) {
+		return this.multiply(new THREE.Quaternion().setFromAxisAngle(a, r));
 	});
 	THREE.Quaternion.prototype.$method('rotateX', function(r) {
-		return this.multiply(new THREE.Quaternion().setFromAxisAngle(Axis.x, r));
+		return this.rotate(Axis.x, r);
 	});
 	THREE.Quaternion.prototype.$method('rotateY', function(r) {
-		return this.multiply(new THREE.Quaternion().setFromAxisAngle(Axis.y, r));
+		return this.rotate(Axis.y, r);
 	});
 	THREE.Quaternion.prototype.$method('rotateZ', function(r) {
-		return this.multiply(new THREE.Quaternion().setFromAxisAngle(Axis.z, r));
+		return this.rotate(Axis.z, r);
+	});
+	THREE.Quaternion.prototype.$method('rotateAbs', function(a, r) {
+		return this.premultiply(new THREE.Quaternion().setFromAxisAngle(a, r));
 	});
 	THREE.Quaternion.prototype.$method('rotateAbsX', function(r) {
-		return this.premultiply(new THREE.Quaternion().setFromAxisAngle(Axis.x, r));
+		return this.rotateAbs(Axis.x, r);
 	});
 	THREE.Quaternion.prototype.$method('rotateAbsY', function(r) {
-		return this.premultiply(new THREE.Quaternion().setFromAxisAngle(Axis.y, r));
+		return this.rotateAbs(Axis.y, r);
 	});
 	THREE.Quaternion.prototype.$method('rotateAbsZ', function(r) {
-		return this.premultiply(new THREE.Quaternion().setFromAxisAngle(Axis.z, r));
+		return this.rotateAbs(Axis.z, r);
 	});
 	THREE.Vector3.prototype.getter('tweener', function() {
     if (!this._tweener) {

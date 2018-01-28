@@ -23,24 +23,32 @@ phina.define('TitleScene', {
 			var setFilter = function() {
 				fade.uniforms.color.value.w = this.startframe * 0.025;
 				zoomblur.uniforms.strength.value = this.startframe * 0.4;
-				if (this.startframe === 40) {
-					this.exit({stage: nowarg.stage, difficulty: nowarg.difficulty});
-				} else {
-					this.startframe++;
-				}
+				if (this.startframe === 40) this.exit(nowarg);
+				else this.startframe++;
 			}.bind(this);
 			this.on('enterframe', setFilter);
 		}.bind(this);
 		var nowarg = {};
+		nowarg.skills = JSON.parse(localStorage.getItem('skills-pre')) || [
+			{klass: Railgun, level: 0},
+			{klass: Empty, level: 0},
+			{klass: Empty, level: 0},
+			//{klass: BladeMinion, level: 0},
+			//{klass: Reinforce, level: 2},
+			{klass: SelfRepair, level: 0}
+		];
+		nowarg.skills.each(function(skill) {
+			if (skill.name) skill.klass = skills.byName[skill.name];
+		});
 		var menu = {
 			title: {
 				x: 0, y: 0, sub: [
-					{type: 'label', value: 'Re:Flight', y: this.gridY.center(-3), size: 64},
+					{type: 'label', value: 'Forever Flight', y: this.gridY.center(-3), size: 64},
 					{type: 'label', value: 'Click start', y: this.gridY.center(3), size: 32},
-					{type: 'model', name: 'player', value: phina.asset.AssetManager.get('threejson', 'fighter').get(), x: 0, y: 0, z: 0},
+					{type: 'model', name: 'player', value: phina.asset.AssetManager.get('threejson', 'fighter').get(), x: 0, y: 50, z: 0},
 					{type: 'model', value: new THREE.Mesh(new THREE.CircleGeometry(10000, 100), new THREE.MeshBasicMaterial({
 						map: phina.asset.AssetManager.get('threetexture', 'plane').get()
-					})), x: 0, y: -1000, z: 0, init: function(model) {model.rotate(-Math.PI / 2, 0, 0);}}
+					})), x: 0, y: 10000, z: 0, init: function(model) {model.rotateX(-Math.PI / 2);}}
 				]
 			},
 			main: {
@@ -49,47 +57,112 @@ phina.define('TitleScene', {
 					{type: 'label', value: 'Campaign', y: this.gridY.center(-2), size: 32, link: 'difficulty'},
 					{type: 'label', value: 'Stage Select', y: this.gridY.center(-1), size: 32, link: 'stageselect'},
 					{type: 'label', value: 'Ship Select', size: 32, link: 'shipselect'},
-					{type: 'label', value: 'Tutorial', y: this.gridY.center(1), size: 32, link: 'tutorial'},
-					{type: 'label', value: 'Free Mode', y: this.gridY.center(2), size: 32, link: 'difficulty', callback: function() {nowarg.stage = 'arcade'}},
+					{type: 'label', value: 'Free Play', y: this.gridY.center(1), size: 32, link: 'difficulty', callback: function() {nowarg.stage = 'arcade'}},
+					{type: 'label', value: 'How to play', y: this.gridY.center(2), size: 32, link: 'help'},
 					{type: 'label', value: 'Settings', y: this.gridY.center(3), size: 32, link: 'setting'},
+					{type: 'label', value: 'Credit', x: this.gridX.center(6), y: this.gridY.center(7), size: 24, link: 'credit'},
 					{type: 'label', value: 'Back', y: this.gridY.center(5), size: 32, link: 'title'}
 				]
 			},
-			tutorial: {
+			help: {
 				x: 750, y: 750, sub: [
-					{type: 'label', value: 'Tutorial', x: this.gridX.center(), y: this.gridY.span(4.5), size: 64},
-					{type: 'label', value: 'Move', x: this.gridX.center(), y: this.gridY.span(6.5), size: 32, callback: function() {nowarg.stage = 'tutorial_move';start();}},
-					{type: 'label', value: 'Attack', x: this.gridX.center(), y: this.gridY.span(7.5), size: 32, callback: function() {nowarg.stage = 'tutorial_attack';start();}},
-					{type: 'label', value: 'Special', x: this.gridX.center(), y: this.gridY.span(8.5), size: 32, callback: function() {nowarg.stage = 'tutorial_special';start();}},
-					{type: 'label', value: 'Space', x: this.gridX.center(), y: this.gridY.span(9.5), size: 32, callback: function() {nowarg.stage = 'tutorial_space';start();}},
-					{type: 'label', value: 'Back', x: this.gridX.center(), y: this.gridY.span(11.5), size: 32, link: 'main'}
+					{type: 'label', value: 'How to play', x: this.gridX.center(), y: this.gridY.span(4.5), size: 64},
+					{type: 'label', value: 'Your airplane moves automatically', x: this.gridX.center(), y: this.gridY.center(1.5), size: 18},
+					{type: 'label', value: 'to direction of your mouse pointer', x: this.gridX.center(), y: this.gridY.center(2), size: 18},
+					{type: 'label', value: '>', x: this.gridX.center(6), y: this.gridY.center(), size: 48, link: 'help2'},
+					{type: 'label', value: '(1/5)', x: this.gridX.center(), y: this.gridY.center(2.75), size: 18},
+					{type: 'label', value: 'Main Menu', x: this.gridX.center(), y: this.gridY.span(11.5), size: 32, link: 'main'}
+				]
+			},
+			help2: {
+				x: 0, y: 750, sub: [
+					{type: 'label', value: 'Speed-up by pressing your left mouse button', x: this.gridX.center(), y: this.gridY.center(1.5), size: 18},
+					{type: 'label', value: '<', x: this.gridX.center(-6), y: this.gridY.center(), size: 48, link: 'help'},
+					{type: 'label', value: '>', x: this.gridX.center(6), y: this.gridY.center(), size: 48, link: 'help3'},
+					{type: 'label', value: '(2/5)', x: this.gridX.center(), y: this.gridY.center(2.75), size: 18},
+					{type: 'label', value: 'Main Menu', x: this.gridX.center(), y: this.gridY.span(11.5), size: 32, link: 'main'}
+				]
+			},
+			help3: {
+				x: -750, y: 750, sub: [
+					{type: 'label', value: 'Press W/S key to up/down vertically', x: this.gridX.center(), y: this.gridY.center(1.5), size: 18},
+					{type: 'label', value: '(any key in this help is default key bind)', x: this.gridX.center(), y: this.gridY.center(2), size: 18},
+					{type: 'label', value: '<', x: this.gridX.center(-6), y: this.gridY.center(), size: 48, link: 'help2'},
+					{type: 'label', value: '>', x: this.gridX.center(6), y: this.gridY.center(), size: 48, link: 'help4'},
+					{type: 'label', value: '(3/5)', x: this.gridX.center(), y: this.gridY.center(2.75), size: 18},
+					{type: 'label', value: 'Main Menu', x: this.gridX.center(), y: this.gridY.span(11.5), size: 32, link: 'main'}
+				]
+			},
+			help4: {
+				x: -1500, y: 750, sub: [
+					{type: 'label', value: 'Press space key to attack', x: this.gridX.center(), y: this.gridY.center(1.5), size: 18},
+					{type: 'label', value: '<', x: this.gridX.center(-6), y: this.gridY.center(), size: 48, link: 'help3'},
+					{type: 'label', value: '>', x: this.gridX.center(6), y: this.gridY.center(), size: 48, link: 'help5'},
+					{type: 'label', value: '(4/5)', x: this.gridX.center(), y: this.gridY.center(2.75), size: 18},
+					{type: 'label', value: 'Main Menu', x: this.gridX.center(), y: this.gridY.span(11.5), size: 32, link: 'main'}
+				]
+			},
+			help5: {
+				x: -2250, y: 750, sub: [
+					{type: 'label', value: 'A/D key and Shift key to use up to 4 kind of skill', x: this.gridX.center(), y: this.gridY.center(1.5), size: 18},
+					{type: 'label', value: '<', x: this.gridX.center(-6), y: this.gridY.center(), size: 48, link: 'help4'},
+					{type: 'label', value: '(5/5)', x: this.gridX.center(), y: this.gridY.center(2.75), size: 18},
+					{type: 'label', value: 'Main Menu', x: this.gridX.center(), y: this.gridY.span(11.5), size: 32, link: 'main'}
 				]
 			},
 			stageselect: {
-				x: 500, y: -250, sub: [
+				x: 560, y: -250, sub: [
 					{type: 'label', value: 'Stage Select', x: this.gridX.center(), y: this.gridY.span(4), size: 64},
 					{type: 'label', value: 'Main Menu', x: this.gridX.center(), y: this.gridY.span(12), size: 32, link: 'main'},
 				]
 			},
 			shipselect: {
-				x: 0, y: 0, z: -30, sub: [
+				x: 0, y: 0, z: -20, sub: [
 					{type: 'label', value: 'Ship Select', x: this.gridX.center(), y: this.gridY.span(4), size: 64},
+					{type: 'label', value: '(You cannot select ship in this version)', x: this.gridX.center(), y: this.gridY.span(5), size: 20},
+					{type: 'label', value: '<', x: this.gridX.span(2), y: this.gridY.center(), size: 64},
+					{type: 'label', value: '>', x: this.gridX.span(14), y: this.gridY.center(), size: 64},
+					{type: 'label', value: 'Modify Ship', x: this.gridX.center(), y: this.gridY.span(10.5), size: 32, link: 'shipmodify'},
+					{type: 'label', value: 'Main Menu', x: this.gridX.center(), y: this.gridY.span(12), size: 32, link: 'main'},
+				]
+			},
+			shipmodify: {
+				x: 0, y: 0, z: -40, sub: [
+					{type: 'label', value: 'Ship Modify', x: this.gridX.center(), y: this.gridY.span(4), size: 64},
+					{type: 'point', parent: 'player', index: 0, place: "front", x: 2, y: 5, z: 20},
+					{type: 'point', parent: 'player', index: 1, place: "front", x: -2, y: 5, z: 20},
+					{type: 'point', parent: 'player', index: 2, place: "top", x: 0, y: 8, z: -5},
+					{type: 'point', parent: 'player', index: 3, place: "core", x: 0, y: 4.5, z: 0},
+					{type: 'label', value: 'Back', x: this.gridX.center(), y: this.gridY.span(11), size: 32, link: 'shipselect'},
 					{type: 'label', value: 'Main Menu', x: this.gridX.center(), y: this.gridY.span(12), size: 32, link: 'main'},
 				]
 			},
 			difficulty: {
-				x: -1000, y: -750, sub: [
+				x: -1250, y: -1000, sub: [
 					{type: 'label', value: 'Difficulty', x: this.gridX.center(), y: this.gridY.span(5), size: 64},
 					{type: 'label', value: 'Easy', x: this.gridX.center(), y: this.gridY.span(7), size: 32, callback: function() {nowarg.difficulty = 0.8;start()}},
 					{type: 'label', value: 'Normal', x: this.gridX.center(), y: this.gridY.span(8), size: 32, callback: start},
 					{type: 'label', value: 'Hard', x: this.gridX.center(), y: this.gridY.span(9), size: 32, callback: function() {nowarg.difficulty = 1.25;start()}},
-					{type: 'label', value: 'Back', x: this.gridX.center(), y: this.gridY.span(11), size: 32, link: 'main'}
+					{type: 'label', value: 'Back', x: this.gridX.center(), y: this.gridY.span(11), size: 32, link: 'main'},
+					{
+						type: 'model', name: 'enem1', value: phina.asset.AssetManager.get('threejson', 'enem1').get(), x: 200, y: 50, z: 0,
+						init: function(model) {model.rotate(new THREE.Vector3(1, -1, -1).normalize(), 1);}
+					},
+					{
+						type: 'model', name: 'enem1', value: phina.asset.AssetManager.get('threejson', 'enem1').get(), x: -250, y: -50, z: 0,
+						init: function(model) {model.rotate(new THREE.Vector3(1, -1, -1).normalize(), 1);}
+					},
+					{
+						type: 'model', name: 'enem1', value: phina.asset.AssetManager.get('threejson', 'enem1').get(), x: -280, y: 160, z: 40,
+						init: function(model) {model.rotate(new THREE.Vector3(1, -1, -1).normalize(), 1);}
+					}
 				]
 			},
 			setting: {
-				x: -250, y: -1250, sub: [
+				x: -250, y: -1440, sub: [
 					{type: 'label', value: 'Settings', x: this.gridX.center(), y: this.gridY.span(4), size: 64},
-					{type: 'label', value: 'Credit', x: this.gridX.center(), y: this.gridY.span(8), size: 32, link: 'credit'},
+					{type: 'label', value: 'KeyBinding', x: this.gridX.center(), y: this.gridY.center(-0.5), size: 32},
+					{type: 'label', value: 'Sound Volume', x: this.gridX.center(), y: this.gridY.center(0.5), size: 32},
 					{type: 'label', value: 'Back', x: this.gridX.center(), y: this.gridY.span(12), size: 32, link: 'main'}
 				]
 			},
@@ -97,7 +170,7 @@ phina.define('TitleScene', {
 				x: -5000, y: -5000, sub: [
 					{type: 'label', value: 'Credit', x: this.gridX.center(), y: this.gridY.span(4), size: 64},
 					{type: 'label', value: 'Programing: axion014', x: this.gridX.center(), y: this.gridY.span(6), size: 32},
-					{type: 'label', value: 'Back', x: this.gridX.center(), y: this.gridY.span(12), size: 32, link: 'setting'}
+					{type: 'label', value: 'Back', x: this.gridX.center(), y: this.gridY.span(12), size: 32, link: 'main'}
 				]
 			}
 		}
@@ -112,13 +185,15 @@ phina.define('TitleScene', {
 		threelayer.scene.add(directionalLight);
 		threelayer.scene.add(new THREE.AmbientLight(0x606060));
 		threelayer.renderer.setClearColor(0x66aaee);
-		threelayer.scene.fog = new THREE.FogExp2(0x66aaee, 0.0004);
+		threelayer.scene.fog = new THREE.FogExp2(0x66aaee, 0.00025);
 		threelayer.camera.position.z = 100;
+		var time = 0;
 		threelayer.update = function(app) { // Update routine
+			time += this.position === 'shipmodify' ? 0.2 : 1;
 			// Camera control
 			this.player.quaternion.copy(new THREE.Quaternion());
-			this.player.rotateX(Math.sin(this.frame * 0.01) * 0.25);
-			this.player.rotateY(-Math.PI / 2 + this.frame * 0.005);
+			this.player.rotateX(Math.sin(time * 0.01) * 0.25);
+			this.player.rotateY(-Math.PI / 2 + time * 0.005);
 			threelayer.camera.position.tweener.update(app);
 			threelayer.camera.updateMatrixWorld();
 
@@ -131,7 +206,7 @@ phina.define('TitleScene', {
 		var amp = 0.085;
 		var moveTo = function(x, y, z) {
 			var dist = phina.geom.Vector2(threelayer.camera.position.x / amp, threelayer.camera.position.y / amp).distance(phina.geom.Vector2(x, y));
-			var time = Math.max(dist / 3, 1000);
+			var time = Math.max(dist / 3, 900);
 			var tween = dist > 3000 ? 'easeInOutQuint' : 'easeInOutCubic';
 			threelayer.camera.position.tweener.to({x: -x * amp, y: y * amp, z: 100 + z}, time, tween).play();
 		}.bind(this);
@@ -144,7 +219,14 @@ phina.define('TitleScene', {
 				});
 			};
 		}.bind(this);
-		var labels = [], buttons = [];
+		var labels = [], buttons = [], points = [];
+		var equipmentEdit = phina.display.RectangleShape({
+			x: SCREEN_CENTER_X, y: SCREEN_CENTER_Y,
+			stroke: null, fill: "#6668",
+			width: this.gridX.span(12), height: this.gridY.span(12)
+		});
+		equipmentEdit.alpha = 0;
+		var scene = this;
 		menu.forIn(function(key, value) {
 			value.z = value.z || 0;
 			value.sub.each(function(selects) {
@@ -171,6 +253,9 @@ phina.define('TitleScene', {
 							if (selects.link === 'title') this.one('enterframe', function() {
 								this.onpointstart = moveToMain;
 							}.bind(this));
+							else if (selects.link === 'shipmodify') points.each(function(point) {point.setInteractive(true).show();});
+							else points.each(function(point) {point.setInteractive(false).hide();});
+							this.position = selects.link;
 						}.bind(this));
 					}
 					if (selects.callback) {
@@ -180,13 +265,105 @@ phina.define('TitleScene', {
 					labels.push(label);
 					if (button) buttons.push(label);
 				} else if (selects.type === 'model') {
-					threelayer.scene.add(selects.value);
-					selects.value.position.set(selects.x, selects.y, selects.z);
-					if(selects.init) selects.init(selects.value);
-					if(selects.name) this[selects.name] = selects.value;
+					var add = function(parent, models) {
+						models.each(function(model) {
+							parent.add(model.value);
+							model.value.position.set((-value.x + model.x) * amp, (value.y - model.y) * amp, model.z);
+							if(model.init) model.init(model.value);
+							if(model.name) this[model.name] = model.value;
+							model.childrens && add(model.value, model.childrens);
+						}, this);
+					}.bind(this);
+					add(threelayer.scene, [selects]);
+				} else if (selects.type === 'point') {
+					var EquipSlot = phina.createClass({
+						superClass: phina.display.DisplayElement,
+						init: function(options) {
+							this.superInit(options);
+							this.data = options.data;
+							this.hide();
+							MarkShape({stroke: "#4a4", width: 48, height: 48}).addChildTo(this);
+							phina.display.CircleShape({fill: "#4a48", stroke: null, radius: 16}).addChildTo(this);
+						},
+						update: function() {
+							var pos = scene[this.data.parent].localToWorld(new THREE.Vector3(this.data.x, this.data.y, this.data.z))
+								.project(threelayer.camera);
+							this.x = (pos.x + 1) * SCREEN_CENTER_X;
+							this.y = (1 - pos.y) * SCREEN_CENTER_Y;
+						},
+						onpointstart: function() {
+							scene.interactive = false;
+							points.each(function(point) {point.interactive = false;});
+							equipmentEdit.children.each(function(child) {child.interactive = true;});
+							equipmentEdit.target = this.data;
+							equipmentEdit.addChildTo(scene);
+							equipmentEdit.tweener.fadeIn(250).play();
+							equipmentEdit.updateCurrent(nowarg.skills[this.data.index].klass, nowarg.skills[this.data.index].level);
+						}
+					});
+					points.push(EquipSlot({
+						data: selects
+					}).addChildTo(this));
 				}
 			}, this);
 		}, this);
 		this.onpointstart = moveToMain;
+		equipmentEdit.skill = {};
+		equipmentEdit.name = phina.display.Label({y: this.gridY.span(-3)}).addChildTo(equipmentEdit);
+		equipmentEdit.description = phina.ui.LabelArea({
+			width: this.gridX.span(6.8), height: this.gridY.span(2),
+			y: this.gridY.span(-1), fontSize: 18
+		}).addChildTo(equipmentEdit);
+		phina.display.Label({x: this.gridX.span(-4.5), y: this.gridY.span(-1), text: "<", fontSize: 48}).addChildTo(equipmentEdit).on('pointstart', function() {
+			var index = skills[equipmentEdit.target.place].indexOf(equipmentEdit.skill.klass);
+			do var klass = skills[equipmentEdit.target.place][index === 0 ? (index = skills[equipmentEdit.target.place].length - 1) : --index];
+			while (klass.unlockedLevel < 0);
+			equipmentEdit.updateCurrent(klass, Math.min(equipmentEdit.skill.level, klass.unlockedLevel));
+		});
+		phina.display.Label({x: this.gridX.span(4.5), y: this.gridY.span(-1), text: ">", fontSize: 48}).addChildTo(equipmentEdit).on('pointstart', function() {
+			var index = skills[equipmentEdit.target.place].indexOf(equipmentEdit.skill.klass);
+			do var klass = skills[equipmentEdit.target.place][index === skills[equipmentEdit.target.place].length - 1 ? (index = 0) : ++index];
+			while (klass.unlockedLevel < 0);
+			equipmentEdit.updateCurrent(klass, Math.min(equipmentEdit.skill.level, klass.unlockedLevel));
+		});
+		var up = phina.display.Label({y: this.gridY.span(-4), text: "<", fontSize: 48}).addChildTo(equipmentEdit).on('pointstart', function() {
+			if (equipmentEdit.skill.level < equipmentEdit.skill.klass.unlockedLevel) equipmentEdit.updateCurrent(equipmentEdit.skill.klass, equipmentEdit.skill.level + 1);
+		});
+		up.rotation = 90;
+		var down = phina.display.Label({y: this.gridY.span(2), text: ">", fontSize: 48}).addChildTo(equipmentEdit).on('pointstart', function() {
+			if (equipmentEdit.skill.level > 0) equipmentEdit.updateCurrent(equipmentEdit.skill.klass, equipmentEdit.skill.level - 1);
+		});
+		down.rotation = 90;
+		equipmentEdit.ok = phina.display.Label({y: this.gridY.span(3.25), text: "Replace"}).addChildTo(equipmentEdit).on('pointstart', function() {
+			nowarg.skills[equipmentEdit.target.index] = {klass: equipmentEdit.skill.klass, level: equipmentEdit.skill.level};
+			nowarg.skills.each(function(skill) {skill.name = skill.klass.prototype.className;});
+			localStorage.setItem('skills-pre', JSON.stringify(nowarg.skills));
+			equipmentEdit.close();
+		});
+		phina.display.Label({y: this.gridY.span(4), text: "Back"}).addChildTo(equipmentEdit).on('pointstart', function() {
+			equipmentEdit.close();
+		});
+		equipmentEdit.close = function() {
+			this.one('enterframe', function() {scene.interactive = true});
+			points.each(function(point) {point.interactive = true;});
+			this.children.each(function(child) {child.interactive = false;});
+			this.tweener.fadeOut(250).call(function() {this.target.remove()}).play();
+		};
+		equipmentEdit.updateCurrent = function(klass, level) {
+			this.skill.klass = klass;
+			this.skill.level = level;
+			var changeing = this.skill.klass !== nowarg.skills[this.target.index].klass || this.skill.level !== nowarg.skills[this.target.index].level;
+			this.ok.setVisible(changeing).setInteractive(changeing);
+			this.ok.text = nowarg.skills[this.target.index].klass.prototype.className === 'Empty' ? 'Install' : 'Replace';
+			this.ok.y = scene.gridY.span(3.25);
+			if (klass.prototype.className === 'Empty') {
+				if (changeing) {
+					this.name.text = '';
+					this.ok.text = 'Uninstall';
+					this.ok.y = scene.gridY.span(-1);
+				} else this.name.text = 'No module';
+			} else this.name.text = klass.skillName + ' ' + (level + 1);
+			this.description.text = klass.getDescription(level);
+		};
 	}
 });
