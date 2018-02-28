@@ -12,6 +12,7 @@ phina.define('MainSequence', {
 								fighter: 'data/models/fighter-1.min.json',
 								bullet: 'data/models/bullet-lq.min.json',
 								enem1: 'data/models/enem-1.min.json',
+								airballoon: 'data/models/airballoon.min.json',
 							},
 							threetexture: {
 								//fighter: 'data/models/fighter-1.png',

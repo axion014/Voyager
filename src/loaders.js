@@ -6,7 +6,9 @@ phina.define('fly.asset.ThreeJSON', {
 
 	_load: function(resolve) {
 		var self = this;
-		new THREE.JSONLoader().load(this.src, function(geometry, materials) {
+		var loader = new THREE.JSONLoader();
+		loader.crossOrigin = '';
+		loader.load(this.src, function(geometry, materials) {
 			self.data = new THREE.Mesh(geometry, materials);
 			resolve(self);
 		});
@@ -22,7 +24,9 @@ phina.define('fly.asset.ThreeTexture', {
 
 	_load: function(resolve) {
 		var self = this;
-		new THREE.TextureLoader().load(this.src, function(texture) {
+		var loader = new THREE.TextureLoader();
+		loader.crossOrigin = '';
+		loader.load(this.src, function(texture) {
 			self._asset = texture;
 			resolve(self);
 		});

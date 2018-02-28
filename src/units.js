@@ -10,6 +10,7 @@
  * hp					hitpoint
  * armor			most of damage this unit takes will divided by this value
  * sharpness	multiplier of body damage
+ * weight			unit with high weight can push enemy
  * time 			number of frames count up from 0
  * target			refer to a enemy unit used to trigger targetAttacked(optional)
  * summons		refer to the AllyManager or the EnemyManager
@@ -42,7 +43,7 @@ phina.define('UnitManager', {
 			enem1: {
 				filename: 'enem-1',
 				routine: {
-					v: 0.6, chase: 0, firerate: 100, mindist: 0, aim: false,
+					v: 0.6, chase: 0, firerate: 100, mindist: 0, aim: false, weight: 16,
 					update: function(em) {
 						var vecToTarget = em.player.position.clone().sub(this.position);
 						var dir = new THREE.Quaternion().setFromAxisAngle(Axis.z.clone().cross(vecToTarget.clone().normalize()).normalize(), Math.acos(Axis.z.clone().dot(vecToTarget.clone().normalize())));
@@ -67,7 +68,7 @@ phina.define('UnitManager', {
 			enem2: {
 				filename: 'enem-2',
 				routine: {
-					hp: 75, v: 5, size: 15, chase: 0.04, sharpness: 2, firerate: 15, explodeTime: 30,
+					hp: 75, v: 5, size: 15, chase: 0.04, sharpness: 2, firerate: 15, explodeTime: 30, weight: 100,
 					update: function(em) {
 						if (!em.player.position.equals(this.position)) {
 							var dir = em.player.position.clone().sub(this.position);
@@ -77,7 +78,8 @@ phina.define('UnitManager', {
 						}
 						if (this.time % this.firerate === 0) {
 							em.bulletManager.createBullet('bullet', {
-								position: this.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.geometry.boundingBox.max.z), quaternion: this.quaternion,
+								position: this.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.geometry.boundingBox.max.z),
+								quaternion: this.quaternion,
 								v: 6, size: 1.5, atk: 10
 							});
 						}
@@ -87,7 +89,7 @@ phina.define('UnitManager', {
 			enem3: {
 				filename: 'enem-3',
 				routine: {
-					hp: 500, v: 0.25, size: 30, firerate: 1, r: 0.1, explodeTime: 30,
+					hp: 500, v: 0.25, size: 30, firerate: 1, r: 0.1, explodeTime: 30, weight: 250,
 					scale: new THREE.Vector3(3, 3, 3),
 					update: function(em) {
 						this.quaternion.premultiply(this.c);
@@ -95,9 +97,79 @@ phina.define('UnitManager', {
 						this.position.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.v);
 						if (this.time % this.firerate === 0) {
 							em.bulletManager.createBullet('bullet', {
-								position: this.position, quaternion: this.quaternion.clone().multiply(new THREE.Quaternion().setFromAxisAngle(
-									Axis.x, 0.1 + (Math.PI - 0.1) * (this.time % (this.firerate * 8) / this.firerate / 8) / 20 * (Math.random() + 9))
-								), v: 2.5, size: 0.5, atk: 5
+								position: this.position,
+								quaternion: this.quaternion.clone().rotate(Axis.x, 0.1 + (Math.PI - 0.1) * (this.time % (this.firerate * 8) / this.firerate / 8) / 20 * (Math.random() + 9)),
+								v: 2.5, size: 0.5, atk: 5
+							});
+						}
+					}
+				}
+			},
+			airballoon: {
+				filename: 'airballoon',
+				routine: {
+					hp: 1000, v: 0.2, size: 40, firerate1: 18, firerate2: 33, explodeTime: 45, weight: 75,
+					scale: new THREE.Vector3(2, 2, 2),
+					update: function(em) {
+						this.position.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.v);
+						if (this.time % this.firerate1 === 0) {
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(7, 0, 24)),
+								quaternion: this.quaternion.clone(),
+								v: 3, size: 2.5, atk: 15
+							});
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(-7, 0, 24)),
+								quaternion: this.quaternion.clone(),
+								v: 3, size: 2.5, atk: 15
+							});
+						}
+						if (this.time % this.firerate2 === 0) {
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(10, -10, 20)),
+								quaternion: this.quaternion.clone(),
+								v: 3, size: 2.5, atk: 15
+							});
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(-10, -10, 20)),
+								quaternion: this.quaternion.clone(),
+								v: 3, size: 2.5, atk: 15
+							});
+						}
+						if (this.time % this.firerate1 === 9) {
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(10, 0, 10)),
+								quaternion: this.quaternion.clone().rotateY(1),
+								v: 3, size: 2.5, atk: 15
+							});
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(-10, 0, 10)),
+								quaternion: this.quaternion.clone().rotateY(-1),
+								v: 3, size: 2.5, atk: 15
+							});
+						}
+						if (this.time % this.firerate2 === 11) {
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(10, 0, 0)),
+								quaternion: this.quaternion.clone().rotateY(1.57),
+								v: 3, size: 2.5, atk: 15
+							});
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(-10, 0, 0)),
+								quaternion: this.quaternion.clone().rotateY(-1.57),
+								v: 3, size: 2.5, atk: 15
+							});
+						}
+						if (this.time % this.firerate2 === 22) {
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(10, 0, -20)),
+								quaternion: this.quaternion.clone().rotateY(3),
+								v: 3, size: 2.5, atk: 15
+							});
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(-10, 0, -20)),
+								quaternion: this.quaternion.clone().rotateY(-3),
+								v: 3, size: 2.5, atk: 15
 							});
 						}
 					}
@@ -106,7 +178,7 @@ phina.define('UnitManager', {
 			blademinion: {
 				filename: 'slicer',
 				routine: {
-					hp: 50, chase: 0.07, v: 7.5, sharpness: 3, size: 5, explodeTime: 30, stealth: true,
+					hp: 50, chase: 0.07, v: 7.5, sharpness: 3, size: 5, explodeTime: 30, stealth: true, weight: 25,
 					scale: new THREE.Vector3(7, 7, 7),
 					update: function(um) {
 						if (this.active) {
@@ -142,7 +214,7 @@ phina.define('UnitManager', {
 			assaultdrone: {
 				filename: 'assault',
 				routine: {
-					hp: 10, chase: 0.07, v: 6, bv: 7, atk: 8, sharpness: 1.4, firerate: 28, size: 5,
+					hp: 10, chase: 0.07, v: 6, bv: 7, atk: 8, sharpness: 1.4, firerate: 28, size: 5, weight: 16,
 					mindist: 50, explodeTime: 20, expire: Infinity,
 					update: function(um) {
 						this.expire--;

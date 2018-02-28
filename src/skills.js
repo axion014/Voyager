@@ -86,6 +86,22 @@ registerSkill(phina.define('ExtraArmor', {
 	}
 }));
 
+registerSkill(phina.define('Spear', {
+	superClass: 'Skill',
+	init: function(user, scene, level) {
+		this.superInit(user, scene, level);
+		this.user.sharpness *= [1.25, 1.28, 1.3][level];
+	},
+	_static: {
+		skillName: 'Spear',
+		place: ['front'],
+		unlockedLevel: 0,
+		getDescription: function(level) {
+			return 'Increase damage deal on\nhitting enemy directly by ' + [25, 28, 30][level] + '%.';
+		}
+	}
+}));
+
 registerSkill(phina.define('Acrobat', {
 	superClass: 'Skill',
 	init: function(user, scene, level) {
@@ -182,8 +198,7 @@ registerSkill(phina.define('Railgun', {
 		if (this.duration > 0) {
 			this.duration--;
 			var angle = Math.randfloat(0, Math.PI * 2);
-			this.scene.threelayer.camera.position.x += Math.sin(angle) * this.duration * 8;
-			this.scene.threelayer.camera.position.z += Math.cos(angle) * this.duration * 8;
+			this.scene.shakeScreen(this.duration * 8);
 			this.user.beam([36, 45, 50][this.level], 3, 25, 0, this.scene);
 		}
 	},
@@ -221,8 +236,7 @@ registerSkill(phina.define('ParticleCannon', {
 		if (this.duration > 0) {
 			this.duration--;
 			var angle = Math.randfloat(0, Math.PI * 2);
-			this.scene.threelayer.camera.position.x += Math.sin(angle) * this.duration;
-			this.scene.threelayer.camera.position.z += Math.cos(angle) * this.duration;
+			this.scene.shakeScreen(this.duration);
 			this.user.beam([10, 12, 15][this.level], 2, 15, [20, 25, 30][this.level], this.scene);
 			if (this.duration === 0) {
 				this.user.rotspeed *= [2, 4, 8][this.level];

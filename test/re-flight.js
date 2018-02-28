@@ -415,7 +415,9 @@ phina.define('fly.asset.ThreeJSON', {
 
 	_load: function(resolve) {
 		var self = this;
-		new THREE.JSONLoader().load(this.src, function(geometry, materials) {
+		var loader = new THREE.JSONLoader();
+		loader.crossOrigin = '';
+		loader.load(this.src, function(geometry, materials) {
 			self.data = new THREE.Mesh(geometry, materials);
 			resolve(self);
 		});
@@ -431,7 +433,9 @@ phina.define('fly.asset.ThreeTexture', {
 
 	_load: function(resolve) {
 		var self = this;
-		new THREE.TextureLoader().load(this.src, function(texture) {
+		var loader = new THREE.TextureLoader();
+		loader.crossOrigin = '';
+		loader.load(this.src, function(texture) {
 			self._asset = texture;
 			resolve(self);
 		});
@@ -1077,6 +1081,7 @@ phina.define('EnemyManager', {
  * hp					hitpoint
  * armor			most of damage this unit takes will divided by this value
  * sharpness	multiplier of body damage
+ * weight			unit with high weight can push enemy
  * time 			number of frames count up from 0
  * target			refer to a enemy unit used to trigger targetAttacked(optional)
  * summons		refer to the AllyManager or the EnemyManager
@@ -1109,7 +1114,7 @@ phina.define('UnitManager', {
 			enem1: {
 				filename: 'enem-1',
 				routine: {
-					v: 0.6, chase: 0, firerate: 100, mindist: 0, aim: false,
+					v: 0.6, chase: 0, firerate: 100, mindist: 0, aim: false, weight: 16,
 					update: function(em) {
 						var vecToTarget = em.player.position.clone().sub(this.position);
 						var dir = new THREE.Quaternion().setFromAxisAngle(Axis.z.clone().cross(vecToTarget.clone().normalize()).normalize(), Math.acos(Axis.z.clone().dot(vecToTarget.clone().normalize())));
@@ -1134,7 +1139,7 @@ phina.define('UnitManager', {
 			enem2: {
 				filename: 'enem-2',
 				routine: {
-					hp: 75, v: 5, size: 15, chase: 0.04, sharpness: 2, firerate: 15, explodeTime: 30,
+					hp: 75, v: 5, size: 15, chase: 0.04, sharpness: 2, firerate: 15, explodeTime: 30, weight: 100,
 					update: function(em) {
 						if (!em.player.position.equals(this.position)) {
 							var dir = em.player.position.clone().sub(this.position);
@@ -1144,7 +1149,8 @@ phina.define('UnitManager', {
 						}
 						if (this.time % this.firerate === 0) {
 							em.bulletManager.createBullet('bullet', {
-								position: this.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.geometry.boundingBox.max.z), quaternion: this.quaternion,
+								position: this.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.geometry.boundingBox.max.z),
+								quaternion: this.quaternion,
 								v: 6, size: 1.5, atk: 10
 							});
 						}
@@ -1154,7 +1160,7 @@ phina.define('UnitManager', {
 			enem3: {
 				filename: 'enem-3',
 				routine: {
-					hp: 500, v: 0.25, size: 30, firerate: 1, r: 0.1, explodeTime: 30,
+					hp: 500, v: 0.25, size: 30, firerate: 1, r: 0.1, explodeTime: 30, weight: 250,
 					scale: new THREE.Vector3(3, 3, 3),
 					update: function(em) {
 						this.quaternion.premultiply(this.c);
@@ -1162,9 +1168,79 @@ phina.define('UnitManager', {
 						this.position.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.v);
 						if (this.time % this.firerate === 0) {
 							em.bulletManager.createBullet('bullet', {
-								position: this.position, quaternion: this.quaternion.clone().multiply(new THREE.Quaternion().setFromAxisAngle(
-									Axis.x, 0.1 + (Math.PI - 0.1) * (this.time % (this.firerate * 8) / this.firerate / 8) / 20 * (Math.random() + 9))
-								), v: 2.5, size: 0.5, atk: 5
+								position: this.position,
+								quaternion: this.quaternion.clone().rotate(Axis.x, 0.1 + (Math.PI - 0.1) * (this.time % (this.firerate * 8) / this.firerate / 8) / 20 * (Math.random() + 9)),
+								v: 2.5, size: 0.5, atk: 5
+							});
+						}
+					}
+				}
+			},
+			airballoon: {
+				filename: 'airballoon',
+				routine: {
+					hp: 1000, v: 0.2, size: 40, firerate1: 18, firerate2: 33, explodeTime: 45, weight: 75,
+					scale: new THREE.Vector3(2, 2, 2),
+					update: function(em) {
+						this.position.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.v);
+						if (this.time % this.firerate1 === 0) {
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(7, 0, 24)),
+								quaternion: this.quaternion.clone(),
+								v: 3, size: 2.5, atk: 15
+							});
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(-7, 0, 24)),
+								quaternion: this.quaternion.clone(),
+								v: 3, size: 2.5, atk: 15
+							});
+						}
+						if (this.time % this.firerate2 === 0) {
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(10, -10, 20)),
+								quaternion: this.quaternion.clone(),
+								v: 3, size: 2.5, atk: 15
+							});
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(-10, -10, 20)),
+								quaternion: this.quaternion.clone(),
+								v: 3, size: 2.5, atk: 15
+							});
+						}
+						if (this.time % this.firerate1 === 9) {
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(10, 0, 10)),
+								quaternion: this.quaternion.clone().rotateY(1),
+								v: 3, size: 2.5, atk: 15
+							});
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(-10, 0, 10)),
+								quaternion: this.quaternion.clone().rotateY(-1),
+								v: 3, size: 2.5, atk: 15
+							});
+						}
+						if (this.time % this.firerate2 === 11) {
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(10, 0, 0)),
+								quaternion: this.quaternion.clone().rotateY(1.57),
+								v: 3, size: 2.5, atk: 15
+							});
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(-10, 0, 0)),
+								quaternion: this.quaternion.clone().rotateY(-1.57),
+								v: 3, size: 2.5, atk: 15
+							});
+						}
+						if (this.time % this.firerate2 === 22) {
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(10, 0, -20)),
+								quaternion: this.quaternion.clone().rotateY(3),
+								v: 3, size: 2.5, atk: 15
+							});
+							em.bulletManager.createBullet('bullet', {
+								position: this.position.clone().add(new THREE.Vector3(-10, 0, -20)),
+								quaternion: this.quaternion.clone().rotateY(-3),
+								v: 3, size: 2.5, atk: 15
 							});
 						}
 					}
@@ -1173,7 +1249,7 @@ phina.define('UnitManager', {
 			blademinion: {
 				filename: 'slicer',
 				routine: {
-					hp: 50, chase: 0.07, v: 7.5, sharpness: 3, size: 5, explodeTime: 30, stealth: true,
+					hp: 50, chase: 0.07, v: 7.5, sharpness: 3, size: 5, explodeTime: 30, stealth: true, weight: 25,
 					scale: new THREE.Vector3(7, 7, 7),
 					update: function(um) {
 						if (this.active) {
@@ -1209,7 +1285,7 @@ phina.define('UnitManager', {
 			assaultdrone: {
 				filename: 'assault',
 				routine: {
-					hp: 10, chase: 0.07, v: 6, bv: 7, atk: 8, sharpness: 1.4, firerate: 28, size: 5,
+					hp: 10, chase: 0.07, v: 6, bv: 7, atk: 8, sharpness: 1.4, firerate: 28, size: 5, weight: 16,
 					mindist: 50, explodeTime: 20, expire: Infinity,
 					update: function(um) {
 						this.expire--;
@@ -1398,6 +1474,22 @@ registerSkill(phina.define('ExtraArmor', {
 	}
 }));
 
+registerSkill(phina.define('Spear', {
+	superClass: 'Skill',
+	init: function(user, scene, level) {
+		this.superInit(user, scene, level);
+		this.user.sharpness *= [1.25, 1.28, 1.3][level];
+	},
+	_static: {
+		skillName: 'Spear',
+		place: ['front'],
+		unlockedLevel: 0,
+		getDescription: function(level) {
+			return 'Increase damage deal on\nhitting enemy directly by ' + [25, 28, 30][level] + '%.';
+		}
+	}
+}));
+
 registerSkill(phina.define('Acrobat', {
 	superClass: 'Skill',
 	init: function(user, scene, level) {
@@ -1494,8 +1586,7 @@ registerSkill(phina.define('Railgun', {
 		if (this.duration > 0) {
 			this.duration--;
 			var angle = Math.randfloat(0, Math.PI * 2);
-			this.scene.threelayer.camera.position.x += Math.sin(angle) * this.duration * 8;
-			this.scene.threelayer.camera.position.z += Math.cos(angle) * this.duration * 8;
+			this.scene.shakeScreen(this.duration * 8);
 			this.user.beam([36, 45, 50][this.level], 3, 25, 0, this.scene);
 		}
 	},
@@ -1533,8 +1624,7 @@ registerSkill(phina.define('ParticleCannon', {
 		if (this.duration > 0) {
 			this.duration--;
 			var angle = Math.randfloat(0, Math.PI * 2);
-			this.scene.threelayer.camera.position.x += Math.sin(angle) * this.duration;
-			this.scene.threelayer.camera.position.z += Math.cos(angle) * this.duration;
+			this.scene.shakeScreen(this.duration);
 			this.user.beam([10, 12, 15][this.level], 2, 15, [20, 25, 30][this.level], this.scene);
 			if (this.duration === 0) {
 				this.user.rotspeed *= [2, 4, 8][this.level];
@@ -2003,6 +2093,10 @@ phina.define('TitleScene', {
 				x: 560, y: -250, sub: [
 					{type: 'label', value: 'Stage Select', x: this.gridX.center(), y: this.gridY.span(4), size: 64},
 					{type: 'label', value: 'Main Menu', x: this.gridX.center(), y: this.gridY.span(12), size: 32, link: 'main'},
+					{
+						type: 'model', name: 'airballoon', value: phina.asset.AssetManager.get('threejson', 'airballoon').get(), x: 0, y: 0, z: 0,
+						init: function(model) {model.rotate(new THREE.Vector3(1, -1, -1).normalize(), 1);}
+					},
 				]
 			},
 			shipselect: {
@@ -2157,7 +2251,7 @@ phina.define('TitleScene', {
 					var add = function(parent, models) {
 						models.each(function(model) {
 							parent.add(model.value);
-							model.value.position.set((-value.x + model.x) * amp, (value.y - model.y) * amp, model.z);
+							model.value.position.set((-value.x + model.x) * amp, (value.y - model.y) * amp, value.z + model.z);
 							if(model.init) model.init(model.value);
 							if(model.name) this[model.name] = model.value;
 							model.childrens && add(model.value, model.childrens);
@@ -2325,8 +2419,8 @@ phina.define('MainScene', {
 				player.add(new THREE.AxesHelper(1000));
 				player.tweener.setUpdateType('fps');
 				player.$safe({ // Player control
-					myrot: {x: 0, y: 0, z1: 0, z2: 0}, pitch: 0, yo: 0, v: 0, av: new THREE.Vector3(),
-					maxenergy: 2000, maxhp: 100, speed: 0.95, armor: 1, rotspeed: 1,
+					myrot: {x: 0, y: 0, z1: 0, z2: 0}, pitch: 0, yaw: 0, v: 5, av: new THREE.Vector3(),
+					maxenergy: 2000, maxhp: 100, speed: 0.95, armor: 1, rotspeed: 1, sharpness: 1, weight: 100,
 					summons: allyManager,
 					update: function(p, k, s) {
 						function normalizeAngle(t) {
@@ -2336,30 +2430,33 @@ phina.define('MainScene', {
 							return t;
 						}
 
-						var reverse = Math.abs(this.myrot.x) > Math.PI / 2 && Math.abs(this.myrot.x) < Math.PI * 1.5;
+						var reverse = Math.abs(this.myrot.x) > Math.PI / 2;
 
 						if (reverse) this.myrot.z2 += (Math.PI - this.myrot.z2) * 0.05;
 						else this.myrot.z2 *= 0.95;
 
-						var rot = Math.atan2(p.y - SCREEN_CENTER_Y, p.x - SCREEN_CENTER_X) + this.myrot.y - this.yo + Math.PI / 2 + (reverse ? Math.PI : 0);
-						rot = normalizeAngle(rot);
+						reverse = this.myrot.z2 > Math.PI / 2;
+
+						var rot = normalizeAngle(
+							Math.atan2(p.y - SCREEN_CENTER_Y, p.x - SCREEN_CENTER_X) +
+							this.myrot.y - this.yaw + (reverse ? Math.PI * 1.5 : Math.PI / 2)
+						);
 						var maxrot = (0.04 - this.v * 0.001) * this.rotspeed;
-						if (Math.abs(rot) > 2.5) this.way = 'back';
+						if (Math.abs(rot) > 2.5) this.mode = 'back';
 						else {
-							rot = Math.max(Math.min(rot * 0.07, maxrot), -maxrot);
-							this.myrot.z1 += rot * 0.00008;
-							this.yo += rot;
+							if (this.mode === 'back') this.mode = null;
+							rot = Math.clamp(rot * 0.07, -maxrot, maxrot);
+							this.myrot.z1 += rot * 0.3;
+							this.yaw += rot;
 						}
 
 						if (enemyManager.elements.length !== 0) {
-							var h = player.geometry.boundingBox.max.x * 2;
 							var targetingEnemy = enemyManager.elements.reduce(function(o, enm) { // Select targeting enemy
 								var v = enm.position.clone().sub(this.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.v * 5 + 25));
-								var l = Math.clamp(Math.abs(v.y) / h * 5 - 4.5, 0, 1) * 0.8 + 0.2;
 								v.y = 0;
-								var d = v.angleTo(Axis.z.clone().applyQuaternion(new THREE.Quaternion().rotateY(this.myrot.y + this.yo * 0.5 + (this.way === 'back' ? Math.PI : 0))));
-								if (d > Math.PI / (this.way === 'back' ? 6 : 2)) return o;
-								d *= v.length() * l;
+								var d = v.angleTo(Axis.z.clone().applyQuaternion(new THREE.Quaternion().rotateY(this.myrot.y - this.yaw * 0.5 + ((this.mode === 'back') !== reverse ? Math.PI : 0))));
+								if (d > Math.PI / (this.mode === 'back' ? 6 : 2)) return o;
+								d *= v.length();
 								return d < o.d ? {d: d, enm: enm} : o;
 							}.bind(this), {d: Infinity, enm: null}).enm;
 						}
@@ -2367,7 +2464,7 @@ phina.define('MainScene', {
 						var shift = k.getKey(16);
 
 						if (this.way) {
-							if (k.getKeyUp(87) || k.getKeyUp(83) || (this.way === 'back' && !targetingEnemy)) this.way = null;
+							if (k.getKeyUp(87) || k.getKeyUp(83)) this.way = null;
 						} else {
 							if (k.getKeyDown(87)) this.way = 'up'; // W Key
 							if (k.getKeyDown(83)) this.way = 'down'; // S Key
@@ -2379,23 +2476,23 @@ phina.define('MainScene', {
 							var pos = targetingEnemy.position.clone().project(threelayer.camera);
 							target.x = (pos.x + 1) * s.width / 2;
 							target.y = (1 - pos.y) * s.height / 2;
-							target.stroke = this.way === 'back' ? "#a44" : "#444";
+							target.stroke = this.mode === 'back' ? "#a44" : "#444";
 						} else target.hide();
 
 						maxrot /= 2;
 
-						if (this.position.y < 100 || this.way === 'up') this.pitch -= maxrot * (1.55 - (reverse ? 1 : -1) * this.myrot.x);
-						else if (this.way === 'down') this.pitch += maxrot * (1.55 - (reverse ? -1 : 1) * this.myrot.x);
+						if (this.position.y < 100 || this.way === 'up') this.pitch -= (reverse ? -1 : 1) * maxrot * (this.mode === 'back' ? 2 : 1 - (reverse ? (this.myrot.x + (this.myrot.x > 0 ? -Math.PI : Math.PI)) / 1.6 : -this.myrot.x / 1.6));
+						else if (this.way === 'down') this.pitch += (reverse ? -1 : 1) * maxrot * (this.mode === 'back' ? 2 : 1 - (reverse ? (-this.myrot.x - (this.myrot.x > 0 ? -Math.PI : Math.PI)) / 1.6 : this.myrot.x / 1.6));
 						else if (targetingEnemy) {
 							var v = targetingEnemy.position.clone().add(targetingEnemy.geometry.boundingSphere.center).sub(this.position);
-							var b = this.way === 'back' && Math.abs(normalizeAngle(Math.atan2(v.z, v.x) + this.myrot.y)) > Math.PI / 2;
+							var b = (this.mode === 'back') !== reverse;
 							rot = normalizeAngle(Math.atan2(-v.y, Math.sqrt(v.x * v.x + v.z * v.z) * (b ? -1 : 1)) - this.myrot.x - this.pitch);
 							this.pitch += Math.clamp(rot * 0.15, -maxrot, maxrot);
 						}
 
 						// Move and rotate
 						this.myrot.x += this.pitch * 0.1;
-						this.myrot.y -= this.yo * 0.1;
+						this.myrot.y -= this.yaw * 0.1;
 						this.myrot.x = normalizeAngle(this.myrot.x);
 						this.myrot.y = normalizeAngle(this.myrot.y);
 						this.quaternion.copy(new THREE.Quaternion());
@@ -2410,29 +2507,26 @@ phina.define('MainScene', {
 						});
 
 						if (!s.space) {
-							this.position.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.v + 5);
-							var angle = Math.randfloat(0, Math.PI * 2);
-							threelayer.camera.position.x += Math.sin(angle) * this.v / 20;
-							threelayer.camera.position.z += Math.cos(angle) * this.v / 20;
+							this.position.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.v);
+							s.shakeScreen((this.v - 5) / 20);
 						}
 						this.position.add(this.av);
 
 						this.myrot.z1 *= 0.95;
 
-						this.yo *= 0.95 - (Math.PI / 2 - Math.abs(Math.abs(this.myrot.x) - Math.PI / 2)) * 0.1;
+						this.yaw *= 0.95 - (Math.PI / 2 - Math.abs(Math.abs(this.myrot.x) - Math.PI / 2)) * 0.1;
 						this.pitch *= 0.9;
 						if (s.space) this.av.multiplyScalar(0.996); // Speed loss
 						else {
-							this.v *= 0.98 - Math.abs(rot) * 0.06;
+							this.v *= 0.98 - (this.pitch + this.yaw) * 0.06;
+							if (this.v < 5) this.v = 5;
 							this.av.multiplyScalar(0.98);
 						}
 
 
 						if (k.getKey(32)) this.consumeEnergy(1.5, function() { // Space Key
 							this.attack(6);
-							var angle = Math.randfloat(0, Math.PI * 2);
-							threelayer.camera.position.x += Math.sin(angle) * 2;
-							threelayer.camera.position.z += Math.cos(angle) * 2;
+							s.shakeScreen(2);
 						});
 
 						this.sub.each(function(sub) {
@@ -2455,9 +2549,7 @@ phina.define('MainScene', {
 						for (var i = 0; i < enmBulletManager.elements.length; i++) {
 							if (this.position.clone().sub(enmBulletManager.get(i).position).length() < 5 + enmBulletManager.get(i).size) {
 								//effectManager.explode(enmBulletManager.get(i).position, enmBulletManager.get(i).size, 10);
-								var angle = Math.randfloat(0, Math.PI * 2);
-								threelayer.camera.position.x += Math.sin(angle) * enmBulletManager.get(i).atk;
-								threelayer.camera.position.z += Math.cos(angle) * enmBulletManager.get(i).atk;
+								s.shakeScreen(enmBulletManager.get(i).atk);
 								this.hp -= enmBulletManager.get(i).atk * s.difficulty / this.armor;
 								s.score--;
 								enmBulletManager.removeBullet(i);
@@ -2469,12 +2561,13 @@ phina.define('MainScene', {
 							if (fly.colcupsphere(this.position.clone().sub(v.clone().multiplyScalar(-0.5)), v,
 									enemy.position.clone().add(enemy.geometry.boundingSphere.center),
 									this.geometry.boundingBox.max.x + enemy.geometry.boundingSphere.radius * enemy.scale.x)) {
-								var angle = Math.randfloat(0, Math.PI * 2);
-								threelayer.camera.position.x += Math.sin(angle) * this.v;
-								threelayer.camera.position.z += Math.cos(angle) * this.v;
+								s.shakeScreen(this.v);
 								this.hp -= Math.min(enemy.hp, 2.5) * s.difficulty * enemy.sharpness / this.armor;
-								if (enemy.size < 15) s.score--;
-								if (this.hp > 0) enemy.hp -= (this.v + 5) / s.difficulty / enemy.armor;
+								if (enemy.size < 15) {
+									s.score--;
+									this.v /= 2;
+								}
+								if (this.hp > 0) enemy.hp -= this.v * this.sharpness / s.difficulty / enemy.armor;
 							}
 						}, this);
 						// hit vs obstacle
@@ -2763,13 +2856,14 @@ phina.define('MainScene', {
 								};
 
 								var enmname = Slot([
-									{weight: 6, target: 'enem1'},
-									{weight: 3, target: function() {
+									{weight: 24, target: 'enem1'},
+									{weight: 12, target: function() {
 										params.aim = true;
 										return 'enem1';
 									}},
-									{weight: 2, target: 'enem2'},
-									{weight: 1, target: 'enem3'},
+									{weight: 8, target: 'enem2'},
+									{weight: 4, target: 'enem3'},
+									{weight: 3, target: 'airballoon'},
 								]);
 								enemyManager.createMulti(enmname, params, {random: {x: 50, y: 10, z: 50}});
 							}
@@ -2939,6 +3033,11 @@ phina.define('MainScene', {
 				resolve();
 			}
 		]]);
+	},
+	shakeScreen: function(amount) {
+		var angle = Math.randfloat(0, Math.PI * 2);
+		this.threelayer.camera.position.x += Math.sin(angle) * amount;
+		this.threelayer.camera.position.z += Math.cos(angle) * amount;
 	}
 });
 
@@ -2956,6 +3055,7 @@ phina.define('MainSequence', {
 								fighter: 'data/models/fighter-1.min.json',
 								bullet: 'data/models/bullet-lq.min.json',
 								enem1: 'data/models/enem-1.min.json',
+								airballoon: 'data/models/airballoon.min.json',
 							},
 							threetexture: {
 								//fighter: 'data/models/fighter-1.png',

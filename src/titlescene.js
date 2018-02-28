@@ -114,6 +114,10 @@ phina.define('TitleScene', {
 				x: 560, y: -250, sub: [
 					{type: 'label', value: 'Stage Select', x: this.gridX.center(), y: this.gridY.span(4), size: 64},
 					{type: 'label', value: 'Main Menu', x: this.gridX.center(), y: this.gridY.span(12), size: 32, link: 'main'},
+					{
+						type: 'model', name: 'airballoon', value: phina.asset.AssetManager.get('threejson', 'airballoon').get(), x: 0, y: 0, z: 0,
+						init: function(model) {model.rotate(new THREE.Vector3(1, -1, -1).normalize(), 1);}
+					},
 				]
 			},
 			shipselect: {
@@ -268,7 +272,7 @@ phina.define('TitleScene', {
 					var add = function(parent, models) {
 						models.each(function(model) {
 							parent.add(model.value);
-							model.value.position.set((-value.x + model.x) * amp, (value.y - model.y) * amp, model.z);
+							model.value.position.set((-value.x + model.x) * amp, (value.y - model.y) * amp, value.z + model.z);
 							if(model.init) model.init(model.value);
 							if(model.name) this[model.name] = model.value;
 							model.childrens && add(model.value, model.childrens);
