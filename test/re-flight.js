@@ -1338,18 +1338,31 @@ phina.define('BulletManager', {
 		// Put some variant of model of bullet here
 		// maybe laser
 		this.models = {
-			bullet: phina.asset.AssetManager.get('threejson', 'bullet')
+			bullet: phina.asset.AssetManager.get('threejson', 'bullet').data,
+			laser: new THREE.Mesh(new THREE.SphereGeometry(4, 16, 16), new THREE.ShaderMaterial({
+        uniforms: {
+          c: {type: "f", value: 0},
+          p: {type: "f", value: 3},
+          glowColor: {type: "c", value: new THREE.Color(0xffff00)}
+        },
+        vertexShader: phina.asset.AssetManager.get('text', 'glowvertexshader').data,
+        fragmentShader: phina.asset.AssetManager.get('text', 'glowfragshader').data,
+				side: THREE.FrontSide,
+        transparent: true
+      }))
 		};
+		this.models.laser.scale.z = 4;
 		// Material pool to reduce GC, is this right way to increase performance?
 		this.materials = {
-			bullet: []
+			bullet: [],
+			laser: []
 		};
 		this.cloneMaterial = c;
 	},
 
 	createBullet: function(n, r, k) {
 		if (k === undefined) k = this.cloneMaterial;
-		var bullet = this.models[n].get(false, k && this.materials[n].length === 0);
+		var bullet = this.models[n].deepclone(false, k && this.materials[n].length === 0);
 		if (k && this.materials[n].length !== 0) bullet.material = this.materials[n].pop();
 		THREE.$extend(bullet, r).$safe({
 			v: 1, size: 1, atk: 1, ownMaterial: k,
@@ -1359,7 +1372,7 @@ phina.define('BulletManager', {
 		});
 		bullet.velocity = Axis.z.clone().applyQuaternion(bullet.quaternion).setLength(bullet.v);
 		bullet.name = n;
-		bullet.scale.setScalar(bullet.size * 2);
+		bullet.scale.multiplyScalar(bullet.size * 2);
 		this.threescene.add(bullet);
 		this.elements.push(bullet);
 		return bullet;
@@ -1478,14 +1491,14 @@ registerSkill(phina.define('Spear', {
 	superClass: 'Skill',
 	init: function(user, scene, level) {
 		this.superInit(user, scene, level);
-		this.user.sharpness *= [1.25, 1.28, 1.3][level];
+		this.user.sharpness *= [1.25, 1.27, 1.28][level];
 	},
 	_static: {
 		skillName: 'Spear',
 		place: ['front'],
 		unlockedLevel: 0,
 		getDescription: function(level) {
-			return 'Increase damage deal on\nhitting enemy directly by ' + [25, 28, 30][level] + '%.';
+			return 'Increase damage deal on\nhitting enemy directly by ' + [25, 27, 28][level] + '%.';
 		}
 	}
 }));
@@ -1543,6 +1556,27 @@ registerSkill(phina.define('ExtraGenerator', {
 		unlockedLevel: 0,
 		getDescription: function(level) {
 			return 'Allows you to use skills more by increasing energy\nreplenish speed.';
+		}
+	}
+}));
+
+registerSkill(phina.define('Glitch', {
+	superClass: 'Skill',
+	init: function(user, scene, level) {
+		this.superInit(user, scene, level);
+		user.applyRotation = function() {
+			// The order is important, even with quaternion. but...
+			this.rotateX(this.myrot.x);
+			this.rotateY(this.myrot.y);
+			this.rotateZ(this.myrot.z1 + this.myrot.z2);
+		};
+	},
+	_static: {
+		skillName: 'The glitch',
+		place: ['core'],
+		//unlockedLevel: 0,
+		getDescription: function(level) {
+			return 'Do not use as this can completely break the game.';
 		}
 	}
 }));
@@ -1684,16 +1718,17 @@ registerSkill(phina.define('Lasergun', {
 	activate: function(trigger) {
 		if (!trigger || this.cooldown > 0) return;
 		this.cooldown = this.user.consumeEnergy([500, 630, 800][this.level], function() {
-			this.user.summons.bulletManager.createBullet('bullet', {
-				position: this.user.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.user.geometry.boundingBox.max.z), quaternion: this.user.quaternion,
+			console.log(this.user.summons.bulletManager.createBullet('laser', {
+				position: this.user.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.user.quaternion).normalize(), this.user.geometry.boundingBox.max.z), quaternion: this.user.quaternion,
 				v: 18, atk: [60, 70, 75], pierce: true
-			});
+			}));
 			return [180, 200, 240][this.level];
 		}.bind(this), 0);
 	},
 	_static: {
 		skillName: 'Laser gun',
 		place: ['front'],
+		unlockedLevel: 0,
 		getDescription: function(level) {
 			return 'The Laser can pierce enemies.\nDeals massive damage\nagainst huge enemy by\nhitting their core.';
 		}
@@ -2496,10 +2531,7 @@ phina.define('MainScene', {
 						this.myrot.x = normalizeAngle(this.myrot.x);
 						this.myrot.y = normalizeAngle(this.myrot.y);
 						this.quaternion.copy(new THREE.Quaternion());
-						// The order is important, even with quaternion.
-						this.rotateY(this.myrot.y)
-						this.rotateX(this.myrot.x);
-						this.rotateZ(this.myrot.z1 + this.myrot.z2);
+						this.applyRotation();
 
 						if (p.getPointing()) this.consumeEnergy(this.speed * 3, function() { // Speed up
 							if (s.space) this.av.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.speed);
@@ -2614,6 +2646,12 @@ phina.define('MainScene', {
 							return f.call(this);
 						}
 						return defaultreturn;
+					},
+					applyRotation: function() {
+						// The order is important, even with quaternion.
+						this.rotateY(this.myrot.y);
+						this.rotateX(this.myrot.x);
+						this.rotateZ(this.myrot.z1 + this.myrot.z2);
 					}
 				});
 				player.hp = player.maxhp;
@@ -3064,7 +3102,9 @@ phina.define('MainSequence', {
 							},
 							text: {
 								expvertexshader: 'data/glsl/expvertexshader.glsl',
-								expfragshader: 'data/glsl/expfragshader.glsl'
+								expfragshader: 'data/glsl/expfragshader.glsl',
+								glowvertexshader: 'data/glsl/glowvertexshader.glsl',
+								glowfragshader: 'data/glsl/glowfragshader.glsl'
 							}
 						}
 					}

@@ -90,14 +90,14 @@ registerSkill(phina.define('Spear', {
 	superClass: 'Skill',
 	init: function(user, scene, level) {
 		this.superInit(user, scene, level);
-		this.user.sharpness *= [1.25, 1.28, 1.3][level];
+		this.user.sharpness *= [1.25, 1.27, 1.28][level];
 	},
 	_static: {
 		skillName: 'Spear',
 		place: ['front'],
 		unlockedLevel: 0,
 		getDescription: function(level) {
-			return 'Increase damage deal on\nhitting enemy directly by ' + [25, 28, 30][level] + '%.';
+			return 'Increase damage deal on\nhitting enemy directly by ' + [25, 27, 28][level] + '%.';
 		}
 	}
 }));
@@ -155,6 +155,27 @@ registerSkill(phina.define('ExtraGenerator', {
 		unlockedLevel: 0,
 		getDescription: function(level) {
 			return 'Allows you to use skills more by increasing energy\nreplenish speed.';
+		}
+	}
+}));
+
+registerSkill(phina.define('Glitch', {
+	superClass: 'Skill',
+	init: function(user, scene, level) {
+		this.superInit(user, scene, level);
+		user.applyRotation = function() {
+			// The order is important, even with quaternion. but...
+			this.rotateX(this.myrot.x);
+			this.rotateY(this.myrot.y);
+			this.rotateZ(this.myrot.z1 + this.myrot.z2);
+		};
+	},
+	_static: {
+		skillName: 'The glitch',
+		place: ['core'],
+		//unlockedLevel: 0,
+		getDescription: function(level) {
+			return 'Do not use as this can completely break the game.';
 		}
 	}
 }));

@@ -143,10 +143,7 @@ phina.define('MainScene', {
 						this.myrot.x = normalizeAngle(this.myrot.x);
 						this.myrot.y = normalizeAngle(this.myrot.y);
 						this.quaternion.copy(new THREE.Quaternion());
-						// The order is important, even with quaternion.
-						this.rotateY(this.myrot.y)
-						this.rotateX(this.myrot.x);
-						this.rotateZ(this.myrot.z1 + this.myrot.z2);
+						this.applyRotation();
 
 						if (p.getPointing()) this.consumeEnergy(this.speed * 3, function() { // Speed up
 							if (s.space) this.av.addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.speed);
@@ -261,6 +258,12 @@ phina.define('MainScene', {
 							return f.call(this);
 						}
 						return defaultreturn;
+					},
+					applyRotation: function() {
+						// The order is important, even with quaternion.
+						this.rotateY(this.myrot.y);
+						this.rotateX(this.myrot.x);
+						this.rotateZ(this.myrot.z1 + this.myrot.z2);
 					}
 				});
 				player.hp = player.maxhp;
