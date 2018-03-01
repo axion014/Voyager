@@ -296,16 +296,17 @@ registerSkill(phina.define('Lasergun', {
 	activate: function(trigger) {
 		if (!trigger || this.cooldown > 0) return;
 		this.cooldown = this.user.consumeEnergy([500, 630, 800][this.level], function() {
-			this.user.summons.bulletManager.createBullet('bullet', {
-				position: this.user.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.quaternion).normalize(), this.user.geometry.boundingBox.max.z), quaternion: this.user.quaternion,
+			console.log(this.user.summons.bulletManager.createBullet('laser', {
+				position: this.user.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.user.quaternion).normalize(), this.user.geometry.boundingBox.max.z), quaternion: this.user.quaternion,
 				v: 18, atk: [60, 70, 75], pierce: true
-			});
+			}));
 			return [180, 200, 240][this.level];
 		}.bind(this), 0);
 	},
 	_static: {
 		skillName: 'Laser gun',
 		place: ['front'],
+		unlockedLevel: 0,
 		getDescription: function(level) {
 			return 'The Laser can pierce enemies.\nDeals massive damage\nagainst huge enemy by\nhitting their core.';
 		}

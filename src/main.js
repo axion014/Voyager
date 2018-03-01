@@ -21,7 +21,9 @@ phina.define('MainSequence', {
 							},
 							text: {
 								expvertexshader: 'data/glsl/expvertexshader.glsl',
-								expfragshader: 'data/glsl/expfragshader.glsl'
+								expfragshader: 'data/glsl/expfragshader.glsl',
+								glowvertexshader: 'data/glsl/glowvertexshader.glsl',
+								glowfragshader: 'data/glsl/glowfragshader.glsl'
 							}
 						}
 					}
