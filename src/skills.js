@@ -317,10 +317,10 @@ registerSkill(phina.define('Lasergun', {
 	activate: function(trigger) {
 		if (!trigger || this.cooldown > 0) return;
 		this.cooldown = this.user.consumeEnergy([500, 630, 800][this.level], function() {
-			console.log(this.user.summons.bulletManager.createBullet('laser', {
+			this.user.summons.bulletManager.createBullet('laser', {
 				position: this.user.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.user.quaternion).normalize(), this.user.geometry.boundingBox.max.z), quaternion: this.user.quaternion,
-				v: 18, atk: [60, 70, 75], pierce: true
-			}));
+				v: 18, atk: [60, 70, 75][this.level], pierce: true, size: 2
+			});
 			return [180, 200, 240][this.level];
 		}.bind(this), 0);
 	},

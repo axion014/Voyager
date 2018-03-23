@@ -9,7 +9,7 @@ phina.define('BulletManager', {
 		// maybe laser
 		this.models = {
 			bullet: phina.asset.AssetManager.get('threejson', 'bullet').data,
-			laser: new THREE.Mesh(new THREE.SphereGeometry(4, 16, 16), new THREE.ShaderMaterial({
+			laser: new THREE.Mesh(new THREE.SphereGeometry(2, 16, 16), new THREE.ShaderMaterial({
         uniforms: {
           c: {type: "f", value: 0},
           p: {type: "f", value: 3},
@@ -51,8 +51,7 @@ phina.define('BulletManager', {
 	hitTest: function(unit) {
 		this.each(function(bullet, j) {
 			if (unit.position.clone().sub(bullet.position).length() < unit.geometry.boundingSphere.radius * unit.scale.x + bullet.size) {
-				unit.summons.effectManager.explode(bullet.position, 1, 10);
-				//effectManager.explode(this.allyBulletManager.get(j).position, this.allyBulletManager.get(j).size, 10);
+				unit.summons.effectManager.explode(bullet.position, bullet.size, 10);
 				unit.hp -= bullet.atk * this.scene.difficulty / unit.armor;
 				if (!bullet.pierce) this.removeBullet(j);
 			}

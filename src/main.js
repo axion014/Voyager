@@ -20,10 +20,10 @@ phina.define('MainSequence', {
 								explode: 'data/images/explosion.png'
 							},
 							text: {
-								expvertexshader: 'data/glsl/expvertexshader.glsl',
-								expfragshader: 'data/glsl/expfragshader.glsl',
-								glowvertexshader: 'data/glsl/glowvertexshader.glsl',
-								glowfragshader: 'data/glsl/glowfragshader.glsl'
+								expvertexshader: 'data/glsl/expvertexshader.min.glsl',
+								expfragshader: 'data/glsl/expfragshader.min.glsl',
+								glowvertexshader: 'data/glsl/glowvertexshader.min.glsl',
+								glowfragshader: 'data/glsl/glowfragshader.min.glsl'
 							}
 						}
 					}
