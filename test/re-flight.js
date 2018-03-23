@@ -713,7 +713,9 @@ phina.define('ExplodeManager', {
 			transparent: true,
 			uniforms: {
 				tExplosion: {type: "t", value: phina.asset.AssetManager.get('threetexture', 'explode').get()},
-				time: {type: "f", value: 100 * Math.random()}, alpha: {type: "f", value: 1.0}
+				random: {type: "f", value: 100 * Math.random()},
+				time: {type: "f", value: 0},
+				alpha: {type: "f", value: 1.0}
 			},
 			vertexShader: phina.asset.AssetManager.get('text', 'expvertexshader').data,
 			fragmentShader: phina.asset.AssetManager.get('text', 'expfragshader').data
@@ -724,7 +726,7 @@ phina.define('ExplodeManager', {
 			time: 10, timeMax: 10,
 			update: function() {
 				this.time--;
-				material.uniforms.time.value += 0.015 * Math.random();
+				material.uniforms.time.value += 0.015;
 				material.uniforms.alpha.value = this.time / this.timeMax;
 			}
 		});
@@ -1339,7 +1341,7 @@ phina.define('BulletManager', {
 		// maybe laser
 		this.models = {
 			bullet: phina.asset.AssetManager.get('threejson', 'bullet').data,
-			laser: new THREE.Mesh(new THREE.SphereGeometry(4, 16, 16), new THREE.ShaderMaterial({
+			laser: new THREE.Mesh(new THREE.SphereGeometry(2, 16, 16), new THREE.ShaderMaterial({
         uniforms: {
           c: {type: "f", value: 0},
           p: {type: "f", value: 3},
@@ -1381,8 +1383,7 @@ phina.define('BulletManager', {
 	hitTest: function(unit) {
 		this.each(function(bullet, j) {
 			if (unit.position.clone().sub(bullet.position).length() < unit.geometry.boundingSphere.radius * unit.scale.x + bullet.size) {
-				unit.summons.effectManager.explode(bullet.position, 1, 10);
-				//effectManager.explode(this.allyBulletManager.get(j).position, this.allyBulletManager.get(j).size, 10);
+				unit.summons.effectManager.explode(bullet.position, bullet.size, 10);
 				unit.hp -= bullet.atk * this.scene.difficulty / unit.armor;
 				if (!bullet.pierce) this.removeBullet(j);
 			}
@@ -1718,10 +1719,10 @@ registerSkill(phina.define('Lasergun', {
 	activate: function(trigger) {
 		if (!trigger || this.cooldown > 0) return;
 		this.cooldown = this.user.consumeEnergy([500, 630, 800][this.level], function() {
-			console.log(this.user.summons.bulletManager.createBullet('laser', {
+			this.user.summons.bulletManager.createBullet('laser', {
 				position: this.user.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.user.quaternion).normalize(), this.user.geometry.boundingBox.max.z), quaternion: this.user.quaternion,
-				v: 18, atk: [60, 70, 75], pierce: true
-			}));
+				v: 18, atk: [60, 70, 75][this.level], pierce: true, size: 2
+			});
 			return [180, 200, 240][this.level];
 		}.bind(this), 0);
 	},
@@ -2580,7 +2581,7 @@ phina.define('MainScene', {
 						// hit vs bullet
 						for (var i = 0; i < enmBulletManager.elements.length; i++) {
 							if (this.position.clone().sub(enmBulletManager.get(i).position).length() < 5 + enmBulletManager.get(i).size) {
-								//effectManager.explode(enmBulletManager.get(i).position, enmBulletManager.get(i).size, 10);
+								effectManager.explode(enmBulletManager.get(i).position, enmBulletManager.get(i).size, 10);
 								s.shakeScreen(enmBulletManager.get(i).atk);
 								this.hp -= enmBulletManager.get(i).atk * s.difficulty / this.armor;
 								s.score--;
@@ -3101,10 +3102,10 @@ phina.define('MainSequence', {
 								explode: 'data/images/explosion.png'
 							},
 							text: {
-								expvertexshader: 'data/glsl/expvertexshader.glsl',
-								expfragshader: 'data/glsl/expfragshader.glsl',
-								glowvertexshader: 'data/glsl/glowvertexshader.glsl',
-								glowfragshader: 'data/glsl/glowfragshader.glsl'
+								expvertexshader: 'data/glsl/expvertexshader.min.glsl',
+								expfragshader: 'data/glsl/expfragshader.min.glsl',
+								glowvertexshader: 'data/glsl/glowvertexshader.min.glsl',
+								glowfragshader: 'data/glsl/glowfragshader.min.glsl'
 							}
 						}
 					}
