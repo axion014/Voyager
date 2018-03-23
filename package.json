@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "del": "^2.2.0",
+    "glob": "^7.1.2",
+    "glsl-transition-minify": "^0.3.1",
     "gulp": "^3.9.0",
     "gulp-concat": "^2.6.0",
     "gulp-jsonminify": "^1.0.0",
@@ -14,7 +15,8 @@
     "gulp-rename": "^1.2.2",
     "gulp-sort": "^1.1.1",
     "gulp-uglify": "^1.5.1",
-    "gulp-webserver": "^0.9.1"
+    "gulp-webserver": "^0.9.1",
+    "through": "^2.3.8"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
