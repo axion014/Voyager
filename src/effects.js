@@ -25,7 +25,9 @@ phina.define('ExplodeManager', {
 			transparent: true,
 			uniforms: {
 				tExplosion: {type: "t", value: phina.asset.AssetManager.get('threetexture', 'explode').get()},
-				time: {type: "f", value: 100 * Math.random()}, alpha: {type: "f", value: 1.0}
+				random: {type: "f", value: 100 * Math.random()},
+				time: {type: "f", value: 0},
+				alpha: {type: "f", value: 1.0}
 			},
 			vertexShader: phina.asset.AssetManager.get('text', 'expvertexshader').data,
 			fragmentShader: phina.asset.AssetManager.get('text', 'expfragshader').data
@@ -36,7 +38,7 @@ phina.define('ExplodeManager', {
 			time: 10, timeMax: 10,
 			update: function() {
 				this.time--;
-				material.uniforms.time.value += 0.015 * Math.random();
+				material.uniforms.time.value += 0.015;
 				material.uniforms.alpha.value = this.time / this.timeMax;
 			}
 		});
