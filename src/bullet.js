@@ -1,23 +1,36 @@
-phina.define('BulletManager', {
-	superClass: 'SimpleUpdater',
+import {
+	Mesh,
+	SphereGeometry,
+	ShaderMaterial,
+	Vector3, Color,
+	FrontSide
+} from "three";
 
-	init: function(s, ts, c) {
-		this.superInit();
+import {get, free} from "w3g/utils";
+import {Axis} from "w3g/threeutil";
+
+import ElementManager from "./elementmanager";
+
+const bulletScale = 2;
+
+export default class BulletManager extends ElementManager {
+
+	constructor(s, c) {
+		super();
 		this.scene = s;
-		this.threescene = ts;
-		// Put some variant of model of bullet here
+		// Put some variant of model for the bullets here
 		// maybe laser
 		this.models = {
 			bullet: phina.asset.AssetManager.get('threejson', 'bullet').data,
-			laser: new THREE.Mesh(new THREE.SphereGeometry(2, 16, 16), new THREE.ShaderMaterial({
+			laser: new Mesh(new SphereGeometry(2, 16, 16), new ShaderMaterial({
         uniforms: {
           c: {type: "f", value: 0},
           p: {type: "f", value: 3},
-          glowColor: {type: "c", value: new THREE.Color(0xffff00)}
+          glowColor: {type: "c", value: new Color(0xffff00)}
         },
         vertexShader: phina.asset.AssetManager.get('text', 'glowvertexshader').data,
         fragmentShader: phina.asset.AssetManager.get('text', 'glowfragshader').data,
-				side: THREE.FrontSide,
+				side: FrontSide,
         transparent: true
       }))
 		};
@@ -28,42 +41,45 @@ phina.define('BulletManager', {
 			laser: []
 		};
 		this.cloneMaterial = c;
-	},
+	}
 
-	createBullet: function(n, r, k) {
+	create(n, r, k) {
 		if (k === undefined) k = this.cloneMaterial;
 		var bullet = this.models[n].deepclone(false, k && this.materials[n].length === 0);
 		if (k && this.materials[n].length !== 0) bullet.material = this.materials[n].pop();
 		THREE.$extend(bullet, r).$safe({
 			v: 1, size: 1, atk: 1, ownMaterial: k,
-			update: function() {
-				this.position.add(this.velocity);
+			update(delta) {
+				this.position.addScaledVector(this.velocity, delta);
 			}
 		});
-		bullet.velocity = Axis.z.clone().applyQuaternion(bullet.quaternion).setLength(bullet.v);
+		bullet.velocity = get(Vector3).copy(Axis.z).applyQuaternion(bullet.quaternion).setLength(bullet.v);
 		bullet.name = n;
-		bullet.scale.multiplyScalar(bullet.size * 2);
-		this.threescene.add(bullet);
+		bullet.scale.multiplyScalar(bullet.size * bulletScale);
+		this.scene.threeScene.add(bullet);
 		this.elements.push(bullet);
 		return bullet;
-	},
+	}
 
-	hitTest: function(unit) {
-		this.each(function(bullet, j) {
-			if (unit.position.clone().sub(bullet.position).length() < unit.geometry.boundingSphere.radius * unit.scale.x + bullet.size) {
-				unit.summons.effectManager.explode(bullet.position, bullet.size, 10);
-				unit.hp -= bullet.atk * this.scene.difficulty / unit.armor;
-				if (!bullet.pierce) this.removeBullet(j);
+	hitTest(unit) {
+		this.forEach((bullet, i) => {
+			const radius = unit.hitSphere ? unit.hitSphere : unit.geometry.boundingSphere.radius * unit.scale.x;
+			if (unit.position.distanceTo(bullet.position) < radius + bullet.size) {
+				this.scene.effectManager.hit(bullet.position, bullet.size, 10);
+				unit.dispatchEvent('hitByBullet', bullet);
+				unit.hp -= bullet.atk / unit.armor;
+				if (!bullet.pierce) this.remove(i);
 			}
-		}, this);
-	},
+		});
+	}
 
-	update: function() {this.each(function(bullet) {bullet.update();});},
+	update(delta) {this.forEach(bullet => bullet.update(delta));}
 
-	removeBullet: function(i) {
-		var bullet = this.get(i);
+	remove(i) {
+		const bullet = this.get(i);
 		bullet.parent.remove(bullet);
 		if (bullet.ownMaterial) this.materials[bullet.name].push(bullet.material);
-		this.remove(i);
+		free(bullet.velocity);
+		super.remove(i);
 	}
-});
+}

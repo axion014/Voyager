@@ -1,45 +1,62 @@
-phina.define('EffectManager', {
-	superClass: 'SimpleUpdater',
+import {
+	Mesh,
+	IcosahedronGeometry, SphereGeometry, CylinderGeometry,
+	ShaderMaterial, MeshBasicMaterial,
+	Quaternion, Color,
+	FrontSide
+} from "three";
 
-	init: function(ts) {
-		this.superInit();
-		this.explodeManager = ExplodeManager(ts).addChildTo(this);
-		this.rayManager = RayManager(ts).addChildTo(this);
+import ElementManager from "./elementmanager";
+
+export default class EffectManager extends ElementManager {
+
+	constructor(ts) {
+		super();
+		this.hitEffectManager = HitEffectManager(ts);
+		this.explodeManager = ExplodeManager(ts);
+		this.rayManager = RayManager(ts);
+	}
+
+	update() {
+		this.hitEffectManager.update();
+		this.explodeManager.update();
+		this.rayManager.update();
+	}
+
+	hit(p, s, t) {return this.hitEffectManager.generate(p, s, t);}
+	explode(p, s, t) {return this.explodeManager.explode(p, s, t);}
+	ray(g, c, o, w, mw, t) {return this.rayManager.ray(g, c, o, w, mw, t);}
+}
+
+class HitEffectManager extends ElementManager {
+
+	constructor(ts) {
+		super();
 		this.threescene = ts;
-	},
+	}
 
-	explode: function(p, s, t) {return this.explodeManager.explode(p, s, t);},
-	ray: function(g, c, o, w, mw, t) {return this.rayManager.ray(g, c, o, w, mw, t);},
-});
-
-phina.define('ExplodeManager', {
-	superClass: 'SimpleUpdater',
-
-	init: function(ts) {
-		this.superInit();
-		this.threescene = ts;
-	},
-
-	explode: function(p, s, t) {
-		var material = new THREE.ShaderMaterial({
+	generate(p, s, t) {
+		const material = new ShaderMaterial({
 			transparent: true,
+			side: FrontSide,
 			uniforms: {
-				tExplosion: {type: "t", value: phina.asset.AssetManager.get('threetexture', 'explode').get()},
 				random: {type: "f", value: 100 * Math.random()},
-				time: {type: "f", value: 0},
-				alpha: {type: "f", value: 1.0}
+				c: {type: "f", value: 0},
+				p: {type: "f", value: 3},
+				glowColor: {type: "c", value: new Color(0xffff00)},
+				opacity: {type: "f", value: 1}
 			},
-			vertexShader: phina.asset.AssetManager.get('text', 'expvertexshader').data,
-			fragmentShader: phina.asset.AssetManager.get('text', 'expfragshader').data
+			vertexShader: phina.asset.AssetManager.get('text', 'noisyglowvertexshader').data,
+			fragmentShader: phina.asset.AssetManager.get('text', 'glowfragshader').data
 		});
-		var mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(20, 2), material).$safe({
+		const mesh = new Mesh(new IcosahedronGeometry(20, 2), material).$safe({
 			time: t, timeMax: t
 		}).$safe({
 			time: 10, timeMax: 10,
-			update: function() {
+			update() {
 				this.time--;
-				material.uniforms.time.value += 0.015;
-				material.uniforms.alpha.value = this.time / this.timeMax;
+				material.opacity = this.time / this.timeMax;
+				material.uniforms.opacity.value = material.opacity;
 			}
 		});
 		mesh.move(p);
@@ -47,10 +64,10 @@ phina.define('ExplodeManager', {
 		this.threescene.add(mesh);
 		this.elements.push(mesh);
 		return mesh;
-	},
+	}
 
-	update: function() {
-		for (var i = 0; i < this.count(); i++) {
+	update() {
+		for (let i = 0; i < this.count; i++) {
 			this.get(i).update();
 			if (this.get(i).time === 0) {
 				this.get(i).parent.remove(this.get(i));
@@ -59,30 +76,78 @@ phina.define('ExplodeManager', {
 			}
 		}
 	}
-});
+}
 
-phina.define('RayManager', {
-	superClass: 'SimpleUpdater',
+class ExplodeManager extends ElementManager {
 
-	init: function(ts) {
-		this.superInit();
+	constructor(ts) {
+		super();
 		this.threescene = ts;
-	},
+	}
 
-	ray: function(g, a, b, c, d) {
+	explode(p, s, t) {
+		const material = new ShaderMaterial({
+			transparent: true,
+			uniforms: {
+				tExplosion: {type: "t", value: phina.asset.AssetManager.get('threetexture', 'explode').get()},
+				random: {type: "f", value: 100 * Math.random()},
+				time: {type: "f", value: 0},
+				opacity: {type: "f", value: 1}
+			},
+			vertexShader: phina.asset.AssetManager.get('text', 'expvertexshader').data,
+			fragmentShader: phina.asset.AssetManager.get('text', 'expfragshader').data
+		});
+		const mesh = new Mesh(new IcosahedronGeometry(20, 2), material).$safe({
+			time: t, timeMax: t
+		}).$safe({
+			time: 10, timeMax: 10,
+			update() {
+				this.time--;
+				material.uniforms.time.value += 0.0025;
+				material.opacity = this.time / this.timeMax;
+				material.uniforms.opacity.value = material.opacity;
+			}
+		});
+		mesh.move(p);
+		mesh.scale.set(s, s, s);
+		this.threescene.add(mesh);
+		this.elements.push(mesh);
+		return mesh;
+	}
+
+	update() {
+		for (let i = 0; i < this.count; i++) {
+			this.get(i).update();
+			if (this.get(i).time === 0) {
+				this.get(i).parent.remove(this.get(i));
+				this.remove(i);
+				i--;
+			}
+		}
+	}
+}
+
+class RayManager extends ElementManager {
+
+	constructor(ts) {
+		super();
+		this.threescene = ts;
+	}
+
+	ray(g, a, b, c, d) {
 		g.geometry.boundingBox || g.geometry.computeBoundingBox();
-		var self = this;
+		const self = this;
 		if (d) {
-			var upperSphere = new THREE.Mesh(new THREE.SphereGeometry(c, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2));
+			const upperSphere = new Mesh(new SphereGeometry(c, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2));
 			upperSphere.position.y = 500;
-			var ray = new THREE.Mesh(
-				new THREE.CylinderGeometry(c, c, 1000, 20, 10),
-				new THREE.MeshBasicMaterial({color: a, opacity: b, transparent: true})
+			const ray = new Mesh(
+				new CylinderGeometry(c, c, 1000, 20, 10),
+				new MeshBasicMaterial({color: a, opacity: b, transparent: true})
 			).$safe({
 				generator: g,
 				offset: 500 + c + g.geometry.boundingBox.max.z,
 				time: d,
-				update: function() {
+				update() {
 					this.time--;
 					if (this.time === 0) {
 						this.parent.remove(this);
@@ -91,7 +156,7 @@ phina.define('RayManager', {
 					}
 					this.move(this.generator.position.clone().add(Axis.z.clone().applyQuaternion(
 							this.generator.quaternion).setLength(this.offset)));
-					this.quaternion.copy(new THREE.Quaternion());
+					this.quaternion.set(0, 0, 0, 1);
 					this.rotateY(Math.PI);
 					this.rotateX(Math.PI / 2);
 					this.quaternion.premultiply(this.generator.quaternion);
@@ -102,47 +167,47 @@ phina.define('RayManager', {
 			this.elements.push(ray);
 			return ray;
 		}
-		var data = a;
-		var rays = [];
+		const data = a;
+		const rays = [];
 		rays.$safe({
 			generator: g,
-			offset: 500 + data.reduce(function(a, b) {return a > b.radius ? a : b.radius}, 0) + g.geometry.boundingBox.max.z,
+			offset: 500 + data.reduce((a, b) => a > b.radius ? a : b.radius, 0) + g.geometry.boundingBox.max.z,
 			time: 0,
 			timeMax: b,
 			radiusfunc: c,
-			update: function() {
+			update() {
 				this.time++;
 
-				var scale = rays.radiusfunc(this.time, this.timeMax);
-				this.each(function(ray) {
+				const scale = rays.radiusfunc(this.time, this.timeMax);
+				this.forEach(ray => {
 					if (this.time === this.timeMax) {
 						ray.parent.remove(ray);
 						return;
 					}
 					ray.move(this.generator.position.clone().add(Axis.z.clone().applyQuaternion(
 						this.generator.quaternion).setLength(this.offset)));
-					ray.quaternion.copy(new THREE.Quaternion());
+					ray.quaternion.copy(new Quaternion());
 					ray.rotateY(Math.PI);
 					ray.rotateX(Math.PI / 2);
 					ray.quaternion.premultiply(this.generator.quaternion);
 					ray.scale.x = ray.scale.z = scale;
-				}, this);
+				});
 				if (this.time === this.timeMax) self.elements.erase(this);
 			}
 		});
-		data.each(function(data) {
-			var upperSphere = new THREE.Mesh(new THREE.SphereGeometry(data.radius, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2));
+		data.forEach(data => {
+			const upperSphere = new Mesh(new SphereGeometry(data.radius, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2));
 			upperSphere.position.y = 500;
-			var ray = new THREE.Mesh(
-				new THREE.CylinderGeometry(data.radius, data.radius, 1000, 20, 10),
-				new THREE.MeshBasicMaterial({color: data.color, opacity: data.opacity, transparent: true})
+			const ray = new Mesh(
+				new CylinderGeometry(data.radius, data.radius, 1000, 20, 10),
+				new MeshBasicMaterial({color: data.color, opacity: data.opacity, transparent: true})
 			);
 			ray.geometry.mergeMesh(upperSphere);
 			this.threescene.add(ray);
 			rays.push(ray);
-		}, this);
+		});
 
 		this.elements.push(rays);
 		return rays;
 	}
-});
+}

@@ -1,40 +1,37 @@
-phina.define('fly.SceneLoadingScene', {
-	superClass: 'phina.display.DisplayScene',
+import {createLabel} from "w3g/uielements";
+import Scene from "w3g/scene";
 
-	init: function(options) {
-		options = (options || {}).$safe(fly.SceneLoadingScene.defaults)
-		this.superInit(options);
-		this.options = options;
-		this.loadprogress = 0;
-		this.loadfrequenry = 0;
-	},
+import regeneratorRuntime from "regenerator-runtime"; // async requires this
 
-	load: function(params) {
-		this.label = phina.display.Label({
-			text: 'Loading... 0%',
-			fill: 'hsla(0, 0%, 0%, 0.6)',
-			fontSize: 15,
-		}).addChildTo(this).setPosition(SCREEN_CENTER_X, SCREEN_CENTER_Y);
-		for(var i = 0; i < params.length; i++) {for(var j = 0; j < params[i].length; j++) {this.loadfrequenry++;}}
-		var exec = function() {
-			flows = [];
-			for(var j = 0; j < params[ii].length; j++) {
-				phina.namespace(function() {
-					var flow = phina.util.Flow(params[ii][j].bind(this));
-					flow.then(function() {
-						this.label.text = 'Loading... ' + ++this.loadprogress / this.loadfrequenry * 100 + '%';
-						if (this.loadprogress === this.loadfrequenry) {this.removeChild(this.label);}
-					}.bind(this));
-					flows.push(flow);
-				}.bind(this));
+export default class SceneLoadingScene extends Scene {
+
+	_loading_label = createLabel(' ', {
+		align: textAlign.center,
+		fillStyle: 'hsla(0, 0%, 0%, 0.6)',
+		font: "20px 'HiraKakuProN-W3'"
+	});
+
+	constructor() {
+		super();
+		this.threeScene.add(this._loading_label);
+	}
+
+	async load(params) {
+		this._loadprogress = 0;
+		this._loadfrequency = 0;
+		for(let i = 0; i < params.length; i++) for(let j = 0; j < params[i].length; j++) this._loadfrequency++;
+		this._loading_label.text = 'Loading... 0/' + this._loadfrequency;
+		for(let i = 0; i < params.length; i++) {
+			const promises = [];
+			for(let j = 0; j < params[i].length; j++) {
+				const promise = new Promise(params[i][j]);
+				promise.then(() => {
+					this._loading_label.text = 'Loading... ' + ++this._loadprogress + '/' + this._loadfrequency;
+					if (this._loadprogress === this._loadfrequency) this.threeScene.remove(this._loading_label);
+				});
+				promises.push(promise);
 			}
-		}.bind(this);
-		var ii = 0;
-		var flows = [];
-		exec();
-		for(i = 1; i < params.length; i++) {
-			var ii = i;
-			phina.util.Flow.all(flows).then(exec);
+			await Promise.all(promises);
 		}
 	}
-});
+}

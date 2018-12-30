@@ -87,7 +87,6 @@ float pnoise(vec3 P, vec3 rep) {
 
 // Include the Ashima code here!
 
-varying vec2 vUv;
 varying float noise;
 uniform float random;
 uniform float time;
@@ -103,12 +102,10 @@ float turbulence(vec3 p) {
 }
 
 void main() {
-	vUv = uv;
-
 	// add time to the noise parameters so it's animated
 	noise = -turbulence(.5 * normal + (random + time));
 	float b = 5.0 * pnoise(0.05 * position + vec3(2.0 * (random + time)), vec3(100.0));
-	float displacement = (-noise + b) * 7.5 * time;
+	float displacement = (-noise + b) * 200.0 * time * time;
 
 	gl_Position = projectionMatrix * modelViewMatrix * vec4(position + normal * displacement, 5.0);
 }
