@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "regenerator-runtime": "^0.13.1",
-    "three": "^0.99.0",
+    "three": "^0.100.0",
     "w3g": "file:../w3g"
   },
   "devDependencies": {
@@ -21,10 +21,10 @@
     "gulp-rename": "^1.4.0",
     "gulp-uglify": "^3.0.1",
     "gulp-webserver": "^0.9.1",
-    "rollup": "^0.66.6",
-    "rollup-plugin-babel": "^4.2.0",
+    "rollup": "^1.0.0",
+    "rollup-plugin-babel": "^4.3.0",
     "rollup-plugin-commonjs": "^9.2.0",
-    "rollup-plugin-node-resolve": "^3.4.0",
+    "rollup-plugin-node-resolve": "^4.0.0",
     "through": "^2.3.8"
   },
   "scripts": {
