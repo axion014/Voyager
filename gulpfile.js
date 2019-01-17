@@ -5,7 +5,6 @@ const del = require("del");
 const glsl = require("gulp-glsl");
 const gulp = require('gulp');
 const json = require('gulp-jsonminify');
-const through = require('through');
 const plumber = require('gulp-plumber');
 const rename = require('gulp-rename');
 const resolve = require('rollup-plugin-node-resolve');
@@ -104,18 +103,18 @@ gulp.task('live', gulp.series('test', gulp.parallel('watch', function() {
 	gulp.src('.')
 		.pipe(plumber())
 		.pipe(webserver({open: true, livereload: {
-			enable: true, filter: function(filename) {return !filename.match(/src/);}
+			enable: true, filter: function(filename) {return filename.match(/^src/);}
 		}}))
 })));
 
 gulp.task(function open() {
 	gulp.src('.')
 		.pipe(plumber())
-		.pipe(webserver({open: true, livereload: {enable: true, filter: function(filename) {return false;}}}))
+		.pipe(webserver({open: true}))
 });
 
 const server = gulp.series('test', gulp.parallel('watch', 'open'));
 
 gulp.task('server', server);
 
-gulp.task('default', server);
+gulp.task('default', gulp.series('live'));
