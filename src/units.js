@@ -114,7 +114,7 @@ export class UnitManager extends ElementManager {
 	}
 
 	update(delta) {
-		this.dispatchEvent("update");
+		this.dispatchEvent({type: "update"});
 		this.forEach((unit, i) => {
 			this.opponents.bulletManager.hitTest(unit);
 			unit.update(delta);

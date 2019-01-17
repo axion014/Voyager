@@ -344,7 +344,7 @@ export default class MainScene extends SceneLoadingScene {
 					if (enemy.position.distanceTo(ally.position) <
 						enemy.geometry.boundingSphere.radius * enemy.scale.x +
 						ally.geometry.boundingSphere.radius * ally.scale.x) {
-						if (enemy === ally.target) ally.dispatchEvent('targetAttacked');
+						if (enemy === ally.target) ally.dispatchEvent({type: 'targetAttacked'});
 						enemy.hp -= Math.min(ally.hp, 2.5) * ally.sharpness / enemy.armor;
 						ally.hp -= 2.5 * enemy.sharpness / ally.armor;
 					}
