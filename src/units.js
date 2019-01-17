@@ -495,7 +495,7 @@ export const units = {
 		]
 	},
 	enem2: {
-		filename: 'enem-2',
+		filename: 'fighter-2',
 		properties: {
 			hp: 75, v: 5, size: 15, chase: 0.04, sharpness: 2, firerate: 15, explodeTime: 30, weight: 100,
 			update(delta) {
@@ -522,7 +522,7 @@ export const units = {
 		]
 	},
 	enem3: {
-		filename: 'enem-3',
+		filename: 'enem-2',
 		properties: {
 			hp: 500, v: 0.25, size: 30, firerate: 1, r: 0.1, explodeTime: 30, weight: 250, c: new Quaternion(),
 			scale: new Vector3(3, 3, 3),
