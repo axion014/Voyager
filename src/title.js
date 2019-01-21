@@ -41,7 +41,9 @@ export default class TitleScene extends Scene {
 			//{klass: skills.Reinforce, level: 2},
 			{klass: skills.SelfRepair, level: 0}
 		];
-		currentSkills.forEach(skill => { if (skill.name) skill.klass = skills.byID[skill.name]; });
+		currentSkills.forEach(skill => {
+			if (skill.name) skill.klass = skills.byID[skill.name];
+		});
 		let selectedStage;
 		let selectedDifficulty = "normal";
 		const start = () => {
@@ -63,11 +65,15 @@ export default class TitleScene extends Scene {
 				x: 0, y: 0, sub: [
 					{type: 'label', value: 'Forever Flight', y: 15, size: 3.6},
 					{type: 'label', value: 'Click to start', y: -15, size: 1.8},
-					{type: 'model', name: 'player', value: assets.THREE_Model_JSON.fighter.clone(), x: 0, y: -5, z: -50},
 					{
-						type: 'model', value: new Mesh(new CircleBufferGeometry(10000, 100), new MeshBasicMaterial({
-							map: assets.THREE_Texture.plane
-						})), x: 0, y: 1000, z: 0, init: model => THREE_Utils.rotateX(model, -Math.PI / 2)
+						type: 'model', name: 'player', value: assets.THREE_Model_GLTF.player1.clone(),
+						x: 0, y: -5, z: -50
+					},
+					{
+						type: 'model', value: new Mesh(
+							new CircleBufferGeometry(10000, 100),
+							new MeshBasicMaterial({map: assets.THREE_Texture.plane})
+						), x: 0, y: 1000, z: 0, init: model => THREE_Utils.rotateX(model, -Math.PI / 2)
 					}
 				]
 			},
@@ -77,7 +83,10 @@ export default class TitleScene extends Scene {
 					{type: 'label', value: 'Campaign', y: 8, size: 1.8, link: 'difficulty'},
 					{type: 'label', value: 'Stage Select', y: 4, size: 1.8, link: 'stageselect'},
 					{type: 'label', value: 'Ship Select', size: 1.8, link: 'shipselect'},
-					{type: 'label', value: 'Free Play', y: -4, size: 1.8, link: 'difficulty', callback: () => {selectedStage = 'arcade'}},
+					{
+						type: 'label', value: 'Free Play', y: -4, size: 1.8, link: 'difficulty',
+						callback: () => selectedStage = 'arcade'
+					},
 					{type: 'label', value: 'How to play', y: -8, size: 1.8, link: 'help'},
 					{type: 'label', value: 'Settings', y: -12, size: 1.8, link: 'setting'},
 					{type: 'label', value: 'Credit', x: 8, y: -18, size: 1.5, link: 'credit'},
@@ -164,9 +173,15 @@ export default class TitleScene extends Scene {
 			difficulty: {
 				x: 125, y: -100, sub: [
 					{type: 'label', value: 'Difficulty', y: 16, size: 3.6},
-					{type: 'label', value: 'Easy', y: 4, size: 1.8, callback: () => {selectedDifficulty = "easy";start()}},
+					{type: 'label', value: 'Easy', y: 4, size: 1.8, callback: () => {
+						selectedDifficulty = "easy";
+						start()
+					}},
 					{type: 'label', value: 'Normal', size: 1.8, callback: start},
-					{type: 'label', value: 'Hard', y: -4, size: 1.8, callback: () => {selectedDifficulty = "hard";start()}},
+					{type: 'label', value: 'Hard', y: -4, size: 1.8, callback: () => {
+						selectedDifficulty = "hard";
+						start()
+					}},
 					{type: 'label', value: 'Back', y: -8, size: 1.8, link: 'main'},
 					{
 						type: 'model', name: 'enem1', value: assets.THREE_Model_JSON.enem1.clone(), x: 8, y: -4, z: 0,
@@ -233,7 +248,7 @@ export default class TitleScene extends Scene {
 				if (selects.type === 'label') {
 					selects = Object.assign({x: 0, y: 0}, selects);
 					const pixratio = 32;
-					const label = createLabel(selects.value, {font: (selects.size * pixratio) + "px 'HiraKakuProN-W3'"});
+					const label = createLabel(selects.value, {font: `${selects.size * pixratio}px 'HiraKakuProN-W3'`});
 					label.scale.set(1 / pixratio, 1 / pixratio, 1);
 					this.threeScene.add(label);
 					label.position.set(value.x + selects.x, value.y + selects.y, value.z + 50);
@@ -245,8 +260,8 @@ export default class TitleScene extends Scene {
 							moveTo(menu[selects.link].x, menu[selects.link].y, menu[selects.link].z || 0);
 							if (selects.link === 'title') this.addEventListener('click', moveToMain);
 
-							if (selects.link === 'shipmodify') this.points.forEach(point => point.visible = true);
-							else this.points.forEach(point => point.visible = false);
+							const movedToShipModify = selects.link === 'shipmodify';
+							this.points.forEach(point => point.visible = movedToShipModify);
 
 							this.position = selects.link;
 						});

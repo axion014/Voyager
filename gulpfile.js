@@ -55,9 +55,7 @@ async function $build(dest) {
 	}
 }
 
-gulp.task('jsbuild', function() {
-	return $build('build');
-});
+gulp.task('jsbuild', $build.bind(null, 'build'));
 
 function jsonminify() {
 	del.sync(['data/**/*.min.json']);
@@ -80,24 +78,14 @@ function glslminify() {
 
 gulp.task(glslminify);
 
-const test = gulp.parallel('jsonminify', 'glslminify', function() {
-	return $build('test');
-});
-
+const test = gulp.parallel('jsonminify', 'glslminify', $build.bind(null, 'test'));
 gulp.task('test', test);
 
 gulp.task('build', gulp.parallel('jsbuild', 'jsonminify', 'glslminify'));
 
-gulp.task('jswatch', function() {
-	return gulp.watch(['src/**/*'], test);
-});
-gulp.task('jsonwatch', function() {
-	return gulp.watch(['data/**/!(*.min).json'], jsonminify);
-});
-gulp.task('glslwatch', function() {
-	return gulp.watch(['data/**/!(*.min).glsl'], glslminify);
-});
-gulp.task('watch', gulp.parallel('jswatch', 'jsonwatch', 'glslwatch'));
+gulp.task('jswatch', () => gulp.watch(['src/**/*'], test));
+gulp.task('jsonwatch', () => gulp.watch(['data/**/!(*.min).json'], jsonminify));
+gulp.task('glslwatch', () => gulp.watch(['data/**/!(*.min).glsl'], glslminify));
 
 gulp.task('live', gulp.series('test', gulp.parallel('watch', function() {
 	gulp.src('.')
