@@ -71,7 +71,7 @@ gulp.task(jsonminify);
 function glslminify() {
 	return gulp.src('data/**/!(*.min).glsl')
 		.pipe(plumber())
-		.pipe(glsl())
+		.pipe(glsl({format: 'raw'}))
 		.pipe(rename({extname: '.min.glsl'}))
   	.pipe(gulp.dest('data'));
 }
@@ -87,13 +87,7 @@ gulp.task('jswatch', () => gulp.watch(['src/**/*'], test));
 gulp.task('jsonwatch', () => gulp.watch(['data/**/!(*.min).json'], jsonminify));
 gulp.task('glslwatch', () => gulp.watch(['data/**/!(*.min).glsl'], glslminify));
 
-gulp.task('live', gulp.series('test', gulp.parallel('watch', function() {
-	gulp.src('.')
-		.pipe(plumber())
-		.pipe(webserver({open: true, livereload: {
-			enable: true, filter: function(filename) {return filename.match(/^src/);}
-		}}))
-})));
+gulp.task('watch', gulp.parallel('jswatch', 'jsonwatch', 'glslwatch'));
 
 gulp.task(function open() {
 	gulp.src('.')
@@ -105,4 +99,4 @@ const server = gulp.series('test', gulp.parallel('watch', 'open'));
 
 gulp.task('server', server);
 
-gulp.task('default', gulp.series('live'));
+gulp.task('default', server);

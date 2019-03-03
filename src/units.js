@@ -1,12 +1,12 @@
 import {Vector3, Quaternion, Raycaster} from "three";
 
 import * as THREE_Utils from "w3g/threeutil";
-import {normalizeAngle, opt} from "w3g/utils";
-import assets from "w3g/loading";
-import {createEllipse} from "w3g/geometries";
-import {mouseX, mouseY, keys, keyDown} from "w3g/input";
+import {normalizeAngle, opt, get, free} from "w3g/utils";
+import {vw, vh} from "w3g/main";
+import assets, {addFile} from "w3g/loading";
+import {mouseX, mouseY, keys, keyDown, pointing} from "w3g/input";
 
-import {minimapScale} from "./mainscene";
+import {minimapScale, raderRadius, bossHPGaugeFadeTime} from "./constants";
 import ElementManager from "./elementmanager";
 import {testOBBSphere, testCupsuleSphere} from "./collision";
 
@@ -23,24 +23,22 @@ import {testOBBSphere, testCupsuleSphere} from "./collision";
  * armor			most of damage this unit takes will divided by this value
  * sharpness	multiplier of body damage
  * weight			unit with high weight can push enemy
- * time 			number of frames count up from 0
+ * time 			time since spawn(milliseconds)
  * target			refer to a enemy unit used to trigger targetAttacked(optional)
- * summons		refer to the AllyManager or the EnemyManager
+ * summons		refer to the UnitManager instance that have created the unit.
  * stealth		unit with this property true never shown in the rader
- * despawn		set this property to true will cause despawning of the unit without any death trigger. will checked after each update
+ * despawn		set this property to true will cause despawning of the unit without any death trigger.
+ *						will be checked after each update.
  * --size--
  *
  * ===== methods =====
  *
  * update						the update routine will called each frame, and recieves this.summons to first argument
- * targetAttacked		this function will called when the unit ram to a enemy of this.target
- *									(optional but required if the unit has property 'target')
  */
 
 export class UnitManager extends ElementManager {
 
 	groups = [];
-	raders = [];
 	spawncount = 0;
 	deathcount = 0;
 
@@ -50,11 +48,12 @@ export class UnitManager extends ElementManager {
 		this.bulletManager = bm;
 	}
 
-	create(name, properties, group, delay, targetProgress) {
+	create(build, position, quaternion, group, delay, targetProgress) {
+		if (typeof build === "string") build = {name: build};
 		if (targetProgress) {
 			const checkForProgress = e => {
 				if (this.scene.progress > targetProgress) {
-					this.create(name, properties, targetTime);
+					this.create(name, properties, group, delay);
 					this.removeEventListener('update', checkForProgress);
 				}
 			};
@@ -62,51 +61,37 @@ export class UnitManager extends ElementManager {
 		} else if (delay) window.setTimeout(() => this.create(name, properties), delay);
 		else {
 			this.spawncount++;
-			const unit = deepclone(get(name).mesh, false, true);
-			THREE.$extend(unit, get(name).properties);
-			THREE.$extend(unit, properties);
+			const unit = THREE_Utils.deepclone(getUnit(build.name).mesh, false, true);
+			Object.assign(unit, getUnit(build.name).properties, build.properties);
+			if (position) unit.position.copy(position);
+			if (quaternion) unit.quaternion.copy(quaternion);
 			if (!unit.hp) unit.hp = unit.maxhp;
 			if (!unit.energy) unit.energy = unit.maxenergy;
 			unit.allies = this;
 			unit.opponents = this.opponents;
-			unit.group = group;
 			unit.scene = this.scene;
-			group.size++;
-			unit.init();
+			if (group) {
+				unit.group = group;
+				group.size++;
+			}
+			if (unit.init) unit.init();
 			this.scene.threeScene.add(unit);
 			this.elements.push(unit);
-			const rader = createEllipse({radius: 3, fill: 'hsl(210, 80%, 60%)', stroke: 'black', strokeWidth: 1, opacity: 0.5});
-			const xdist = this.scene.player.position.x - unit.position.x;
-			const zdist = this.scene.player.position.z - unit.position.z;
-			const distance = Math.min(Math.sqrt(Math.pow(xdist, 2) + Math.pow(zdist, 2)) * minimapScale, 75);
-			const angle = Math.atan2(xdist, zdist) - this.scene.player.myrot.y +
-				(Math.abs(this.scene.player.myrot.x) > Math.PI / 2 && Math.abs(this.scene.player.myrot.x) < Math.PI * 1.5 ? Math.PI : 0);
-			rader.setPosition(vw - 100 + Math.sin(angle) * distance, vh - 100 + Math.cos(angle) * distance);
-			this.scene.UIScene.add(rader);
-			this.raders.push(rader);
-			if (unit.stealth) rader.hide();
-			if (properties.boss) {
-				this.scene.bosscoming = true;
-				this.scene.boss = unit;
-				this.scene.gauge_boss_h.tweener.fadeIn(10).play();
-				this.scene.gauge_boss_h.value = unit.hp;
-				this.scene.gauge_boss_h.maxValue = unit.hp;
-			}
+			this.scene.minimap.addObject(unit).visible = !unit.stealth;
 			return unit;
 		}
 	}
 
-	createMulti(name, properties, autospawn, km) {
-		autospawn = Object.assign(get(name).autospawn, autospawn);
+	createMulti(build, position, quaternion, autospawn, km) {
+		if (typeof build === "string") build = {name: build};
+		autospawn = Object.assign(getUnit(build.name).autospawn, autospawn);
 		const group = {size: 0, message: km};
 		this.groups.push(group);
 		for(let i = 0; i < autospawn.rep; i++) {
-			const nr = {position: new Vector3()};
-			THREE.$extend(nr, properties);
-			this.create(name, properties, group, autospawn.time, autospawn.progress);
+			this.create(build, position, quaternion, group, autospawn.time, autospawn.progress);
 			if (autospawn.delay) {autospawn.time += autospawn.delay;}
-			THREE.$add(properties, autospawn.options);
-			properties.position.add(new Vector3(
+			//THREE.$add(properties, autospawn.options);
+			position.add(new Vector3(
 				Math.random() * autospawn.random.x * 2 - autospawn.random.x,
 				Math.random() * autospawn.random.y * 2 - autospawn.random.y,
 				Math.random() * autospawn.random.z * 2 - autospawn.random.z));
@@ -127,17 +112,7 @@ export class UnitManager extends ElementManager {
 				return;
 			}
 			unit.time += delta;
-			const xdist = this.player.position.x - unit.position.x;
-			const zdist = this.player.position.z - unit.position.z;
-			const distance = Math.sqrt(Math.pow(xdist, 2) + Math.pow(zdist, 2)) * minimapScale;
-			if (unit.stealth || distance > 100) {
-				this.raders[i].hide();
-				return;
-			}
-			this.raders[i].show();
-			distance = Math.min(distance, 75);
-			const angle = Math.atan2(xdist, zdist);
-			this.raders[i].setPosition(vw - 100 + Math.sin(angle) * distance, vh - 100 + Math.cos(angle) * distance);
+			this.scene.minimap.getObject(unit).visible = !unit.stealth;
 		});
 	}
 
@@ -155,10 +130,9 @@ export class UnitManager extends ElementManager {
 			}
 		}
 		unit.parent.remove(unit);
-		applyToAllMaterials(unit.material, m => m.dispose());
+		THREE_Utils.applyToAllMaterials(unit.material, m => m.dispose());
 		super.remove(i);
-		this.raders[i].remove();
-		this.raders.splice(i, 1);
+		this.scene.minimap.removeObject(unit);
 	}
 
 	kill(i) {
@@ -171,34 +145,19 @@ export class UnitManager extends ElementManager {
 
 const loadedunit = {};
 
-function get(n) {
-	if (this.loadedunit[n]) return this.loadedunit[n];
-	this.loadedunit[n] = {
-		mesh: assets.THREE_Model_JSON[n],
-		properties: Object.assign(this.units[n].properties, {
-			maxhp: 5, maxenergy: 100, armor: 1, size: 1, v: 0, time: 0, sharpness: 1, update: () => {}
-		}),
-		autospawn: {rep: 1, options: {}}
-	};
-	if (!this.loadedunit[n].mesh) throw Error(n);
-	this.loadedunit[n].mesh.data.geometry.computeBoundingBox();
-	this.loadedunit[n].mesh.data.geometry.computeBoundingSphere();
-	return this.loadedunit[n];
-}
-
 function setQuaternionFromDirectionVector(q, v) {
-	const axis = get(Vector3).copy(Axis.z).cross(v).normalize();
-	const retquaternion = q.setFromAxisAngle(axis, Math.acos(Axis.z.dot(v)));
+	const axis = get(Vector3).copy(THREE_Utils.Axis.z).cross(v).normalize();
+	const retquaternion = q.setFromAxisAngle(axis, Math.acos(THREE_Utils.Axis.z.dot(v)));
 	free(axis);
 	return retquaternion;
 }
 
 export const units = {
 	player1: {
-		filename: 'fighter',
+		filename: 'fighter-1',
 		properties: {
-			myrot: {x: 0, y: 0, z1: 0, z2: 0}, pitch: 0, yaw: 0, v: 5, av: new Vector3(),
-			maxenergy: 2000, maxhp: 100, speed: 0.95, rotspeed: 1, weight: 100, hitSphere: 5, excludeFromHitTest: true,
+			myrot: {x: 0, y: 0, z1: 0, z2: 0}, pitch: 0, yaw: 0, v: 0.17, av: new Vector3(),
+			maxenergy: 2000, maxhp: 100, speed: 0.06, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5, excludeFromHitTest: true,
 			raycaster: new Raycaster(),
 			update(delta) {
 				if (this.targetingEnemy && !this.targetingEnemy.parent) {
@@ -211,45 +170,48 @@ export const units = {
 
 				const reverse = this.myrot.z2 > Math.PI / 2;
 
-				const rot = normalizeAngle(
-					Math.atan2(mouseY - 0.5 * vy, mouseX - 0.5 * vx) +
+				let rot = normalizeAngle(
+					Math.atan2(mouseY - 0.5 * vh, mouseX - 0.5 * vw) +
 					this.myrot.y - this.yaw + (reverse ? Math.PI * 1.5 : Math.PI / 2)
 				);
-				const maxrot = (0.04 - this.v * 0.001) * this.rotspeed;
+				let maxrot = (0.04 - this.v * 0.001) * this.rotspeed;
 				if (Math.abs(rot) > 2.5) this.mode = 'back';
 				else {
 					if (this.mode === 'back') this.mode = null;
-					rot = Math.clamp(rot * 0.07, -maxrot, maxrot);
+					rot = Math.min(Math.max(rot * 0.07, -maxrot), maxrot);
 					this.myrot.z1 += rot * 0.3 * delta;
 					this.yaw += rot * delta;
 				}
 
 				const direction = get(Vector3);
-				direction.copy(Axis.z).applyQuaternion(this.quaternion).normalize();
+				direction.copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
 
+				let targetingEnemy;
 				if (this.opponents.elements.length !== 0) {
 					// Select targeting enemy
 					const futurePosition = get(Vector3);
-					futurePosition.copy(this.position).addScaledVector(direction, this.v * 5 * delta);
+					futurePosition.copy(this.position).addScaledVector(direction, this.v * 5);
 					const futureAngle = get(Quaternion);
-					futureAngle.set(0, 0, 0, 1).rotateY(this.myrot.y - this.yaw * 0.5 + ((this.mode === 'back') !== reverse ? Math.PI : 0))
+					THREE_Utils.rotateY(futureAngle.set(0, 0, 0, 1), this.myrot.y - this.yaw * 0.5 + ((this.mode === 'back') !== reverse ? Math.PI : 0))
 					const futureDirection = get(Vector3);
-					futureDirection.copy(Axis.z).applyQuaternion(futureAngle);
+					futureDirection.copy(THREE_Utils.Axis.z).applyQuaternion(futureAngle);
 					free(futureAngle);
 					const futureDistance = get(Vector3);
-					const targetingEnemy = this.opponents.elements.reduce((o, enm) => {
+					targetingEnemy = this.opponents.elements.reduce((o, enm) => {
 						futureDistance.copy(enm.position).sub(futurePosition);
 						futureDistance.y = 0;
-						const targetingPriority = futureDistance.angleTo(futureDirection);
+						let targetingPriority = futureDistance.angleTo(futureDirection);
 						if (targetingPriority > Math.PI / (this.mode === 'back' ? 6 : 2)) return o;
 						targetingPriority *= futureDistance.length();
-						return targetingPriority < o.d ? {d: futureAngle, enm: enm} : o;
+						if (targetingPriority < o.d) {
+							o.d = targetingPriority;
+							o.enm = enm;
+						}
+						return o;
 					}, {d: Infinity, enm: null}).enm;
 
 					free(futurePosition, futureDirection, futureDistance);
 				}
-
-				const shift = keys.ShiftLeft;
 
 				if (this.way === 'up') {
 					if (!keys.KeyW) this.way = null;
@@ -263,10 +225,8 @@ export const units = {
 				this.targetingEnemy = targetingEnemy;
 				if (targetingEnemy) {
 					this.targetMarker.visible = true;
-					const pos = get(Vector3);
-					pos.copy(targetingEnemy.position).project(this.camera);
-					this.targetMarker.x = (pos.x + 1) * vw / 2;
-					this.targetMarker.y = (1 - pos.y) * vh / 2;
+					const pos = get(Vector3).copy(targetingEnemy.position).project(this.scene.camera);
+					this.targetMarker.position.set((pos.x + 1) * vw / 2, (1 - pos.y) * vh / 2);
 					free(pos);
 					this.targetMarker.strokeColor = this.mode === 'back' ? "#a44" : "#444";
 				} else this.targetMarker.visible = false;
@@ -287,24 +247,25 @@ export const units = {
 					const b = (this.mode === 'back') !== reverse;
 					rot = normalizeAngle(Math.atan2(-v.y, Math.sqrt(v.x * v.x + v.z * v.z) * (b ? -1 : 1)) - this.myrot.x - this.pitch);
 					free(v);
-					this.pitch += Math.clamp(rot * 0.15, -maxrot, maxrot) * delta;
+					this.pitch += Math.min(Math.max(rot * 0.15, -maxrot), maxrot) * delta;
 				}
 
 				// Move and rotate
-				this.myrot.x += this.pitch * 0.1 * delta;
-				this.myrot.y -= this.yaw * 0.1 * delta;
+				this.myrot.x += this.pitch * 0.004 * delta;
+				this.myrot.y -= this.yaw * 0.004 * delta;
 				this.myrot.x = normalizeAngle(this.myrot.x);
 				this.myrot.y = normalizeAngle(this.myrot.y);
 				this.applyRotation();
 
-				if (p.getPointing()) this.consumeEnergy(this.speed * 3 * delta, () => { // Speed up
+				if (pointing) this.consumeEnergy(this.speed * 3 * delta, () => { // Speed up
 					if (this.scene.space) this.av.addScaledVector(direction, this.speed * delta);
 					else this.v += this.speed * delta;
 				});
 
 				if (!this.scene.space) {
+					console.log(delta)
 					this.position.addScaledVector(direction, this.v * delta);
-					this.scene.shakeScreen((this.v - 5) / 20);
+					this.scene.shakeScreen((this.v - this.minspeed) * 1.5);
 				}
 				this.position.addScaledVector(this.av, delta);
 
@@ -319,7 +280,7 @@ export const units = {
 				if (this.scene.space) this.av.multiplyScalar(0.996 ** delta);
 				else {
 					this.v *= (0.98 - (this.pitch + this.yaw) * 0.06) ** delta;
-					if (this.v < 5) this.v = 5;
+					if (this.v < this.minspeed) this.v = this.minspeed;
 					this.av.multiplyScalar(0.98 ** delta);
 				}
 
@@ -334,22 +295,23 @@ export const units = {
 					sub.update();
 				});
 
-				if (keys.KeyA) opt(opt(this.sub, shift ? 2 : 0), 'activate')(keyDown.keyA);
-				if (keys.KeyD) opt(opt(this.sub, shift ? 3 : 1), 'activate')(keyDown.keyD);
+				if (keys.KeyA) opt(opt(this.sub, keys.ShiftLeft ? 2 : 0), 'activate')(keyDown.keyA);
+				if (keys.KeyD) opt(opt(this.sub, keys.ShiftLeft ? 3 : 1), 'activate')(keyDown.keyD);
 
 				this.energy = Math.min(this.energy + 2 * delta, this.maxenergy);
-				gauge_e.value = this.energy;
-				gauge_h.value = this.hp;
+				this.scene.gauge_e.value = this.energy;
+				this.scene.gauge_h.value = this.hp;
 
-				windManager.forEach(wind => {
+				this.scene.windManager.forEach(wind => {
 					const radius = 15 + wind.size;
 					if (Math.sqrt(this.position.x * wind.position.x + this.position.z * wind.position.y) <= radius) this.av.y += wind.v / 2;
 				});
 				// hit vs enemy
-				const v = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion);
+				const t = get(Vector3);
+				const v = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion);
 				const p = get(Vector3).copy(this.position)
 					.addScaledVector(v, -this.geometry.boundingBox.min.z + this.geometry.boundingBox.max.x);
-				v.multiplyScalar(this.geometry.boundingBox.getSize().z - this.geometry.boundingBox.getSize().x);
+				v.multiplyScalar(this.geometry.boundingBox.getSize(t).z - this.geometry.boundingBox.getSize(t).x);
 				const enemyPosition = get(Vector3);
 				this.opponents.elements.forEach(enemy => {
 					enemyPosition.copy(enemy.position).add(enemy.geometry.boundingSphere.center);
@@ -364,9 +326,9 @@ export const units = {
 						enemy.hp -= this.v * this.sharpness / enemy.armor;
 					}
 				});
-				free(v, p, enemyPosition);
+				free(v, p, t, enemyPosition);
 				// hit vs obstacle
-				obstacleManager.forEach(obstacle => {
+				this.scene.obstacleManager.forEach(obstacle => {
 					if (testOBBSphere(obstacle.position, this.position, obstacle.size, obstacle.quaternion, this.geometry.boundingBox.max.x)) this.hp = 0;
 				});
 			},
@@ -377,14 +339,14 @@ export const units = {
 				const a = Math.random() * Math.PI * 2;
 				const bullet = this.allies.bulletManager.create('bullet', {v: 15, atk: this.getDamage(atk)});
 				const v = get(Vector3);
-				v.copy(Axis.z).applyQuaternion(this.quaternion).setLength(this.geometry.boundingBox.max.z);
+				v.copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).setLength(this.geometry.boundingBox.max.z);
 				bullet.position.copy(this.position).add(v);
 				v.set(Math.sin(a), Math.cos(a), 0);
 				bullet.quaternion.copy(this.quaternion).rotate(v, Math.sqrt(Math.random() * 0.0009));
 				free(v);
 			},
 			beam(atk, exps, expt, radius, effect) {
-				const vec = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion).normalize();
+				const vec = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
 
 				// 距離で並べかえる
 				this.opponents.elements.sort((a, b) => {
@@ -459,18 +421,21 @@ export const units = {
 	enem1: {
 		filename: 'enem-1',
 		properties: {
-			v: 0.6, chase: 0, firerate: 100, mindist: 0, aim: false, weight: 16, c: new Quaternion(),
+			v: 0.02, chase: 0, firerate: 100, mindist: 0, aim: false, weight: 16, c: new Quaternion(),
 			update(delta) {
 				this.quaternion.premultiply(this.c);
 
-				const vecToTarget = get(Vector3).copy(this.scene.player.position).sub(this.position);
+				let quaternionToTarget;
+				let vecToTarget;
+				if (this.scene.player) {
+					vecToTarget = get(Vector3).copy(this.scene.player.position).sub(this.position);
+					const directionVectorToTarget = get(Vector3).copy(vecToTarget).normalize();
+					quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), directionVectorToTarget);
+					free(directionVectorToTarget);
+				}
 
-				const directionVectorToTarget = get(Vector3).copy(vecToTarget).normalize();
-				const quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), directionVectorToTarget);
-				free(directionVectorToTarget);
-
-				const currentDirection = get(Vector3).copy(Axis.z);
-				if (!this.scene.player.position.equals(this.position) && this.chase !== 0) {
+				const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z);
+				if (this.scene.player && this.chase !== 0 && !this.scene.player.position.equals(this.position)) {
 					const spd = this.v * (this.mindist !== 0 ? Math.clamp((vecToTarget.length() - this.mindist) * 2 / this.mindist, -1, 1) : 1);
 					this.quaternion.slerp(quaternionToTarget, this.chase * delta);
 					currentDirection.applyQuaternion(this.quaternion);
@@ -479,40 +444,43 @@ export const units = {
 					currentDirection.applyQuaternion(this.quaternion);
 					this.position.addScaledVector(currentDirection, this.v * delta);
 				}
-				free(currentDirection, vecToTarget);
+				free(currentDirection);
+				if (vecToTarget) free(vecToTarget);
 				if (this.time % this.firerate === 0) {
-					this.allies.bulletManager.create('bullet', {
-						position: this.position, quaternion: this.aim ? quaternionToTarget : this.quaternion,
-						v: 3.5, atk: 7
-					});
+					const bullet = this.allies.bulletManager.create('bullet', {v: 3.5, atk: 7});
+					bullet.position.copy(this.position);
+					bullet.quaternion.copy(this.aim && quaternionToTarget ? quaternionToTarget : this.quaternion);
 				}
-				free(quaternionToTarget);
+				if (quaternionToTarget) free(quaternionToTarget);
 			}
 		},
 		builds: [
 			{value: 1},
-			{value: 2, properties: {aim: true}}
+			{value: 2, properties: {aim: true}},
+			{value: 2, properties: {chase: 0.002}}
 		]
 	},
 	enem2: {
 		filename: 'fighter-2',
 		properties: {
-			hp: 75, v: 5, size: 15, chase: 0.04, sharpness: 2, firerate: 15, explodeTime: 30, weight: 100,
+			hp: 75, v: 0.17, size: 15, chase: 0.0014, sharpness: 2, firerate: 15, explodeTime: 30, weight: 100,
 			update(delta) {
-				const currentDirection = get(Vector3).copy(Axis.z);
-				if (!this.scene.player.position.equals(this.position)) {
+				const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z);
+				if (this.scene.player && !this.scene.player.position.equals(this.position)) {
 					const directionVectorToTarget = get(Vector3).copy(this.scene.player.position).sub(this.position).normalize();
 					const quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), directionVectorToTarget);
 					this.quaternion.slerp(quaternionToTarget, this.chase * delta);
-					free(quaternionToTarget, axis, directionVectorToTarget);
+					free(quaternionToTarget, directionVectorToTarget);
 
 					currentDirection.applyQuaternion(this.quaternion);
-					this.position.addScaledVector(currentDirection, this.v * delta);
 				} else currentDirection.applyQuaternion(this.quaternion);
 
+				this.position.addScaledVector(currentDirection, this.v * delta);
+
 				if (this.time % this.firerate === 0) {
-					const bullet = this.allies.bulletManager.create('bullet', {quaternion: this.quaternion, v: 6, size: 1.5, atk: 10});
+					const bullet = this.allies.bulletManager.create('bullet', {v: 6, size: 1.5, atk: 10});
 					bullet.position.copy(this.position).addScaledVector(currentDirection, this.geometry.boundingBox.max.z);
+					bullet.quaternion.copy(this.quaternion);
 				}
 				free(currentDirection);
 			}
@@ -524,19 +492,22 @@ export const units = {
 	enem3: {
 		filename: 'enem-2',
 		properties: {
-			hp: 500, v: 0.25, size: 30, firerate: 1, r: 0.1, explodeTime: 30, weight: 250, c: new Quaternion(),
-			scale: new Vector3(3, 3, 3),
+			hp: 500, v: 0.008, size: 30, firerate: 1, r: 0.03, explodeTime: 30, weight: 250, c: new Quaternion(),
+			init() {
+				this.scale.setScalar(3);
+			},
 			update(delta) {
 				this.quaternion.premultiply(this.c);
-				this.rotateZ(this.r);
-				const dir = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion);
+				this.rotateZ(this.r * delta);
+				const dir = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion);
 				this.position.addScaledVector(dir, this.v * delta);
 				free(dir);
 				if (this.time % this.firerate === 0) {
 					const bullet = this.allies.bulletManager.create('bullet', {
-						position: this.position, v: 2.5, size: 0.5, atk: 5
+						v: 2.5, size: 0.5, atk: 5
 					});
-					bullet.quaternion.copy(this.quaternion).rotate(Axis.x, 0.1 + (Math.PI - 0.1) * (this.time % (this.firerate * 8) / this.firerate / 8) / 20 * (Math.random() + 9));
+					bullet.position.copy(this.position);
+					THREE_Utils.rotateX(bullet.quaternion.copy(this.quaternion), 0.1 + (Math.PI - 0.1) * (this.time % (this.firerate * 8) / this.firerate / 8) / 20 * (Math.random() + 9));
 				}
 			}
 		},
@@ -547,54 +518,60 @@ export const units = {
 	airballoon: {
 		filename: 'airballoon',
 		properties: {
-			hp: 1000, v: 0.2, size: 40, firerate1: 18, firerate2: 33, explodeTime: 45, weight: 75,
-			scale: new Vector3(2, 2, 2),
+			hp: 1000, v: 0.007, size: 40, firerate1: 18, firerate2: 33, explodeTime: 45, weight: 75,
+			init() {
+				this.scale.setScalar(2);
+			},
 			update(delta) {
-				const dir = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion).normalize();
+				const dir = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
 				this.position.addScaledVector(dir, this.v * delta);
 				free(dir);
 				const tmpVector = get(Vector3);
 				let bullet;
 				if (this.time % this.firerate1 === 0) {
-					const params = {quaternion: this.quaternion, v: 3, size: 2.5, atk: 15};
+					const params = {v: 3, size: 2.5, atk: 15};
 					bullet = this.allies.bulletManager.create('bullet', params);
 					bullet.position.copy(this.position).add(tmpVector.set(7, 0, -24));
+					bullet.quaternion.copy(this.quaternion);
 					bullet = this.allies.bulletManager.create('bullet', params);
 					bullet.position.copy(this.position).add(tmpVector.set(-7, 0, -24));
+					bullet.quaternion.copy(this.quaternion);
 				}
 				if (this.time % this.firerate2 === 0) {
-					const params = {quaternion: this.quaternion, v: 3, size: 2.5, atk: 15};
+					const params = {v: 3, size: 2.5, atk: 15};
 					bullet = this.allies.bulletManager.create('bullet', params);
 					bullet.position.copy(this.position).add(tmpVector.set(10, -10, -20));
+					bullet.quaternion.copy(this.quaternion);
 					bullet = this.allies.bulletManager.create('bullet', params);
 					bullet.position.copy(this.position).add(tmpVector.set(-10, -10, -20));
+					bullet.quaternion.copy(this.quaternion);
 				}
 				if (this.time % this.firerate1 === 9) {
 					const params = {v: 3, size: 2.5, atk: 15};
 					bullet = this.allies.bulletManager.create('bullet', params);
 					bullet.position.copy(this.position).add(tmpVector.set(10, 0, -10));
-					bullet.quaternion.copy(this.quaternion).rotateY(1);
+					THREE_Utils.rotateY(bullet.quaternion.copy(this.quaternion), 1);
 					bullet = this.allies.bulletManager.create('bullet', params);
 					bullet.position.copy(this.position).add(tmpVector.set(-10, 0, -10));
-					bullet.quaternion.copy(this.quaternion).rotateY(-1);
+					THREE_Utils.rotateY(bullet.quaternion.copy(this.quaternion), -1);
 				}
 				if (this.time % this.firerate2 === 11) {
 					const params = {v: 3, size: 2.5, atk: 15};
 					bullet = this.allies.bulletManager.create('bullet', params);
 					bullet.position.copy(this.position).add(tmpVector.set(10, 0, 0));
-					bullet.quaternion.copy(this.quaternion).rotateY(Math.PI / 2);
+					THREE_Utils.rotateY(bullet.quaternion.copy(this.quaternion), Math.PI / 2);
 					bullet = this.allies.bulletManager.create('bullet', params);
 					bullet.position.copy(this.position).add(tmpVector.set(-10, 0, 0));
-					bullet.quaternion.copy(this.quaternion).rotateY(-Math.PI / 2);
+					THREE_Utils.rotateY(bullet.quaternion.copy(this.quaternion), -Math.PI / 2);
 				}
 				if (this.time % this.firerate2 === 22) {
 					const params = {v: 3, size: 2.5, atk: 15};
 					bullet = this.allies.bulletManager.create('bullet', params);
 					bullet.position.copy(this.position).add(tmpVector.set(10, 0, 20));
-					bullet.quaternion.copy(this.quaternion).rotateY(3);
+					THREE_Utils.rotateY(bullet.quaternion.copy(this.quaternion), 3);
 					bullet = this.allies.bulletManager.create('bullet', params);
 					bullet.position.copy(this.position).add(tmpVector.set(-10, 0, 20));
-					bullet.quaternion.copy(this.quaternion).rotateY(-3);
+					THREE_Utils.rotateY(bullet.quaternion.copy(this.quaternion), -3);
 				}
 				free(tmpVector);
 			}
@@ -606,8 +583,10 @@ export const units = {
 	blademinion: {
 		filename: 'slicer',
 		properties: {
-			hp: 50, chase: 0.07, v: 7.5, sharpness: 3, size: 5, explodeTime: 30, stealth: true, weight: 25,
-			scale: new Vector3(7, 7, 7),
+			hp: 50, chase: 0.0024, v: 0.25, sharpness: 3, size: 5, explodeTime: 30, stealth: true, weight: 25,
+			init() {
+				this.scale.setScalar(7);
+			},
 			update(delta) {
 				if (this.active) {
 					if (this.target.hp <= 0 || !this.target.parent) {
@@ -627,7 +606,7 @@ export const units = {
 						this.quaternion.slerp(quaternionToTarget, this.chase * delta);
 						free(quaternionToTarget, vectorToTarget);
 					}
-					const currentDirection = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion);
+					const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion);
 					this.position.addScaledVector(currentDirection, this.v * delta);
 					free(currentDirection);
 				} else {
@@ -648,7 +627,7 @@ export const units = {
 	assaultdrone: {
 		filename: 'assault',
 		properties: {
-			hp: 10, chase: 0.07, v: 6, bv: 7, atk: 8, sharpness: 1.4, firerate: 28, size: 5, weight: 16,
+			hp: 10, chase: 0.0024, v: 0.2, bv: 0.24, atk: 8, sharpness: 1.4, firerate: 28, size: 5, weight: 16,
 			mindist: 50, explodeTime: 20, expire: Infinity,
 			update(delta) {
 				this.expire -= delta;
@@ -656,7 +635,7 @@ export const units = {
 					this.despawn = true;
 					return;
 				}
-				const currentDirection = get(Vector3).copy(Axis.z);
+				const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z);
 				if (!this.target || this.target.hp <= 0 || !this.target.parent) {
 					if (this.opponents.elements.length !== 0) {
 						this.target = this.opponents.elements.reduce((o, enm) => {
@@ -693,7 +672,25 @@ export const units = {
 	}
 };
 
+function getUnit(name) {
+	if (!loadedunit[name]) {
+		loadedunit[name] = {
+			mesh: assets.THREE_Model_GLTF[name],
+			properties: Object.assign({
+				maxhp: 5, maxenergy: 100, armor: 1, size: 1, v: 0, time: 0, sharpness: 1, update: () => {}
+			}, units[name].properties),
+			autospawn: {rep: 1, options: {}}
+		};
+		if (!loadedunit[name].mesh) throw new Error(`Mesh ${name} not found`);
+		loadedunit[name].mesh.geometry.computeBoundingBox();
+		loadedunit[name].mesh.geometry.computeBoundingSphere();
+	}
+	return loadedunit[name];
+}
+
 export const builds = [];
-Object.keys(units).forEach(key => {
-	if (units[key].builds) units[key].builds.forEach(build => builds.push(Object.assign({name: key}, build)));
+
+Object.keys(units).forEach(name => {
+	addFile('THREE_Model_GLTF', name, `data/models/${units[name].filename}.glb`);
+	if (units[name].builds) units[name].builds.forEach(build => builds.push(Object.assign({name: name}, build)));
 });

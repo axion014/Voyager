@@ -240,7 +240,7 @@ export class ParticleCannon extends ActiveSkill {
 		super.update();
 		if (this.duration > 0) {
 			this.duration--;
-			var angle = Math.randfloat(0, Math.PI * 2);
+			//const angle = Math.random() * Math.PI * 2;
 			this.scene.shakeScreen(this.duration);
 			this.user.beam([10, 12, 15][this.level], 2, 15, [20, 25, 30][this.level], this.effect);
 			if (this.duration === 0) {
@@ -251,16 +251,16 @@ export class ParticleCannon extends ActiveSkill {
 			if (this.delay === 0) {
 				this.duration = [20, 30, 40][this.level];
 				// flash effect
-				var fade = new ShaderPass(new FadeShader());
-				fade.uniforms.color.value = new Vector4(1, 1, 1, 0.8);
+				const fade = new ShaderPass(new FadeShader());
+				fade.uniforms.color.value.set(1, 1, 1, 0.8);
 				this.scene.app.composer.addPass(fade);
-				var frame = this.scene.frame;
+				const frame = this.scene.frame;
 				this.scene.on('enterframe', function tmp() {
 					if (this.scene.frame - frame > 1) {
 						this.scene.app.composer.passes.erase(fade);
 						this.scene.off('enterframe', tmp);
 					}
-				}.bind(this));
+				});
 				this.scene.effectManager.ray(this.user, 0xffffff, 0.5, 500, 2);
 				this.effect = this.scene.effectManager.ray(this.user, [
 					{color: 0xffffff, opacity: 0.2, radius: [5, 6, 8][this.level]},

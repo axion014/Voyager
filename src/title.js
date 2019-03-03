@@ -15,12 +15,14 @@ import * as THREE_Utils from "w3g/threeutil";
 import Scene from "w3g/scene";
 import assets from "w3g/loading";
 import {vw, vh, threeComposer} from "w3g/main";
-import {createRectangle, createEllipse, createMark} from "w3g/geometries";
-import {createLabel, createLabelArea} from "w3g/uielements";
+import {Rectangle, Ellipse} from "w3g/geometries";
+import {Label, LabelArea} from "w3g/uielements";
 import Easing from "w3g/easing";
+import {get, free} from "w3g/utils";
 
 import * as skills from "./skills";
 import MainScene from "./mainscene";
+import {Mark} from "./geometries";
 
 const BASE_Z = 100;
 const SKILLS = "skills-0.1" // retrieve key for current set of skills
@@ -67,7 +69,7 @@ export default class TitleScene extends Scene {
 					{type: 'label', value: 'Click to start', y: -15, size: 1.8},
 					{
 						type: 'model', name: 'player', value: assets.THREE_Model_GLTF.player1.clone(),
-						x: 0, y: -5, z: -50
+						x: 0, y: 0, z: -50
 					},
 					{
 						type: 'model', value: new Mesh(
@@ -144,7 +146,8 @@ export default class TitleScene extends Scene {
 					{type: 'label', value: 'Stage Select', y: 14, size: 2.5},
 					{type: 'label', value: 'Main Menu', y: -16, size: 1.8, link: 'main'},
 					{
-						type: 'model', name: 'airballoon', value: assets.THREE_Model_JSON.airballoon.clone(), x: 0, y: 0, z: 0,
+						type: 'model', value: assets.THREE_Model_GLTF.airballoon.clone(),
+						x: 0, y: 0, z: 0,
 						init: (model) => THREE_Utils.rotate(model, new Vector3(1, -1, -1).normalize(), 1)
 					},
 				]
@@ -162,10 +165,10 @@ export default class TitleScene extends Scene {
 			shipmodify: {
 				x: 0, y: 0, z: -40, sub: [
 					{type: 'label', value: 'Ship Modify', y: 14, size: 3.6},
-					{type: 'point', parent: 'player', index: 0, place: "front", position: new Vector3(2, 4, 24)},
-					{type: 'point', parent: 'player', index: 1, place: "front", position: new Vector3(-2, 4, 24)},
-					{type: 'point', parent: 'player', index: 2, place: "top", position: new Vector3(0, 7, -5)},
-					{type: 'point', parent: 'player', index: 3, place: "core", position: new Vector3(0, 3, 0)},
+					{type: 'point', parent: 'player', index: 0, place: "front", position: new Vector3(1.5, -1, 27)},
+					{type: 'point', parent: 'player', index: 1, place: "front", position: new Vector3(-1.5, -1, 27)},
+					{type: 'point', parent: 'player', index: 2, place: "top", position: new Vector3(0, 3, -5)},
+					{type: 'point', parent: 'player', index: 3, place: "core", position: new Vector3(0, 0, 0)},
 					{type: 'label', value: 'Back', y: -12, size: 1.8, link: 'shipselect'},
 					{type: 'label', value: 'Main Menu', y: -16, size: 1.8, link: 'main'},
 				]
@@ -175,24 +178,24 @@ export default class TitleScene extends Scene {
 					{type: 'label', value: 'Difficulty', y: 16, size: 3.6},
 					{type: 'label', value: 'Easy', y: 4, size: 1.8, callback: () => {
 						selectedDifficulty = "easy";
-						start()
+						start();
 					}},
 					{type: 'label', value: 'Normal', size: 1.8, callback: start},
 					{type: 'label', value: 'Hard', y: -4, size: 1.8, callback: () => {
 						selectedDifficulty = "hard";
-						start()
+						start();
 					}},
 					{type: 'label', value: 'Back', y: -8, size: 1.8, link: 'main'},
 					{
-						type: 'model', name: 'enem1', value: assets.THREE_Model_JSON.enem1.clone(), x: 8, y: -4, z: 0,
+						type: 'model', value: assets.THREE_Model_GLTF.enem1.clone(), x: 8, y: -4, z: 0,
 						init: model => THREE_Utils.rotate(model, new Vector3(1, -1, -1).normalize(), 1)
 					},
 					{
-						type: 'model', name: 'enem1', value: assets.THREE_Model_JSON.enem1.clone(), x: -8, y: 4, z: 0,
+						type: 'model', value: assets.THREE_Model_GLTF.enem1.clone(), x: -8, y: 4, z: 0,
 						init: model => THREE_Utils.rotate(model, new Vector3(1, -1, -1).normalize(), 1)
 					},
 					{
-						type: 'model', name: 'enem1', value: assets.THREE_Model_JSON.enem1.clone(), x: -10, y: -12, z: 40,
+						type: 'model', value: assets.THREE_Model_GLTF.enem1.clone(), x: -10, y: -12, z: 40,
 						init: model => THREE_Utils.rotate(model, new Vector3(1, -1, -1).normalize(), 1)
 					}
 				]
@@ -234,21 +237,23 @@ export default class TitleScene extends Scene {
 			moveTo(50, -50, 0);
 			this.removeEventListener('click', moveToMain);
 		};
-		const equipmentEdit = createRectangle({
+		const equipmentEdit = new Rectangle({
 			width: vw * 0.75,
 			height: vh * 0.75,
 			fillColor: "#888",
 			opacity: 0,
-			selfOpacity: 0.65
+			selfOpacity: 0.65,
+			strokeWidth: 2
 		});
 
-		menu.forEach(menu, value => {
+		Object.keys(menu).forEach(key => {
+			const value = menu[key];
 			value.z = value.z || 0;
 			value.sub.forEach(selects => {
 				if (selects.type === 'label') {
 					selects = Object.assign({x: 0, y: 0}, selects);
 					const pixratio = 32;
-					const label = createLabel(selects.value, {font: `${selects.size * pixratio}px 'HiraKakuProN-W3'`});
+					const label = new Label(selects.value, {font: `${selects.size * pixratio}px 'HiraKakuProN-W3'`});
 					label.scale.set(1 / pixratio, 1 / pixratio, 1);
 					this.threeScene.add(label);
 					label.position.set(value.x + selects.x, value.y + selects.y, value.z + 50);
@@ -290,10 +295,11 @@ export default class TitleScene extends Scene {
 							this.radius = 16;
 							this.data = options.data;
 							this.visible = false;
-							this.add(createMark({strokeColor: "#4a4", strokeWidth: 1, width: 48, height: 48}));
-							this.add(createEllipse({fillColor: "#4a4", radius: 16, opacity: 0.5}));
+							this.add(new Mark({strokeColor: "#4a4", strokeWidth: 1, width: 48, height: 48}));
+							this.add(new Ellipse({fillColor: "#4a4", radius: 16, opacity: 0.5}));
 							this.addEventListener('click', () => {
 								scene.interactive = false;
+								back.interactive = true;
 								scene.labels.forEach(label => label.interactive = false);
 								scene.points.forEach(point => point.interactive = false);
 								equipmentEdit.target = this.data;
@@ -305,6 +311,7 @@ export default class TitleScene extends Scene {
 						}
 					}
 					const slot = new EquipSlot({data: selects});
+					slot.position.z =　-1;
 					this.UIScene.add(slot);
 					this.points.push(slot);
 				}
@@ -313,19 +320,19 @@ export default class TitleScene extends Scene {
 		this.addEventListener('click', moveToMain);
 
 		equipmentEdit.skill = {};
-		equipmentEdit.name = createLabel();
+		equipmentEdit.name = new Label();
 		equipmentEdit.add(equipmentEdit.name);
 		equipmentEdit.name.position.y = vh * 0.19;
-		equipmentEdit.description = createLabelArea(" ", {
+		equipmentEdit.description = new LabelArea(" ", {
 			width: vw * 0.42,
 			font: "18px 'HiraKakuProN-W6'"
 		});
 		equipmentEdit.add(equipmentEdit.description);
 
-		const left = createLabel("<", {font: "48px 'HiraKakuProN-W3'"});
-		const right = createLabel(">", {font: "48px 'HiraKakuProN-W3'"});
-		const up = createLabel("<", {font: "48px 'HiraKakuProN-W3'"});
-		const down = createLabel(">", {font: "48px 'HiraKakuProN-W3'"});
+		const left = new Label("<", {font: "48px 'HiraKakuProN-W3'"});
+		const right = new Label(">", {font: "48px 'HiraKakuProN-W3'"});
+		const up = new Label("<", {font: "48px 'HiraKakuProN-W3'"});
+		const down = new Label(">", {font: "48px 'HiraKakuProN-W3'"});
 
 		left.position.x = -vw * 0.28;
 		right.position.x = vw * 0.28;
@@ -378,7 +385,7 @@ export default class TitleScene extends Scene {
 		equipmentEdit.add(up);
 		equipmentEdit.add(down);
 
-		equipmentEdit.ok = createLabel();
+		equipmentEdit.ok = new Label();
 		equipmentEdit.ok.position.y = -vh * 0.2;
 
 		equipmentEdit.ok.addEventListener('click', () => {
@@ -390,12 +397,13 @@ export default class TitleScene extends Scene {
 
 		equipmentEdit.add(equipmentEdit.ok);
 
-		const back = createLabel("Back");
+		const back = new Label("Back");
 		back.position.y = -vh * 0.25;
 		back.addEventListener('click', () => equipmentEdit.close());
 		equipmentEdit.add(back);
 
 		equipmentEdit.close = () => {
+			back.interactive = false;
 			this.interactive = true;
 			this.labels.forEach(label => label.interactive = true);
 			this.points.forEach(point => point.interactive = true);
@@ -422,7 +430,6 @@ export default class TitleScene extends Scene {
 			} else this.name.text = klass.skillName + ' ' + (level + 1);
 			this.description.text = klass.getDescription(level);
 		};
-		console.log(this)
 	}
 	update(delta) {
 		super.update(delta);
@@ -437,9 +444,15 @@ export default class TitleScene extends Scene {
 		});
 
 		this.points.forEach(point => {
-			const pos = this[point.data.parent].localToWorld(point.data.position).project(this.camera);
+			const v = get(Vector3).copy(point.data.position);
+			const pos = this[point.data.parent].localToWorld(v).project(this.camera);
+			free(v);
 			point.position.x = pos.x * vw / 2;
 			point.position.y = pos.y * vh / 2;
 		});
 	}
+	static requiredResources = {
+		THREE_Model_GLTF: ['player1', 'enem1', 'airballoon'],
+		THREE_Texture: {plane: 'data/images/3.png'}
+	};
 }

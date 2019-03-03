@@ -7,26 +7,41 @@ import {
 } from "three";
 
 import ElementManager from "./elementmanager";
+import assets from "w3g/loading";
 
 export default class EffectManager extends ElementManager {
 
 	constructor(ts) {
 		super();
-		this.hitEffectManager = HitEffectManager(ts);
-		this.explodeManager = ExplodeManager(ts);
-		this.rayManager = RayManager(ts);
+		this.hitEffectManager = new HitEffectManager(ts);
+		this.explodeManager = new ExplodeManager(ts);
+		this.rayManager = new RayManager(ts);
 	}
 
-	update() {
-		this.hitEffectManager.update();
-		this.explodeManager.update();
-		this.rayManager.update();
+	update(delta) {
+		this.hitEffectManager.update(delta);
+		this.explodeManager.update(delta);
+		this.rayManager.update(delta);
 	}
 
 	hit(p, s, t) {return this.hitEffectManager.generate(p, s, t);}
 	explode(p, s, t) {return this.explodeManager.explode(p, s, t);}
 	ray(g, c, o, w, mw, t) {return this.rayManager.ray(g, c, o, w, mw, t);}
+
+	static requiredResources = {
+		THREE_Texture: {explode: "data/images/explosion.png"},
+		GLSL: [
+			'glowFragment',
+			{
+				noisyGlowVertex: "data/glsl/noisyglowvertex.min.glsl",
+				explodeVertex: "data/glsl/expvertex.min.glsl",
+				explodeFragment: "data/glsl/expfrag.min.glsl"
+			}
+		]
+	};
 }
+
+const icosahedronsphere = new IcosahedronGeometry(20, 2);
 
 class HitEffectManager extends ElementManager {
 
@@ -40,37 +55,36 @@ class HitEffectManager extends ElementManager {
 			transparent: true,
 			side: FrontSide,
 			uniforms: {
-				random: {type: "f", value: 100 * Math.random()},
-				c: {type: "f", value: 0},
-				p: {type: "f", value: 3},
-				glowColor: {type: "c", value: new Color(0xffff00)},
-				opacity: {type: "f", value: 1}
+				random: {value: 100 * Math.random()},
+				c: {value: 0},
+				p: {value: 3},
+				glowColor: {value: new Color(0xffff00)},
+				opacity: {value: 1}
 			},
-			vertexShader: phina.asset.AssetManager.get('text', 'noisyglowvertexshader').data,
-			fragmentShader: phina.asset.AssetManager.get('text', 'glowfragshader').data
+			vertexShader: assets.GLSL.noisyGlowVertex,
+			fragmentShader: assets.GLSL.glowFragment
 		});
-		const mesh = new Mesh(new IcosahedronGeometry(20, 2), material).$safe({
-			time: t, timeMax: t
-		}).$safe({
-			time: 10, timeMax: 10,
-			update() {
-				this.time--;
+		const mesh = Object.assign(new Mesh(icosahedronsphere, material), {
+			time: 150, timeMax: 150,
+			update(delta) {
+				this.time -= delta;
 				material.opacity = this.time / this.timeMax;
 				material.uniforms.opacity.value = material.opacity;
 			}
-		});
-		mesh.move(p);
-		mesh.scale.set(s, s, s);
+		}, {time: t, timeMax: t});
+		mesh.position.copy(p);
+		mesh.scale.setScalar(s);
 		this.threescene.add(mesh);
-		this.elements.push(mesh);
+		this.add(mesh);
 		return mesh;
 	}
 
-	update() {
+	update(delta) {
 		for (let i = 0; i < this.count; i++) {
-			this.get(i).update();
-			if (this.get(i).time === 0) {
-				this.get(i).parent.remove(this.get(i));
+			const element = this.get(i);
+			element.update(delta);
+			if (element.time <= 0) {
+				element.parent.remove(element);
 				this.remove(i);
 				i--;
 			}
@@ -89,37 +103,36 @@ class ExplodeManager extends ElementManager {
 		const material = new ShaderMaterial({
 			transparent: true,
 			uniforms: {
-				tExplosion: {type: "t", value: phina.asset.AssetManager.get('threetexture', 'explode').get()},
-				random: {type: "f", value: 100 * Math.random()},
-				time: {type: "f", value: 0},
-				opacity: {type: "f", value: 1}
+				tExplosion: {value: assets.THREE_Texture.explode},
+				random: {value: 100 * Math.random()},
+				time: {value: 0},
+				opacity: {value: 1}
 			},
-			vertexShader: phina.asset.AssetManager.get('text', 'expvertexshader').data,
-			fragmentShader: phina.asset.AssetManager.get('text', 'expfragshader').data
+			vertexShader: assets.GLSL.explodeVertex,
+			fragmentShader: assets.GLSL.explodeFragment
 		});
-		const mesh = new Mesh(new IcosahedronGeometry(20, 2), material).$safe({
-			time: t, timeMax: t
-		}).$safe({
-			time: 10, timeMax: 10,
-			update() {
-				this.time--;
-				material.uniforms.time.value += 0.0025;
+		const mesh = Object.assign(new Mesh(icosahedronsphere, material), {
+			time: 150, timeMax: 150,
+			update(delta) {
+				this.time -= delta;
+				material.uniforms.time.value += 0.0002 * delta;
 				material.opacity = this.time / this.timeMax;
 				material.uniforms.opacity.value = material.opacity;
 			}
-		});
-		mesh.move(p);
-		mesh.scale.set(s, s, s);
+		}, {time: t, timeMax: t});
+		mesh.position.copy(p);
+		mesh.scale.setScalar(s);
 		this.threescene.add(mesh);
-		this.elements.push(mesh);
+		this.add(mesh);
 		return mesh;
 	}
 
-	update() {
+	update(delta) {
 		for (let i = 0; i < this.count; i++) {
-			this.get(i).update();
-			if (this.get(i).time === 0) {
-				this.get(i).parent.remove(this.get(i));
+			const element = this.get(i);
+			element.update(delta);
+			if (element.time <= 0) {
+				element.parent.remove(element);
 				this.remove(i);
 				i--;
 			}
@@ -147,9 +160,9 @@ class RayManager extends ElementManager {
 				generator: g,
 				offset: 500 + c + g.geometry.boundingBox.max.z,
 				time: d,
-				update() {
-					this.time--;
-					if (this.time === 0) {
+				update(delta) {
+					this.time -= delta;
+					if (this.time <= 0) {
 						this.parent.remove(this);
 						self.elements.erase(this);
 						return;
@@ -164,7 +177,7 @@ class RayManager extends ElementManager {
 			});
 			ray.geometry.mergeMesh(upperSphere);
 			this.threescene.add(ray);
-			this.elements.push(ray);
+			this.add(ray);
 			return ray;
 		}
 		const data = a;
@@ -175,12 +188,12 @@ class RayManager extends ElementManager {
 			time: 0,
 			timeMax: b,
 			radiusfunc: c,
-			update() {
-				this.time++;
+			update(delta) {
+				this.time += delta;
 
 				const scale = rays.radiusfunc(this.time, this.timeMax);
 				this.forEach(ray => {
-					if (this.time === this.timeMax) {
+					if (this.time >= this.timeMax) {
 						ray.parent.remove(ray);
 						return;
 					}
@@ -192,7 +205,7 @@ class RayManager extends ElementManager {
 					ray.quaternion.premultiply(this.generator.quaternion);
 					ray.scale.x = ray.scale.z = scale;
 				});
-				if (this.time === this.timeMax) self.elements.erase(this);
+				if (this.time >= this.timeMax) self.remove(self.elements.indexOf(this));
 			}
 		});
 		data.forEach(data => {
@@ -207,7 +220,7 @@ class RayManager extends ElementManager {
 			rays.push(ray);
 		});
 
-		this.elements.push(rays);
+		this.add(rays);
 		return rays;
 	}
 }

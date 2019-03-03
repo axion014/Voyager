@@ -1,25 +1,30 @@
-phina.define('ObstacleManager', {
-	superClass: 'SimpleUpdater',
+import {Mesh, BoxGeometry, MeshStandardMaterial} from "three";
 
-	init: function(ts) {
-		this.superInit();
+import ElementManager from "./elementmanager";
+
+export default class ObstacleManager extends ElementManager {
+
+	constructor(ts) {
+		super();
 		this.threescene = ts;
-	},
+	}
 
-	create: function(p, q, s) {
-		var obstacle = THREE.$extend(new THREE.Mesh(new THREE.BoxGeometry(s.x, s.y, s.z), new THREE.MeshPhongMaterial({
-			color: '#888888'
-		})), {position: p, quaternion: q, size: s});
+	create(p, q, s) {
+		const obstacle = new Mesh(
+			new BoxGeometry(s.x, s.y, s.z), new MeshStandardMaterial({color: '#888'})
+		);
+		obstacle.position.copy(p);
+		obstacle.quaternion.copy(q);
+		obstacle.size = s;
 		this.threescene.add(obstacle);
 		this.elements.push(obstacle);
 		return obstacle;
-	},
-
-	update: function() {
-	},
-
-	removeObstacle: function(i) {
-		this.get(i).parent.remove(this.get(i));
-		this.remove(i);
 	}
-});
+
+	update() {}
+
+	remove(i) {
+		this.get(i).parent.remove(this.get(i));
+		super.remove(i);
+	}
+}
