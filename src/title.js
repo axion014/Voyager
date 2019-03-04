@@ -443,13 +443,14 @@ export default class TitleScene extends Scene {
 			label.material.opacity = 1 - Math.min(Math.max(Math.abs(this.camera.position.z - label.position.z - 50) - 10, 0) * 0.1, 1);
 		});
 
+		const v = get(Vector3);
 		this.points.forEach(point => {
-			const v = get(Vector3).copy(point.data.position);
+			v.copy(point.data.position);
 			const pos = this[point.data.parent].localToWorld(v).project(this.camera);
-			free(v);
 			point.position.x = pos.x * vw / 2;
 			point.position.y = pos.y * vh / 2;
 		});
+		free(v);
 	}
 	static requiredResources = {
 		THREE_Model_GLTF: ['player1', 'enem1', 'airballoon'],
