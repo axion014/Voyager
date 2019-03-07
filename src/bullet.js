@@ -44,7 +44,7 @@ export default class BulletManager extends ElementManager {
 		this.cloneMaterial = c;
 	}
 
-	create(n, r, k) {
+	create(n, p, q, r, k) {
 		if (k === undefined) k = this.cloneMaterial;
 		const bullet = Object.assign(
 			deepclone(this.models[n], false, k && this.materials[n].length === 0), {
@@ -54,6 +54,8 @@ export default class BulletManager extends ElementManager {
 			}
 		}, r);
 		if (k && this.materials[n].length !== 0) bullet.material = this.materials[n].pop();
+		bullet.position.copy(p);
+		bullet.quaternion.copy(q);
 		bullet.velocity = get(Vector3).copy(Axis.z).applyQuaternion(bullet.quaternion).setLength(bullet.v);
 		bullet.name = n;
 		bullet.scale.multiplyScalar(bullet.size * bulletScale);
