@@ -341,7 +341,7 @@ export const units = {
 				const q = get(Quaternion).copy(this.quaternion);
 				THREE_Utils.rotate(q, v, Math.sqrt(Math.random() * 0.0009));
 				v.copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).setLength(this.geometry.boundingBox.max.z).add(this.position);
-				this.allies.bulletManager.create('bullet', v, q, {v: 15, atk: this.getDamage(atk)});
+				this.allies.bulletManager.create('bullet', v, q, {v: 0.5, atk: this.getDamage(atk)});
 				free(v, q);
 			},
 			beam(atk, exps, expt, radius, effect) {
@@ -448,7 +448,7 @@ export const units = {
 				if (this.time % this.firerate === 0) {
 					this.allies.bulletManager.create('bullet', this.position,
 						this.aim && quaternionToTarget ? quaternionToTarget : this.quaternion,
-						{v: 3.5, atk: 7}
+						{v: 0.12, atk: 7}
 					);
 				}
 				if (quaternionToTarget) free(quaternionToTarget);
@@ -481,7 +481,7 @@ export const units = {
 					const v = get(Vector3).copy(this.position)
 						.addScaledVector(currentDirection, this.geometry.boundingBox.max.z);
 					this.allies.bulletManager.create('bullet', v, this.quaternion,
-						{v: 6, size: 1.5, atk: 10}
+						{v: 0.2, size: 1.5, atk: 10}
 					);
 					free(v);
 				}
@@ -509,7 +509,7 @@ export const units = {
 					const q = get(Quaternion).copy(this.quaternion);
 					THREE_Utils.rotateX(q,
 						0.1 + (Math.PI - 0.1) * (this.time % (this.firerate * 8) / this.firerate / 8) / 20 * (Math.random() + 9));
-					this.allies.bulletManager.create('bullet', this.position, q, {v: 2.5, size: 0.5, atk: 5});
+					this.allies.bulletManager.create('bullet', this.position, q, {v: 0.12, size: 0.5, atk: 5});
 					free(q);
 				}
 			}
@@ -532,21 +532,21 @@ export const units = {
 				const tmpVector = get(Vector3);
 				const tmpQuaternion = get(Quaternion);
 				if (this.time % this.firerate1 === 0) {
-					const params = {v: 3, size: 2.5, atk: 15};
+					const params = {v: 0.1, size: 2.5, atk: 15};
 					this.allies.bulletManager.create('bullet',
 						tmpVector.set(7, 0, -24).add(this.position), this.quaternion, params);
 					tmpVector.x -= 14;
 					this.allies.bulletManager.create('bullet', tmpVector, this.quaternion, params);
 				}
 				if (this.time % this.firerate2 === 0) {
-					const params = {v: 3, size: 2.5, atk: 15};
+					const params = {v: 0.1, size: 2.5, atk: 15};
 					this.allies.bulletManager.create('bullet',
 						tmpVector.set(10, -10, -20).add(this.position), this.quaternion, params);
 					tmpVector.x -= 20;
 					this.allies.bulletManager.create('bullet', tmpVector, this.quaternion, params);
 				}
 				if (this.time % this.firerate1 === 9) {
-					const params = {v: 3, size: 2.5, atk: 15};
+					const params = {v: 0.1, size: 2.5, atk: 15};
 					THREE_Utils.rotateY(tmpQuaternion.copy(this.quaternion), 1);
 					this.allies.bulletManager.create('bullet',
 						tmpVector.set(10, 0, -10).add(this.position), tmpQuaternion, params);
@@ -555,7 +555,7 @@ export const units = {
 					this.allies.bulletManager.create('bullet', tmpVector, tmpQuaternion, params);
 				}
 				if (this.time % this.firerate2 === 11) {
-					const params = {v: 3, size: 2.5, atk: 15};
+					const params = {v: 0.1, size: 2.5, atk: 15};
 					THREE_Utils.rotateY(tmpQuaternion.copy(this.quaternion), Math.PI / 2);
 					this.allies.bulletManager.create('bullet',
 						tmpVector.set(10, 0, 0).add(this.position), tmpQuaternion, params);
@@ -564,7 +564,7 @@ export const units = {
 					this.allies.bulletManager.create('bullet', tmpVector, tmpQuaternion, params);
 				}
 				if (this.time % this.firerate2 === 22) {
-					const params = {v: 3, size: 2.5, atk: 15};
+					const params = {v: 0.1, size: 2.5, atk: 15};
 					THREE_Utils.rotateY(tmpQuaternion.copy(this.quaternion), 3);
 					this.allies.bulletManager.create('bullet',
 						tmpVector.set(10, 0, 20).add(this.position), tmpQuaternion, params);
