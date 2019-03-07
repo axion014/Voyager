@@ -415,7 +415,7 @@ export default class MainScene extends Scene {
 				}
 			}
 
-			if (keyDown.Space) this.message.visible = false; // Space Key
+			if (keyDown.Space && this.message) this.message.visible = false; // Space Key
 
 			const changeToResultScreenMode = () => {
 				this.addEasing(new Easing(this.resulttitle).add({opacity: 1, y: 0.17 * vh}, 100, Easing.LINEAR));
