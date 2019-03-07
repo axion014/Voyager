@@ -69,7 +69,7 @@ export default class BulletManager extends ElementManager {
 			const bullet = this.get(i);
 			const radius = unit.hitSphere ? unit.hitSphere : unit.geometry.boundingSphere.radius * unit.scale.x;
 			if (unit.position.distanceTo(bullet.position) < radius + bullet.size) {
-				this.scene.effectManager.hit(bullet.position, bullet.size, 10);
+				this.scene.effectManager.hit(bullet.position, bullet.size, 300);
 				unit.dispatchEvent({type: 'hitByBullet', source: bullet});
 				unit.hp -= bullet.atk / unit.armor;
 				if (!bullet.pierce) {

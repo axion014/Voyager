@@ -157,7 +157,7 @@ export const units = {
 		filename: 'fighter-1',
 		properties: {
 			myrot: {x: 0, y: 0, z1: 0, z2: 0}, pitch: 0, yaw: 0, v: 0.17, av: new Vector3(),
-			maxenergy: 2000, maxhp: 100, speed: 0.06, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5, excludeFromHitTest: true,
+			maxenergy: 2000, maxhp: 100, speed: 0.06, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5, excludeFromHitTest: true, explodeTime: 1000,
 			raycaster: new Raycaster(),
 			update(delta) {
 				if (this.targetingEnemy && !this.targetingEnemy.parent) {
@@ -463,7 +463,7 @@ export const units = {
 	enem2: {
 		filename: 'fighter-2',
 		properties: {
-			hp: 75, v: 0.17, size: 15, chase: 0.0014, sharpness: 2, firerate: 15, explodeTime: 30, weight: 100,
+			hp: 75, v: 0.17, size: 15, chase: 0.0014, sharpness: 2, firerate: 15, explodeTime: 900, weight: 100,
 			update(delta) {
 				const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z);
 				if (this.scene.player && !this.scene.player.position.equals(this.position)) {
@@ -521,7 +521,7 @@ export const units = {
 	airballoon: {
 		filename: 'airballoon',
 		properties: {
-			hp: 1000, v: 0.007, size: 40, firerate1: 18, firerate2: 33, explodeTime: 45, weight: 75,
+			hp: 1000, v: 0.007, size: 40, firerate1: 18, firerate2: 33, explodeTime: 1200, weight: 75,
 			init() {
 				this.scale.setScalar(2);
 			},
@@ -582,7 +582,7 @@ export const units = {
 	blademinion: {
 		filename: 'slicer',
 		properties: {
-			hp: 50, chase: 0.0024, v: 0.25, sharpness: 3, size: 5, explodeTime: 30, stealth: true, weight: 25,
+			hp: 50, chase: 0.0024, v: 0.25, sharpness: 3, size: 5, explodeTime: 800, stealth: true, weight: 25,
 			init() {
 				this.scale.setScalar(7);
 			},
@@ -627,7 +627,7 @@ export const units = {
 		filename: 'assault',
 		properties: {
 			hp: 10, chase: 0.0024, v: 0.2, bv: 0.24, atk: 8, sharpness: 1.4, firerate: 28, size: 5, weight: 16,
-			mindist: 50, explodeTime: 20, expire: Infinity,
+			mindist: 50, explodeTime: 600, expire: Infinity,
 			update(delta) {
 				this.expire -= delta;
 				if (this.expire <= 0) {
