@@ -437,8 +437,6 @@ export default class MainScene extends Scene {
 			}
 
 			if (this.player.hp <= 0) {
-				this.effectManager.explode(this.player.position, 10, 30);
-				this.threeScene.remove(this.player);
 				this.player = null;
 
 				this.resulttext.text = 'Score: ' + Math.max(this.score, 0).toFixed(0)
