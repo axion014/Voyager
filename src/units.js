@@ -263,7 +263,6 @@ export const units = {
 				});
 
 				if (!this.scene.space) {
-					console.log(delta)
 					this.position.addScaledVector(direction, this.v * delta);
 					this.scene.shakeScreen((this.v - this.minspeed) * 1.5);
 				}
