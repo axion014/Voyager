@@ -102,7 +102,6 @@ export class UnitManager extends ElementManager {
 		this.dispatchEvent({type: "update"});
 		this.forEach((unit, i) => {
 			this.opponents.bulletManager.hitTest(unit);
-			unit.update(delta);
 			if (unit.despawn) {
 				this.remove(i);
 				return;

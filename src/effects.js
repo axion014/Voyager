@@ -82,7 +82,6 @@ class HitEffectManager extends ElementManager {
 	update(delta) {
 		for (let i = 0; i < this.count; i++) {
 			const element = this.get(i);
-			element.update(delta);
 			if (element.time <= 0) {
 				element.parent.remove(element);
 				this.remove(i);
@@ -130,7 +129,6 @@ class ExplodeManager extends ElementManager {
 	update(delta) {
 		for (let i = 0; i < this.count; i++) {
 			const element = this.get(i);
-			element.update(delta);
 			if (element.time <= 0) {
 				element.parent.remove(element);
 				this.remove(i);
