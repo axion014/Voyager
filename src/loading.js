@@ -12,11 +12,14 @@ import ZoomblurShader from "w3g/three-effect/ZoomblurShader";
 import regeneratorRuntime from "regenerator-runtime"; // async requires this
 
 import TitleScene from "./title";
+import {PLAYER} from "./constants";
 import "./units";
 
 addFile('GLSL', 'glowFragment', "data/glsl/glowfrag.min.glsl");
 
-export const initialLoads = [FadeShader, ZoomblurShader, TitleScene];
+export const initialLoads = [FadeShader, ZoomblurShader, TitleScene, {
+	THREE_Model_GLTF: localStorage.getItem(PLAYER) || "player1"
+}];
 
 export class LoadingScene extends Scene {
 

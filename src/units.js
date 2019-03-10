@@ -686,10 +686,7 @@ function getUnit(name) {
 	}
 	return loadedunit[name];
 }
-
-export const builds = [];
-
-Object.keys(units).forEach(name => {
-	addFile('THREE_Model_GLTF', name, `data/models/${units[name].filename}.glb`);
-	if (units[name].builds) units[name].builds.forEach(build => builds.push(Object.assign({name: name}, build)));
-});
+const unitnames = Object.keys(units);
+unitnames.forEach(name => addFile('THREE_Model_GLTF', name, `data/models/${units[name].filename}.glb`));
+export const builds = unitnames.filter(name => units[name].builds)
+	.flatMap(name => units[name].builds.map(build => Object.assign({name: name}, build)));

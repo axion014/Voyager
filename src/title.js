@@ -23,6 +23,7 @@ import {get, free} from "w3g/utils";
 import * as skills from "./skills";
 import MainScene from "./mainscene";
 import {Mark} from "./geometries";
+import {PLAYER} from "./constants";
 
 const BASE_Z = 100;
 const SKILLS = "skills-0.1" // retrieve key for current set of skills
@@ -35,6 +36,7 @@ export default class TitleScene extends Scene {
 
 	constructor() {
 		super();
+		let currentPlayer = assets.THREE_Model_GLTF[localStorage.getItem(PLAYER) || "player1"].clone();
 		const currentSkills = JSON.parse(localStorage.getItem(SKILLS)) || [
 			{klass: skills.Railgun, level: 0},
 			{klass: skills.Empty, level: 0},
@@ -67,10 +69,7 @@ export default class TitleScene extends Scene {
 				x: 0, y: 0, sub: [
 					{type: 'label', value: 'Forever Flight', y: 15, size: 3.6},
 					{type: 'label', value: 'Click to start', y: -15, size: 1.8},
-					{
-						type: 'model', name: 'player', value: assets.THREE_Model_GLTF.player1.clone(),
-						x: 0, y: 0, z: -50
-					},
+					{type: 'model', name: 'player', value: currentPlayer, x: 0, y: 0, z: -50},
 					{
 						type: 'model', value: new Mesh(
 							new CircleBufferGeometry(10000, 100),
@@ -453,7 +452,7 @@ export default class TitleScene extends Scene {
 		free(v);
 	}
 	static requiredResources = {
-		THREE_Model_GLTF: ['player1', 'enem1', 'airballoon'],
+		THREE_Model_GLTF: ['enem1', 'airballoon'],
 		THREE_Texture: {plane: 'data/images/3.png'}
 	};
 }

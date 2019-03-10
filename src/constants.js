@@ -11,3 +11,5 @@ export const maxAlliedBullets = 1000;
 export const maxEnemyBullets = 1500;
 export const bulletRemovalMargin = 50;
 export const bulletRetainingRadius = 800;
+
+export const PLAYER = "player-0.1";
