@@ -158,7 +158,7 @@ export const units = {
 		filename: 'fighter-1',
 		properties: {
 			myrot: {x: 0, y: 0, z1: 0, z2: 0}, pitch: 0, yaw: 0, v: 0.17, av: new Vector3(),
-			maxenergy: 2000, maxhp: 100, speed: 0.06, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5, excludeFromHitTest: true, explodeTime: 1000,
+			maxenergy: 2000, maxhp: 100, speed: 0.001, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5, excludeFromHitTest: true, explodeTime: 1000,
 			raycaster: new Raycaster(),
 			update(delta) {
 				if (this.targetingEnemy && !this.targetingEnemy.parent) {
@@ -175,11 +175,11 @@ export const units = {
 					Math.atan2(mouseY - 0.5 * vh, mouseX - 0.5 * vw) +
 					this.myrot.y - this.yaw + (reverse ? Math.PI * 1.5 : Math.PI / 2)
 				);
-				let maxrot = (0.04 - this.v * 0.001) * this.rotspeed;
+				let maxrot = (0.0017 - this.v * 0.001) * this.rotspeed;
 				if (Math.abs(rot) > 2.5) this.mode = 'back';
 				else {
 					if (this.mode === 'back') this.mode = null;
-					rot = Math.min(Math.max(rot * 0.07, -maxrot), maxrot);
+					rot = Math.min(Math.max(rot * 0.003, -maxrot), maxrot);
 					this.myrot.z1 += rot * 0.3 * delta;
 					this.yaw += rot * delta;
 				}
@@ -191,7 +191,7 @@ export const units = {
 				if (this.opponents.elements.length !== 0) {
 					// Select targeting enemy
 					const futurePosition = get(Vector3);
-					futurePosition.copy(this.position).addScaledVector(direction, this.v * 5);
+					futurePosition.copy(this.position).addScaledVector(direction, this.v * 150);
 					const futureAngle = get(Quaternion);
 					THREE_Utils.rotateY(futureAngle.set(0, 0, 0, 1), this.myrot.y - this.yaw * 0.5 + ((this.mode === 'back') !== reverse ? Math.PI : 0))
 					const futureDirection = get(Vector3);
@@ -248,7 +248,7 @@ export const units = {
 					const b = (this.mode === 'back') !== reverse;
 					rot = normalizeAngle(Math.atan2(-v.y, Math.sqrt(v.x * v.x + v.z * v.z) * (b ? -1 : 1)) - this.myrot.x - this.pitch);
 					free(v);
-					this.pitch += Math.min(Math.max(rot * 0.15, -maxrot), maxrot) * delta;
+					this.pitch += Math.min(Math.max(rot * 1.5, -maxrot), maxrot) * delta;
 				}
 
 				// Move and rotate
@@ -271,17 +271,17 @@ export const units = {
 
 				free(direction);
 
-				this.myrot.z1 *= 0.95 ** delta;
+				this.myrot.z1 *= 0.995 ** delta;
 
-				this.yaw *= (0.95 - (Math.PI / 2 - Math.abs(Math.abs(this.myrot.x) - Math.PI / 2)) * 0.1) ** delta;
-				this.pitch *= 0.9 ** delta;
+				this.yaw *= (0.995 - (Math.PI / 2 - Math.abs(Math.abs(this.myrot.x) - Math.PI / 2)) * 0.01) ** delta;
+				this.pitch *= 0.99 ** delta;
 
 				// Speed loss
-				if (this.scene.space) this.av.multiplyScalar(0.996 ** delta);
+				if (this.scene.space) this.av.multiplyScalar(0.9996 ** delta);
 				else {
-					this.v *= (0.98 - (this.pitch + this.yaw) * 0.06) ** delta;
+					this.v *= (0.999 - (this.pitch + this.yaw) * 0.003) ** delta;
 					if (this.v < this.minspeed) this.v = this.minspeed;
-					this.av.multiplyScalar(0.98 ** delta);
+					this.av.multiplyScalar(0.998 ** delta);
 				}
 
 
@@ -341,7 +341,7 @@ export const units = {
 				const q = get(Quaternion).copy(this.quaternion);
 				THREE_Utils.rotate(q, v, Math.sqrt(Math.random() * 0.0009));
 				v.copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).setLength(this.geometry.boundingBox.max.z).add(this.position);
-				this.allies.bulletManager.create('bullet', v, q, {v: 0.5, atk: this.getDamage(atk)});
+				this.allies.bulletManager.create('bullet', v, q, {v: 1.02, atk: this.getDamage(atk)});
 				free(v, q);
 			},
 			beam(atk, exps, expt, radius, effect) {
@@ -495,7 +495,7 @@ export const units = {
 	enem3: {
 		filename: 'enem-2',
 		properties: {
-			hp: 500, v: 0.008, size: 30, firerate: 1, r: 0.03, explodeTime: 30, weight: 250, c: new Quaternion(),
+			hp: 500, v: 0.008, size: 30, firerate: 1, r: 0.001, explodeTime: 900, weight: 250, c: new Quaternion(),
 			init() {
 				this.scale.setScalar(3);
 			},

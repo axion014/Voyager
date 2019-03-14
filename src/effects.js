@@ -114,7 +114,7 @@ class ExplodeManager extends ElementManager {
 			time: 150, timeMax: 150,
 			update(delta) {
 				this.time -= delta;
-				material.uniforms.time.value += 0.0002 * delta;
+				material.uniforms.time.value += 0.00005 * delta;
 				material.opacity = this.time / this.timeMax;
 				material.uniforms.opacity.value = material.opacity;
 			}
