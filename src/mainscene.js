@@ -215,7 +215,7 @@ export default class MainScene extends Scene {
 					const rotation = i * Math.PI / 2;
 					this.direction[i] = new SymmetricTriangle({
 						x: this.minimap.radius * Math.sin(rotation), y: this.minimap.radius * Math.cos(rotation),
-						fillColor: '#181818', width: 12, height: 7.5, opacity: 0.5, rotation: rotation
+						fillColor: '#181818', width: 12, height: 7.5, opacity: 0.5, rotation: -rotation
 					});
 					this.minimap.add(this.direction[i]);
 				}
@@ -376,7 +376,7 @@ export default class MainScene extends Scene {
 			});
 			this.windManager.playerposy = this.player.position.y;
 
-			this.playerpos.rotation = -this.player.myrot.y + (Math.abs(this.player.myrot.x) > Math.PI / 2 && Math.abs(this.player.myrot.x) < Math.PI * 1.5 ? 0 : Math.PI);
+			this.playerpos.rotation = +this.player.myrot.y + (Math.abs(this.player.myrot.x) > Math.PI / 2 && Math.abs(this.player.myrot.x) < Math.PI * 1.5 ? 0 : Math.PI);
 
 			/*if (k.getKeyDown(53)) { // 5 Key
 				this.camera.radius++;
