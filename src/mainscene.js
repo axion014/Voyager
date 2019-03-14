@@ -297,6 +297,12 @@ export default class MainScene extends Scene {
 
 	update(delta) {
 		super.update(delta);
+
+		// Trigger events
+		this.enemyManager.update(delta);
+		this.allyManager.update(delta);
+		this.effectManager.update(delta);
+
 		if (!this.player) {
 			THREE_Utils.rotateAbsY(this.camera, delta * -0.0001);
 		} else if (this.goaled) {
@@ -350,20 +356,11 @@ export default class MainScene extends Scene {
 					}
 				}
 			}
-			if (this.allyBulletManager.count > maxAlliedBullets + bulletRemovalMargin)
-				while (this.allyBulletManager.count > maxAlliedBullets) this.allyBulletManager.remove(0);
-			if (this.enmBulletManager.count > maxEnemyBullets + bulletRemovalMargin)
-				while (this.enmBulletManager.count > maxEnemyBullets) this.enmBulletManager.remove(0);
 
 			// Camera control
 
 			this.camera.position.addVectors(this.player.position, this.cameraPosition);
 			this.camera.lookAt(this.player.position);
-
-			// Trigger events
-			this.enemyManager.update(delta);
-			this.allyManager.update(delta);
-			this.effectManager.update(delta);
 
 			this.allyManager.elements.forEach(ally => {
 				if (ally.excludeFromHitTest) return;
@@ -481,6 +478,11 @@ export default class MainScene extends Scene {
 			this.time += delta;
 			if (this.time % 20000 < delta) this.score--;
 		}
+
+		if (this.allyBulletManager.count > maxAlliedBullets + bulletRemovalMargin)
+			while (this.allyBulletManager.count > maxAlliedBullets) this.allyBulletManager.remove(0);
+		if (this.enmBulletManager.count > maxEnemyBullets + bulletRemovalMargin)
+			while (this.enmBulletManager.count > maxEnemyBullets) this.enmBulletManager.remove(0);
 
 
 		function updateMessageBoxPlacement() {
