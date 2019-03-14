@@ -21,7 +21,7 @@ export default class Minimap extends Ellipse {
 
 	addObject(obj, options) {
 		const point = new Ellipse(Object.assign({
-			radius: 3, fillColor: 'hsl(210, 80%, 60%)', strokeColor: 'black', strokeWidth: 1, opacity: 0.5
+			radius: 3, strokeColor: 'black', strokeWidth: 1, opacity: 0.5
 		}, options || {}));
 		this.elements.set(obj, point);
 		defineAccessor(point, "visible", {

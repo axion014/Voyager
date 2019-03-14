@@ -42,10 +42,11 @@ export class UnitManager extends ElementManager {
 	spawncount = 0;
 	deathcount = 0;
 
-	constructor(s, bm) {
+	constructor(s, bm, rc) {
 		super();
 		this.scene = s;
 		this.bulletManager = bm;
+		this.raderColor = rc;
 	}
 
 	create(build, position, quaternion, group, delay, targetProgress) {
@@ -77,7 +78,7 @@ export class UnitManager extends ElementManager {
 			if (unit.init) unit.init();
 			this.scene.threeScene.add(unit);
 			this.elements.push(unit);
-			this.scene.minimap.addObject(unit).visible = !unit.stealth;
+			this.scene.minimap.addObject(unit, {fillColor: this.raderColor}).visible = !unit.stealth;
 			return unit;
 		}
 	}

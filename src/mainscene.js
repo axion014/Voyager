@@ -73,9 +73,9 @@ export default class MainScene extends Scene {
 			() => { // build data structure
 				this.effectManager = new EffectManager(this.threeScene);
 				this.allyBulletManager = new BulletManager(this, false);
-				this.allyManager = new UnitManager(this, this.allyBulletManager);
+				this.allyManager = new UnitManager(this, this.allyBulletManager, 'hsl(210, 80%, 60%)');
 				this.enmBulletManager = new BulletManager(this, true);
-				this.enemyManager = new UnitManager(this, this.enmBulletManager);
+				this.enemyManager = new UnitManager(this, this.enmBulletManager, 'hsl(0, 80%, 60%)');
 				this.allyManager.opponents = this.enemyManager;
 				this.enemyManager.opponents = this.allyManager;
 				this.obstacleManager = new ObstacleManager(this.threeScene);
@@ -191,7 +191,7 @@ export default class MainScene extends Scene {
 				}));
 
 				this.minimap.radius = 75;
-				this.minimap.fillColor.set('hsl(0, 0%, 30%)');
+				this.minimap.fillColor = 'hsl(0, 0%, 30%)';
 				this.minimap.opacity = 0.5;
 				this.minimap.position.set(vw / 2 - 100, 100 - vh / 2, 0);
 				this.UIScene.add(this.minimap);
@@ -220,7 +220,7 @@ export default class MainScene extends Scene {
 					this.minimap.add(this.direction[i]);
 				}
 
-				this.mark = new Mark({width: 30, height: 30, opacity: 0.5, strokeWidth: 1});
+				this.mark = new Mark({width: 30, height: 30, opacity: 0.5, strokeWidth: 1, strokeColor: '#000'});
 				this.minimap.add(this.mark);
 
 				this.target = new Mark({width: 30, height: 30, opacity: 0.7, strokeWidth: 1});
