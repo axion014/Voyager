@@ -28,7 +28,7 @@ import BulletManager from "./bullet";
 import ObstacleManager from "./obstacle";
 import WindManager from "./wind";
 import {
-	bossHPGaugeFadeTime, messageDelay, gridSize,
+	bossHPGaugeFadeTime, messageDelay, gridDivisions,
 	maxAlliedBullets, maxEnemyBullets, bulletRemovalMargin, bulletRetainingRadius
 } from "./constants";
 import {Mark} from "./geometries";
@@ -276,11 +276,11 @@ export default class MainScene extends Scene {
 				this.threeScene.add(directionalLight);
 				this.threeScene.add(new AmbientLight(0x606060));
 
-				const plane = new GridHelper(20400, gridSize)
+				const plane = new GridHelper(20400, 20400 / gridDivisions, 0x888888);
 				plane.update = function() {
 					if (scene.player) {
-						this.position.x = scene.player.position.x - scene.player.position.x % gridSize;
-						this.position.z = scene.player.position.z - scene.player.position.z % gridSize;
+						this.position.x = scene.player.position.x - scene.player.position.x % gridDivisions;
+						this.position.z = scene.player.position.z - scene.player.position.z % gridDivisions;
 					}
 				};
 				this.threeScene.add(plane);

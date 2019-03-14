@@ -4,7 +4,7 @@ export const raderRadius = 1500;
 
 export const windScaleY = 30;
 export const bossHPGaugeFadeTime = 300;
-export const gridSize = 200;
+export const gridDivisions = 204;
 export const messageDelay = 180;
 
 export const maxAlliedBullets = 1000;
