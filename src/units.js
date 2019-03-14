@@ -88,15 +88,16 @@ export class UnitManager extends ElementManager {
 		autospawn = Object.assign(getUnit(build.name).autospawn, autospawn);
 		const group = {size: 0, message: km};
 		this.groups.push(group);
+		const pos = get(Vector3).copy(position);
 		for(let i = 0; i < autospawn.rep; i++) {
-			this.create(build, position, quaternion, group, autospawn.time, autospawn.progress);
+			this.create(build, pos, quaternion, group, autospawn.time, autospawn.progress);
 			if (autospawn.delay) {autospawn.time += autospawn.delay;}
 			//THREE.$add(properties, autospawn.options);
-			position.add(new Vector3(
-				Math.random() * autospawn.random.x * 2 - autospawn.random.x,
-				Math.random() * autospawn.random.y * 2 - autospawn.random.y,
-				Math.random() * autospawn.random.z * 2 - autospawn.random.z));
+			pos.x += Math.random() * autospawn.random.x * 2 - autospawn.random.x;
+			pos.y += Math.random() * autospawn.random.y * 2 - autospawn.random.y;
+			pos.z += Math.random() * autospawn.random.z * 2 - autospawn.random.z;
 		}
+		free(pos);
 	}
 
 	update(delta) {

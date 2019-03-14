@@ -382,7 +382,7 @@ export default class MainScene extends Scene {
 				this.camera.radius++;
 				this.camera.radius %= this.camera.radiuses.length;
 			}
-			this.camera.quaternion.copy(new Quaternion());
+			this.camera.quaternion.set(0, 0, 0, 1);
 			this.camera.rotateZ(-player.myrot.z2 + (this.camera.radius !== 0 ? -player.myrot.z1 : 0));
 			this.camera.rotateX(-player.myrot.x);
 			this.camera.rotateY(player.myrot.y + Math.PI);
