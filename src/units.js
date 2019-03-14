@@ -225,7 +225,7 @@ export const units = {
 				if (targetingEnemy) {
 					this.targetMarker.visible = true;
 					const pos = get(Vector3).copy(targetingEnemy.position).project(this.scene.camera);
-					this.targetMarker.position.set((pos.x + 1) * vw / 2, (1 - pos.y) * vh / 2);
+					this.targetMarker.position.set(pos.x * vw / 2, pos.y * vh / 2, 0);
 					free(pos);
 					this.targetMarker.strokeColor = this.mode === 'back' ? "#a44" : "#444";
 				} else this.targetMarker.visible = false;

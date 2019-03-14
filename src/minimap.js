@@ -13,7 +13,7 @@ function update(point, obj) {
 	distance *= minimapScale;
 	distance = Math.min(distance, this.width);
 	const angle = Math.atan2(obj.position.x, obj.position.z);
-	point.position.set(Math.sin(angle) * distance, Math.cos(angle) * distance, 0);
+	point.position.set(Math.sin(angle) * distance, -Math.cos(angle) * distance, 0);
 };
 
 export default class Minimap extends Ellipse {

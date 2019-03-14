@@ -193,7 +193,7 @@ export default class MainScene extends Scene {
 				this.minimap.radius = 75;
 				this.minimap.fillColor.set('hsl(0, 0%, 30%)');
 				this.minimap.opacity = 0.5;
-				this.minimap.position.set(vw - 100, vh - 100, 0);
+				this.minimap.position.set(vw / 2 - 100, 100 - vh / 2, 0);
 				this.UIScene.add(this.minimap);
 
 				this.playerpos = new SymmetricTriangle({
@@ -203,7 +203,7 @@ export default class MainScene extends Scene {
 				this.minimap.add(this.playerpos);
 
 				this.name = new Label(stagename, {
-					x: vw / 2, y: vh / 2, font: "24px 'HiraKakuProN-W3'", fillStyle: 'hsla(0, 0%, 0%, 0.8)', opacity: 0
+					font: "24px 'HiraKakuProN-W3'", fillStyle: 'hsla(0, 0%, 0%, 0.8)', opacity: 0
 				});
 				this.UIScene.add(this.name);
 				this.addEasing(new Easing(this.name)
@@ -230,13 +230,13 @@ export default class MainScene extends Scene {
 
 				this.gauge_h = new Gauge({
 					strokeColor: '#aaa', gaugeColor: 'rgb(255, 64, 64)', gaugeOpacity: 0.3,
-					x: 80, y: vh - 100, value: 100, maxValue: 100, strokeWidth: 1, width: 128, height: 16
+					x: 80 - vw / 2, y: 100 - vh / 2, value: 100, maxValue: 100, strokeWidth: 1, width: 128, height: 16
 				});
 				this.UIScene.add(this.gauge_h);
 
 				this.gauge_e = new Gauge({
 					strokeColor: '#aaa', gaugeColor: 'rgb(64, 64, 255)', gaugeOpacity: 0.3,
-					x: 80, y: vh - 80, value: 2000, maxValue: 2000, strokeWidth: 1, width: 128, height: 16
+					x: 80 - vw / 2, y: 80 - vh / 2, value: 2000, maxValue: 2000, strokeWidth: 1, width: 128, height: 16
 				});
 				this.UIScene.add(this.gauge_e);
 
@@ -244,18 +244,18 @@ export default class MainScene extends Scene {
 					for(let i = 0; i < goalraders.length; i++) this.UIScene.add(goalraders[i]);
 					this.gauge_boss_h = new Gauge({
 						strokeColor: '#aaa', gaugeColor: 'rgb(200, 16, 16)', gaugeOpacity: 0.3,
-						x: vw / 2, y: 20, strokeWidth: 1, width: vw / 1.2, height: 16, opacity: 0
+						y: vh / 2 - 20, strokeWidth: 1, width: vw / 1.2, height: 16, opacity: 0
 					});
 					this.UIScene.add(this.gauge_boss_h);
 					this.msgbox = new Rectangle({
 						fillColor: 'hsl(0, 0%, 30%)', strokeColor: 'hsl(0, 0%, 30%)',
 						fillOpacity: 0.5, strokeOpacity: 0.25,
-						y: vh, strokeWidth: 1, cornerRadius: 5, width: vw / 5, height: vh / 12
+						y: -vh / 2, strokeWidth: 1, cornerRadius: 5, width: vw / 5, height: vh / 12
 					});
 					this.msgbox.live = 0;
 					this.UIScene.add(this.msgbox);
 					this.message = new Label(" ", {
-						y: vh, font: "16px 'HiraKakuProN-W3'", fillStyle: 'hsl(0, 0%, 0%, 0.6)', align: textAlign.left
+						y: -vh / 2, font: "16px 'HiraKakuProN-W3'", fillStyle: 'hsl(0, 0%, 0%, 0.6)', align: textAlign.left
 					});
 					this.message.visible = false;
 					this.UIScene.add(this.message);
@@ -418,8 +418,8 @@ export default class MainScene extends Scene {
 			if (keyDown.Space && this.message) this.message.visible = false; // Space Key
 
 			const changeToResultScreenMode = () => {
-				this.addEasing(new Easing(this.resulttitle).add({opacity: 1, y: 0.17 * vh}, 100, Easing.LINEAR));
-				this.addEasing(new Easing(this.resulttext).wait(350).add({opacity: 1, y: 0.3 * vh}, 100, Easing.LINEAR));
+				this.addEasing(new Easing(this.resulttitle).add({opacity: 1, y: 0.33 * vh}, 100, Easing.LINEAR));
+				this.addEasing(new Easing(this.resulttext).wait(350).add({opacity: 1, y: 0.2 * vh}, 100, Easing.LINEAR));
 				if (this.message) this.message.visible = false;
 				this.addEasing(new Easing(this.minimap).add({opacity: 0}, 650, Easing.LINEAR));
 
