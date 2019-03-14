@@ -5,16 +5,17 @@ import {connectColor} from "w3g/threeutil";
 import Element from "w3g/element";
 import {hitTestEllipse} from 'w3g/hittest';
 
+const plane = new PlaneBufferGeometry(1, 1);
 export class Mark extends Element {
 	constructor(options) {
 		const group = new Group();
 
 		const material = new MeshBasicMaterial({color: options.strokeColor});
 
-		const vertical = new Mesh(new PlaneBufferGeometry(1, 1), material);
+		const vertical = new Mesh(plane, material);
 		group.add(vertical);
 
-		const horizontal = new Mesh(new PlaneBufferGeometry(1, 1), material);
+		const horizontal = new Mesh(plane, material);
 		group.add(horizontal);
 
 		super(group, options);
