@@ -23,10 +23,9 @@ import {get, free} from "w3g/utils";
 import * as skills from "./skills";
 import MainScene from "./mainscene";
 import {Mark} from "./geometries";
-import {PLAYER} from "./constants";
+import {PLAYER, SKILLS} from "./constants";
 
 const BASE_Z = 100;
-const SKILLS = "skills-0.1" // retrieve key for current set of skills
 
 export default class TitleScene extends Scene {
 
