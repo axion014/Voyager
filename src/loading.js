@@ -53,7 +53,7 @@ export class LoadingScene extends Scene {
 		this.addEasing(
 			new Easing(this.label)
 				.add({opacity: 0}, 200, Easing.LINEAR)
-				.trigger(this.nextScene.createAndEnter(...this.nextSceneArguments))
+				.trigger(() => this.nextScene.createAndEnter(...this.nextSceneArguments))
 		);
 	}
 }

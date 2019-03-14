@@ -184,8 +184,7 @@ export const units = {
 					this.yaw += rot * delta;
 				}
 
-				const direction = get(Vector3);
-				direction.copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
+				const direction = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
 
 				let targetingEnemy;
 				if (this.opponents.elements.length !== 0) {
@@ -246,7 +245,7 @@ export const units = {
 					const v = get(Vector3);
 					v.copy(targetingEnemy.position).add(targetingEnemy.geometry.boundingSphere.center).sub(this.position);
 					const b = (this.mode === 'back') !== reverse;
-					rot = normalizeAngle(Math.atan2(-v.y, Math.sqrt(v.x * v.x + v.z * v.z) * (b ? -1 : 1)) - this.myrot.x - this.pitch);
+					const rot = normalizeAngle(Math.atan2(-v.y, Math.sqrt(v.x * v.x + v.z * v.z) * (b ? -1 : 1)) - this.myrot.x - this.pitch);
 					free(v);
 					this.pitch += Math.min(Math.max(rot * 1.5, -maxrot), maxrot) * delta;
 				}
