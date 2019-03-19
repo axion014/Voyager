@@ -1,6 +1,6 @@
 import {Mesh, Group, PlaneBufferGeometry, MeshBasicMaterial} from "three";
 
-import {connect, connectMulti} from "w3g/utils";
+import {connectMulti} from "w3g/utils";
 import {connectColor} from "w3g/threeutil";
 import Element from "w3g/element";
 import {hitTestEllipse} from 'w3g/hittest';
@@ -8,24 +8,32 @@ import {hitTestEllipse} from 'w3g/hittest';
 const plane = new PlaneBufferGeometry(1, 1);
 export class Mark extends Element {
 	constructor(options) {
-		const group = new Group();
-
 		const material = new MeshBasicMaterial({color: options.strokeColor});
 
-		const vertical = new Mesh(plane, material);
-		group.add(vertical);
+		super(new Group(), options);
 
-		const horizontal = new Mesh(plane, material);
-		group.add(horizontal);
+		this.vertical = new Mesh(plane, material);
+		this.nativeContent.add(this.vertical);
 
-		super(group, options);
+		this.horizontal = new Mesh(plane, material);
+		this.nativeContent.add(this.horizontal);
 
-		vertical.scale.set(options.strokeWidth, options.height, 1);
-		horizontal.scale.set(options.width, options.strokeWidth, 1);
+		this.vertical.scale.set(options.strokeWidth, options.height, 1);
+		this.horizontal.scale.set(options.width, options.strokeWidth, 1);
 
-		connectColor(this, "strokeColor", material, "color", group);
-		connect(this, "width", horizontal.scale, "x");
-		connect(this, "height", vertical.scale, "y");
-		connectMulti(this, "strokeWidth", [vertical.scale, horizontal.scale], ["x", "y"]);
+		connectColor(this, "strokeColor", material, "color", this.nativeContent);
+		connectMulti(this, "strokeWidth", [this.vertical.scale, this.horizontal.scale], ["x", "y"]);
+	}
+
+	get width() {return this.horizontal.scale.x}
+	set width(v) {
+		if (!this.horizontal) return;
+		this.horizontal.scale.x = v;
+	}
+
+	get height() {return this.vertical.scale.y}
+	set height(v) {
+		if (!this.vertical) return;
+		this.vertical.scale.y = v;
 	}
 }
