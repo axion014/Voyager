@@ -261,6 +261,12 @@ export default class MainScene extends Scene {
 					this.UIScene.add(this.message);
 				}
 
+				this.resultbg = new Rectangle({
+					fillColor: 'hsl(0, 0%, 50%)', fillOpacity: 0.5,
+					y: vh, opacity: 0, selfOpacity: 0.65, width: vw * 0.8, height: vh * 0.9
+				});
+				this.UIScene.add(this.resultbg);
+
 				this.resulttitle = new Label("Result", {
 					font: "48px 'HiraKakuProN-W3'", fillStyle: 'hsla(0, 0%, 0%, 0.8)', opacity: 0
 				});
@@ -415,8 +421,9 @@ export default class MainScene extends Scene {
 			if (keyDown.Space && this.message) this.message.visible = false; // Space Key
 
 			const changeToResultScreenMode = () => {
-				this.addEasing(new Easing(this.resulttitle).add({opacity: 1, y: 0.33 * vh}, 100, Easing.LINEAR));
-				this.addEasing(new Easing(this.resulttext).wait(350).add({opacity: 1, y: 0.2 * vh}, 100, Easing.LINEAR));
+				this.addEasing(new Easing(this.resultbg).add({opacity: 1, y: 0}, 100, Easing.LINEAR));
+				this.addEasing(new Easing(this.resulttitle).wait(180).add({opacity: 1, y: 0.33 * vh}, 100, Easing.LINEAR));
+				this.addEasing(new Easing(this.resulttext).wait(360).add({opacity: 1, y: 0.2 * vh}, 100, Easing.LINEAR));
 				if (this.message) this.message.visible = false;
 				this.addEasing(new Easing(this.minimap).add({opacity: 0}, 650, Easing.LINEAR));
 
