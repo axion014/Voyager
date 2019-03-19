@@ -427,13 +427,6 @@ export default class MainScene extends Scene {
 				if (this.message) this.message.visible = false;
 				this.addEasing(new Easing(this.minimap).add({opacity: 0}, 650, Easing.LINEAR));
 
-				if (this.stage !== 'arcade') for (let i = 0; i < goalraders.length; i++)
-					this.addEasing(new Easing(this.goalraders[i]).add({opacity: 0}, 650, Easing.LINEAR));
-
-				for (let i = 0; i < this.enemyManager.count; i++)
-					this.addEasing(new Easing(this.minimap.getObject(this.enemyManager.get(i))).add({opacity: 0}, 650, Easing.LINEAR));
-				for (let i = 0; i < 4; i++) this.addEasing(new Easing(this.direction[i]).add({opacity: 0}, 650, Easing.LINEAR));
-				this.addEasing(new Easing(this.playerpos).add({opacity: 0}, 650, Easing.LINEAR));
 				this.addEasing(new Easing(this.gauge_h).add({opacity: 0}, 650, Easing.LINEAR));
 				this.addEasing(new Easing(this.gauge_e).add({opacity: 0}, 650, Easing.LINEAR));
 				if (this.msgbox) this.addEasing(new Easing(this.msgbox).add({opacity: 0}, 650, Easing.LINEAR));
