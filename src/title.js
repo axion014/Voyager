@@ -318,29 +318,22 @@ export default class TitleScene extends Scene {
 		this.addEventListener('click', moveToMain);
 
 		equipmentEdit.skill = {};
-		equipmentEdit.name = new Label();
+		equipmentEdit.name = new Label("", {y: vh * 0.19});
 		equipmentEdit.add(equipmentEdit.name);
-		equipmentEdit.name.position.y = vh * 0.19;
 		equipmentEdit.description = new LabelArea(" ", {
 			width: vw * 0.42,
 			font: "18px 'HiraKakuProN-W6'"
 		});
 		equipmentEdit.add(equipmentEdit.description);
 
-		const left = new Label("<", {font: "48px 'HiraKakuProN-W3'"});
-		const right = new Label(">", {font: "48px 'HiraKakuProN-W3'"});
-		const up = new Label("<", {font: "48px 'HiraKakuProN-W3'"});
-		const down = new Label(">", {font: "48px 'HiraKakuProN-W3'"});
-
-		left.position.x = -vw * 0.28;
-		right.position.x = vw * 0.28;
-		up.position.x = -10;
-		up.position.y = vh * 0.125;
-		down.position.x = -10;
-		down.position.y = -vh * 0.125;
-
-		up.material.rotation = -Math.PI / 2;
-		down.material.rotation = -Math.PI / 2;
+		const left = new Label("<", {x: -vw * 0.28, font: "48px 'HiraKakuProN-W3'"});
+		const right = new Label(">", {x: vw * 0.28, font: "48px 'HiraKakuProN-W3'"});
+		const up = new Label("<", {
+			x: -10, y: vh * 0.125, rotation: -Math.PI / 2, font: "48px 'HiraKakuProN-W3'"
+		});
+		const down = new Label(">", {
+			x: -10, y: -vh * 0.125, rotation: -Math.PI / 2, font: "48px 'HiraKakuProN-W3'"
+		});
 
 		left.addEventListener('click', () => {
 			let index = skills.byPlace[equipmentEdit.target.place].indexOf(equipmentEdit.skill.klass);
@@ -395,8 +388,7 @@ export default class TitleScene extends Scene {
 
 		equipmentEdit.add(equipmentEdit.ok);
 
-		const back = new Label("Back");
-		back.position.y = -vh * 0.25;
+		const back = new Label("Back", {y: -vh * 0.25});
 		back.addEventListener('click', () => equipmentEdit.close());
 		equipmentEdit.add(back);
 
