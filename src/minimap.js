@@ -19,6 +19,9 @@ function update(point, obj) {
 	distance = Math.min(distance, this.width);
 	const angle = Math.atan2(x, y);
 	point.position.set(Math.sin(angle) * distance, -Math.cos(angle) * distance, 0);
+	if (!(point instanceof Ellipse)) {
+		point.rotation = Math.sign(point.quaternion.y) * point.quaternion.w / Math.SQRT2 * Math.PI;
+	}
 };
 
 export default class Minimap extends Ellipse {

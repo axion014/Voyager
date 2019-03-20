@@ -197,12 +197,6 @@ export default class MainScene extends Scene {
 				this.minimap.position.set(vw / 2 - 100, 100 - vh / 2, 0);
 				this.UIScene.add(this.minimap);
 
-				this.playerpos = new SymmetricTriangle({
-					fillColor: 'hsl(0, 50%, 70%)', strokeColor: 'black', opacity: 0.5,
-					strokeWidth: 1, width: 2.5, height: 4, rotation: Math.PI
-				});
-				this.minimap.add(this.playerpos);
-
 				this.name = new Label(stagename, {
 					font: "24px 'HiraKakuProN-W3'", fillStyle: 'hsla(0, 0%, 0%, 0.8)', opacity: 0
 				});
@@ -383,7 +377,7 @@ export default class MainScene extends Scene {
 			});
 			this.windManager.playerposy = this.player.position.y;
 
-			this.playerpos.rotation = +this.player.myrot.y + (Math.abs(this.player.myrot.x) > Math.PI / 2 && Math.abs(this.player.myrot.x) < Math.PI * 1.5 ? 0 : Math.PI);
+			//this.playerpos.rotation = +this.player.myrot.y + (Math.abs(this.player.myrot.x) > Math.PI / 2 && Math.abs(this.player.myrot.x) < Math.PI * 1.5 ? 0 : Math.PI);
 
 			/*if (k.getKeyDown(53)) { // 5 Key
 				this.camera.radius++;

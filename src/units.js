@@ -5,6 +5,7 @@ import {normalizeAngle, opt, get, free} from "w3g/utils";
 import {vw, vh} from "w3g/main";
 import assets, {addFile} from "w3g/loading";
 import {mouseX, mouseY, keys, keyDown, pointing} from "w3g/input";
+import {SymmetricTriangle} from "w3g/geometries";
 
 import {minimapScale, raderRadius, bossHPGaugeFadeTime} from "./constants";
 import ElementManager from "./elementmanager";
@@ -78,7 +79,10 @@ export class UnitManager extends ElementManager {
 			if (unit.init) unit.init();
 			this.scene.threeScene.add(unit);
 			this.elements.push(unit);
-			this.scene.minimap.addObject(unit, {fillColor: this.raderColor}).visible = !unit.stealth;
+			this.scene.minimap.addObject(unit, unit.isPlayer ? new SymmetricTriangle({
+				fillColor: 'hsl(0, 50%, 70%)', strokeColor: 'black', opacity: 0.5,
+				strokeWidth: 1, rotation: Math.PI, width: 5, height: 8
+			}) : {fillColor: this.raderColor}).visible = !unit.stealth;
 			return unit;
 		}
 	}
@@ -158,7 +162,7 @@ export const units = {
 		filename: 'fighter-1',
 		properties: {
 			myrot: {x: 0, y: 0, z1: 0, z2: 0}, pitch: 0, yaw: 0, v: 0.17, av: new Vector3(),
-			maxenergy: 2000, maxhp: 100, speed: 0.001, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5, excludeFromHitTest: true, explodeTime: 1000,
+			maxenergy: 2000, maxhp: 100, speed: 0.001, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5, isPlayer: true, excludeFromHitTest: true, explodeTime: 1000,
 			raycaster: new Raycaster(),
 			update(delta) {
 				if (this.targetingEnemy && !this.targetingEnemy.parent) {
