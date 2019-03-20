@@ -87,6 +87,7 @@ export default class MainScene extends Scene {
 			async () => { // Load Player
 				this.player = this.allyManager.create("player1");
 				this.player.position.y = 1000;
+				this.minimap.setOrigin(this.player);
 				this.player.geometry.computeBoundingBox();
 				this.player.addEventListener('hitByBullet', e => {
 					this.shakeScreen(e.source.atk / this.player.armor / this.player.maxhp * 100);
