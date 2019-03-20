@@ -426,7 +426,7 @@ export const units = {
 				let quaternionToTarget;
 				let vecToTarget;
 				if (this.scene.player) {
-					vecToTarget = get(Vector3).copy(this.scene.player.position).sub(this.position);
+					vecToTarget = get(Vector3).subVectors(this.scene.player.position, this.position);
 					const directionVectorToTarget = get(Vector3).copy(vecToTarget).normalize();
 					quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), directionVectorToTarget);
 					free(directionVectorToTarget);
@@ -466,7 +466,8 @@ export const units = {
 			update(delta) {
 				const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z);
 				if (this.scene.player && !this.scene.player.position.equals(this.position)) {
-					const directionVectorToTarget = get(Vector3).copy(this.scene.player.position).sub(this.position).normalize();
+					const directionVectorToTarget = get(Vector3)
+						.subVectors(this.scene.player.position, this.position).normalize();
 					const quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), directionVectorToTarget);
 					this.quaternion.slerp(quaternionToTarget, this.chase * delta);
 					free(quaternionToTarget, directionVectorToTarget);
@@ -599,10 +600,10 @@ export const units = {
 						this.base.cooldown = 75;
 					}
 					if (!this.target.position.equals(this.position) && this.chase !== 0) {
-						const vectorToTarget = get(Vector3).copy(this.target.position).sub(this.position).normalize();
-						const quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), vectorToTarget);
 						this.quaternion.slerp(quaternionToTarget, this.chase * delta);
-						free(quaternionToTarget, vectorToTarget);
+						const directionToTarget = get(Vector3).subVectors(this.target.position, this.position).normalize();
+						const quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), directionToTarget);
+						free(quaternionToTarget, directionToTarget);
 					}
 					const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion);
 					this.position.addScaledVector(currentDirection, this.v * delta);
@@ -649,7 +650,7 @@ export const units = {
 					}
 				}
 				if (!this.target.position.equals(this.position) && this.chase !== 0) {
-					const vectorToTarget = get(Vector3).copy(this.target.position).sub(this.position).normalize();
+					const vectorToTarget = get(Vector3).subVectors(this.target.position, this.position).normalize();
 					const spd = this.v * (this.mindist !== 0 ? Math.clamp((vectorToTarget.length() - this.mindist) * 2 / this.mindist, -1, 1) : 1);
 					const quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), vectorToTarget);
 					this.quaternion.slerp(quaternionToTarget, this.chase);
