@@ -1,3 +1,6 @@
+import {Vector3} from "three";
+
+import Element from "w3g/element";
 import {Ellipse} from "w3g/geometries";
 import {define, defineAccessor} from "w3g/utils";
 
@@ -28,19 +31,19 @@ export default class Minimap extends Ellipse {
 	setOrigin(obj) {
 		this.origin = obj || new Vector3();
 	}
-	addObject(obj, options) {
-		const point = new Ellipse(Object.assign({
+	addObject(obj, visual) {
+		if(!(visual instanceof Element)) visual = new Ellipse(Object.assign({
 			radius: 3, strokeColor: 'black', strokeWidth: 1, opacity: 0.5
-		}, options || {}));
-		this.elements.set(obj, point);
-		defineAccessor(point, "visible", {
+		}, visual || {}));
+		this.elements.set(obj, visual);
+		defineAccessor(visual, "visible", {
 			get() {return this._visible1 && this._visible2},
 			set(v) {this._visible2 = v}
 		});
-		point.visible = true;
-		this.add(point);
-		update.call(this, point, obj);
-		return point;
+		visual.visible = true;
+		this.add(visual);
+		update.call(this, visual, obj);
+		return visual;
 	}
 	getObject(obj) {return this.elements.get(obj)}
 	removeObject(obj) {
