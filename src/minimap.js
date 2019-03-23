@@ -7,8 +7,8 @@ import {define, defineAccessor} from "w3g/utils";
 import {minimapScale, raderRadius} from "./constants";
 
 function update(point, obj) {
-	const x = obj.position.x - this.origin.x;
-	const y = obj.position.z - this.origin.z;
+	const x = obj.position.x - this.origin.position.x;
+	const y = obj.position.z - this.origin.position.z;
 	let distance = Math.hypot(x, y);
 	if (distance > raderRadius) {
 		point._visible1 = false;
@@ -16,14 +16,15 @@ function update(point, obj) {
 	}
 	point._visible1 = true;
 	distance *= minimapScale;
-	distance = Math.min(distance, this.width);
+	distance = Math.min(distance, this.radius);
 	const angle = Math.atan2(x, y);
-	point.position.set(Math.sin(angle) * distance, -Math.cos(angle) * distance, 0);
+	point.position.set(Math.sin(angle) * distance, Math.cos(angle) * distance, 0);
 	if (!(point instanceof Ellipse)) {
 		point.rotation = Math.sign(point.quaternion.y) * point.quaternion.w / Math.SQRT2 * Math.PI;
 	}
 };
 
+const ZERO = {position: new Vector3()}
 export default class Minimap extends Ellipse {
 	elements = new Map();
 
@@ -32,7 +33,7 @@ export default class Minimap extends Ellipse {
 		this.setOrigin(origin);
 	}
 	setOrigin(obj) {
-		this.origin = obj || new Vector3();
+		this.origin = obj || ZERO;
 	}
 	addObject(obj, visual) {
 		if(!(visual instanceof Element)) visual = new Ellipse(Object.assign({
