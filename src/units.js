@@ -439,7 +439,7 @@ export const units = {
 				const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z);
 				if (this.scene.player && this.chase !== 0 && !this.scene.player.position.equals(this.position)) {
 					const spd = this.v * (this.mindist !== 0 ? Math.clamp((vecToTarget.length() - this.mindist) * 2 / this.mindist, -1, 1) : 1);
-					this.quaternion.slerp(quaternionToTarget, this.chase * delta);
+					this.quaternion.slerp(quaternionToTarget, 1 - this.chase ** delta);
 					currentDirection.applyQuaternion(this.quaternion);
 					this.position.addScaledVector(currentDirection, spd * delta);
 				} else {
@@ -473,7 +473,7 @@ export const units = {
 					const directionVectorToTarget = get(Vector3)
 						.subVectors(this.scene.player.position, this.position).normalize();
 					const quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), directionVectorToTarget);
-					this.quaternion.slerp(quaternionToTarget, this.chase * delta);
+					this.quaternion.slerp(quaternionToTarget, 1 - this.chase ** delta);
 					free(quaternionToTarget, directionVectorToTarget);
 
 					currentDirection.applyQuaternion(this.quaternion);
@@ -604,9 +604,9 @@ export const units = {
 						this.base.cooldown = 75;
 					}
 					if (!this.target.position.equals(this.position) && this.chase !== 0) {
-						this.quaternion.slerp(quaternionToTarget, this.chase * delta);
 						const directionToTarget = get(Vector3).subVectors(this.target.position, this.position).normalize();
 						const quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), directionToTarget);
+						this.quaternion.slerp(quaternionToTarget, 1 - this.chase ** delta);
 						free(quaternionToTarget, directionToTarget);
 					}
 					const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion);
@@ -657,7 +657,7 @@ export const units = {
 					const vectorToTarget = get(Vector3).subVectors(this.target.position, this.position).normalize();
 					const spd = this.v * (this.mindist !== 0 ? Math.clamp((vectorToTarget.length() - this.mindist) * 2 / this.mindist, -1, 1) : 1);
 					const quaternionToTarget = setQuaternionFromDirectionVector(get(Quaternion), vectorToTarget);
-					this.quaternion.slerp(quaternionToTarget, this.chase);
+					this.quaternion.slerp(quaternionToTarget, 1 - this.chase ** delta);
 					free(quaternionToTarget, vectorToTarget);
 					currentDirection.applyQuaternion(this.quaternion);
 					this.position.addScaledVector(currentDirection, spd * delta);
