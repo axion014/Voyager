@@ -1,6 +1,6 @@
 import {
 	DirectionalLight, AmbientLight,
-	Mesh,
+	Mesh, Group,
 	IcosahedronGeometry,
 	ShaderMaterial,
 	GridHelper, AxesHelper, Raycaster,
@@ -271,6 +271,12 @@ export default class MainScene extends Scene {
 					font: "24px 'HiraKakuProN-W3'", fillStyle: 'hsla(0, 0%, 0%, 0.8)', opacity: 0
 				});
 				this.UIScene.add(this.resulttext);
+
+				this.debugtexts = new Group();
+				this.debugtexts.position.x = 36 - vw / 2;
+				this.debugtexts.position.y = vh / 2 - 36;
+				this.debugtexts.visible = false;
+				this.UIScene.add(this.debugtexts);
 			}, () => { // Stage Setup
 				const directionalLight = new DirectionalLight(0xffffff, 1);
 				directionalLight.position.set(0, 0, 30);
@@ -474,6 +480,8 @@ export default class MainScene extends Scene {
 			if (this.time % 20000 < delta) this.score--;
 		}
 
+		if (keyDown.KeyB) this.debugtexts.visible = !this.debugtexts.visible;
+
 		if (this.allyBulletManager.count > maxAlliedBullets + bulletRemovalMargin)
 			while (this.allyBulletManager.count > maxAlliedBullets) this.allyBulletManager.remove(0);
 		if (this.enmBulletManager.count > maxEnemyBullets + bulletRemovalMargin)
@@ -504,5 +512,17 @@ export default class MainScene extends Scene {
 		const angle = Math.random() * Math.PI * 2;
 		this.camera.position.x += Math.sin(angle) * amount;
 		this.camera.position.z += Math.cos(angle) * amount;
+	}
+	debugText(id, text) {
+		if (this.debugtexts[id]) {
+			this.debugtexts[id].text = text;
+			return;
+		}
+		const label = new Label(text, {
+			align: textAlign.left, font: "24px 'HiraKakuProN-W3'",
+			fillStyle: 'hsla(0, 0%, 0%, 0.8)', y: -this.debugtexts.children.length * 36
+		});
+		this.debugtexts.add(label);
+		this.debugtexts[id] = label;
 	}
 }
