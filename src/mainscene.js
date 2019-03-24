@@ -210,7 +210,7 @@ export default class MainScene extends Scene {
 					const rotation = i * Math.PI / 2;
 					this.direction[i] = new SymmetricTriangle({
 						x: this.minimap.radius * Math.sin(rotation), y: this.minimap.radius * Math.cos(rotation),
-						fillColor: '#181818', width: 12, height: 7.5, opacity: 0.5, rotation: -rotation
+						fillColor: '#181818', opacity: 0.5, rotation: -rotation + Math.PI, width: 24, height: 15
 					});
 					this.minimap.add(this.direction[i]);
 				}
