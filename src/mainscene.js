@@ -273,7 +273,7 @@ export default class MainScene extends Scene {
 				this.UIScene.add(this.resulttext);
 
 				this.debugtexts = new Group();
-				this.debugtexts.position.x = 36 - vw / 2;
+				this.debugtexts.position.x = 16 - vw / 2;
 				this.debugtexts.position.y = vh / 2 - 36;
 				this.debugtexts.visible = false;
 				this.UIScene.add(this.debugtexts);
@@ -519,8 +519,8 @@ export default class MainScene extends Scene {
 			return;
 		}
 		const label = new Label(text, {
-			align: textAlign.left, font: "24px 'HiraKakuProN-W3'",
-			fillStyle: 'hsla(0, 0%, 0%, 0.8)', y: -this.debugtexts.children.length * 36
+			align: textAlign.left, font: "16px 'HiraKakuProN-W3'",
+			fillStyle: 'hsla(0, 0%, 0%, 0.8)', y: -this.debugtexts.children.length * 24
 		});
 		this.debugtexts.add(label);
 		this.debugtexts.userData[id] = label;
