@@ -17,10 +17,12 @@ function update(point, obj) {
 	point._visible1 = true;
 	distance *= minimapScale;
 	distance = Math.min(distance, this.radius);
-	const angle = Math.atan2(x, y);
+	const angle = -Math.atan2(x, y);
 	point.position.set(Math.sin(angle) * distance, Math.cos(angle) * distance, 0);
 	if (!(point instanceof Ellipse)) {
-		point.rotation = Math.sign(point.quaternion.y) * point.quaternion.w / Math.SQRT2 * Math.PI;
+		// TODO: not very sure about this. need to know better about quaternions.
+		const absy = Math.abs(obj.quaternion.y);
+		point.rotation = Math.sign(obj.quaternion.y) * Math.acos(obj.quaternion.w) * 2 * absy / (absy + Math.hypot(obj.quaternion.x, obj.quaternion.z));
 	}
 };
 
