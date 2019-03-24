@@ -514,8 +514,8 @@ export default class MainScene extends Scene {
 		this.camera.position.z += Math.cos(angle) * amount;
 	}
 	debugText(id, text) {
-		if (this.debugtexts[id]) {
-			this.debugtexts[id].text = text;
+		if (this.debugtexts.userData[id]) {
+			this.debugtexts.userData[id].text = text;
 			return;
 		}
 		const label = new Label(text, {
@@ -523,6 +523,6 @@ export default class MainScene extends Scene {
 			fillStyle: 'hsla(0, 0%, 0%, 0.8)', y: -this.debugtexts.children.length * 36
 		});
 		this.debugtexts.add(label);
-		this.debugtexts[id] = label;
+		this.debugtexts.userData[id] = label;
 	}
 }
