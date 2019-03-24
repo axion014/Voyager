@@ -1,4 +1,4 @@
-import {Vector3, Quaternion, Raycaster} from "three";
+import {Vector3, Quaternion, Ray, Raycaster, Plane} from "three";
 
 import * as THREE_Utils from "w3g/threeutil";
 import {normalizeAngle, opt, get, free} from "w3g/utils";
@@ -165,65 +165,83 @@ export const units = {
 			maxenergy: 2000, maxhp: 100, speed: 0.001, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5, isPlayer: true, excludeFromHitTest: true, explodeTime: 1000,
 			raycaster: new Raycaster(),
 			update(delta) {
-				if (this.targetingEnemy && !this.targetingEnemy.parent) {
-					this.way = null;
-					this.targetingEnemy = null;
-				}
+				const reverse = this.myrot.z2 > Math.PI / 2;
+				const maxrot = (0.0017 - this.v * 0.001) * this.rotspeed;
 
 				if (Math.abs(this.myrot.x) > Math.PI / 2) this.myrot.z2 += (Math.PI - this.myrot.z2) * (1 - 0.95 ** delta);
 				else this.myrot.z2 *= 0.95 ** delta;
 
-				const reverse = this.myrot.z2 > Math.PI / 2;
+				const targetingPosition = get(Vector3).set(mouseX / vw * 2 - 1, -mouseY / vh * 2 + 1, 0).unproject(this.scene.camera);
+				const targetingDirection = get(Vector3).copy(targetingPosition).sub(this.scene.camera.position).normalize();
+				const targetingRay = get(Ray).set(this.scene.camera.position, targetingDirection);
+				free(targetingDirection);
+
+				let targetingEnemy, targetingEnemyPosition;
+				if (this.opponents.elements.length !== 0) {
+					const enemyPosition = get(Vector3);
+					// Select targeting enemy
+					({enm: targetingEnemy, pos: targetingEnemyPosition} = this.opponents.elements.reduce((o, enm) => {
+						enemyPosition.copy(enm.position).add(enm.geometry.boundingSphere.center);
+						let targetingPriority = targetingRay.distanceToPoint(enemyPosition);
+						if (targetingPriority > enm.geometry.boundingSphere.radius * enm.scale.x * 3) return o;
+						if (targetingPriority < o.d) {
+							o.d = targetingPriority;
+							o.enm = enm;
+							o.pos.copy(enemyPosition);
+						}
+						return o;
+					}, {d: Infinity, enm: null, pos: get(Vector3)}));
+					free(enemyPosition);
+				}
+				if (targetingEnemy) targetingPosition.copy(targetingEnemyPosition);
+				else {
+					const plane = get(Plane).set(THREE_Utils.Axis.y, -this.position.y);
+					targetingRay.intersectPlane(plane, targetingPosition);
+					free(plane);
+				}
+				if (this.opponents.elements.length !== 0) free(targetingEnemyPosition);
+				// targetingRay.closestPointToPoint(this.position, targetingPosition);
+
+				const pos = get(Vector3).copy(targetingPosition).project(this.scene.camera);
+				this.targetMarker.position.set(pos.x * vw / 2, pos.y * vh / 2, 0);
+				free(pos);
+				this.targetMarker.strokeColor = this.mode === 'back' ? "#a44" : "#444";
+
+				if (this.position.y < 100) {
+					if (reverse) {
+						this.pitch += maxrot * (this.mode === 'back' ? 2 : 1 - (this.myrot.x + (this.myrot.x > 0 ? -Math.PI : Math.PI)) / 1.6) * delta;
+					} else this.pitch -= maxrot * (this.mode === 'back' ? 2 : -this.myrot.x / 1.6) * delta;
+				} else {
+					const d = get(Vector3).copy(targetingPosition).sub(this.position);
+					this.scene.debugText('targetingPosition', `targetingPosition: {x: ${d.x.toFixed(2)}, y: ${d.y.toFixed(2)}, z: ${d.z.toFixed(2)}}`);
+					const b = (this.mode === 'back') !== reverse ? -1 : 1;
+					const pitch = normalizeAngle(Math.atan2(-d.y, Math.sqrt(d.x * d.x + d.z * d.z) * b) - this.myrot.x - this.pitch);
+					const yaw = normalizeAngle(Math.atan2(d.x, d.z) * b + Math.PI - this.myrot.y);
+					free(d);
+					this.pitch += Math.min(Math.max(pitch * 1.5, -maxrot), maxrot) * delta;
+					this.yaw += Math.min(Math.max(yaw * 1.5, -maxrot), maxrot) * delta;
+				}
+
+				free(targetingPosition, targetingRay);
+
+				const direction = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
+
+				/*if (this.targetingEnemy && !this.targetingEnemy.parent) {
+					this.way = null;
+					this.targetingEnemy = null;
+				}
 
 				let rot = normalizeAngle(
 					Math.atan2(mouseY - 0.5 * vh, mouseX - 0.5 * vw) +
 					this.myrot.y - this.yaw + (reverse ? Math.PI * 1.5 : Math.PI / 2)
 				);
-				let maxrot = (0.0017 - this.v * 0.001) * this.rotspeed;
+
 				if (Math.abs(rot) > 2.5) this.mode = 'back';
 				else {
 					if (this.mode === 'back') this.mode = null;
 					rot = Math.min(Math.max(rot * 0.003, -maxrot), maxrot);
 					this.myrot.z1 += rot * 0.3 * delta;
 					this.yaw += rot * delta;
-				}
-
-				const direction = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
-
-				let targetingEnemy;
-				if (this.opponents.elements.length !== 0) {
-					// Select targeting enemy
-					const futurePosition = get(Vector3);
-					futurePosition.copy(this.position).addScaledVector(direction, this.v * 150);
-					const futureAngle = get(Quaternion);
-					THREE_Utils.rotateY(futureAngle.set(0, 0, 0, 1), this.myrot.y - this.yaw * 0.5 + ((this.mode === 'back') !== reverse ? Math.PI : 0))
-					const futureDirection = get(Vector3);
-					futureDirection.copy(THREE_Utils.Axis.z).applyQuaternion(futureAngle);
-					free(futureAngle);
-					const futureDistance = get(Vector3);
-					targetingEnemy = this.opponents.elements.reduce((o, enm) => {
-						futureDistance.copy(enm.position).sub(futurePosition);
-						futureDistance.y = 0;
-						let targetingPriority = futureDistance.angleTo(futureDirection);
-						if (targetingPriority > Math.PI / (this.mode === 'back' ? 6 : 2)) return o;
-						targetingPriority *= futureDistance.length();
-						if (targetingPriority < o.d) {
-							o.d = targetingPriority;
-							o.enm = enm;
-						}
-						return o;
-					}, {d: Infinity, enm: null}).enm;
-
-					free(futurePosition, futureDirection, futureDistance);
-				}
-
-				if (this.way === 'up') {
-					if (!keys.KeyW) this.way = null;
-				} else if (this.way === 'down') {
-					if (!keys.KeyS) this.way = null;
-				} else {
-					if (keys.KeyW) this.way = 'up';
-					if (keys.KeyS) this.way = 'down';
 				}
 
 				this.targetingEnemy = targetingEnemy;
@@ -235,7 +253,6 @@ export const units = {
 					this.targetMarker.strokeColor = this.mode === 'back' ? "#a44" : "#444";
 				} else this.targetMarker.visible = false;
 
-				maxrot /= 2;
 
 				if (this.position.y < 100 || this.way === 'up') {
 					if (reverse) {
@@ -245,14 +262,7 @@ export const units = {
 					if (reverse) {
 						this.pitch -= maxrot * (this.mode === 'back' ? 2 : 1 + (this.myrot.x + (this.myrot.x > 0 ? -Math.PI : Math.PI)) / 1.6) * delta;
 					} else this.pitch += maxrot * (this.mode === 'back' ? 2 : this.myrot.x / 1.6) * delta;
-				} else if (targetingEnemy) {
-					const v = get(Vector3);
-					v.copy(targetingEnemy.position).add(targetingEnemy.geometry.boundingSphere.center).sub(this.position);
-					const b = (this.mode === 'back') !== reverse;
-					const rot = normalizeAngle(Math.atan2(-v.y, Math.sqrt(v.x * v.x + v.z * v.z) * (b ? -1 : 1)) - this.myrot.x - this.pitch);
-					free(v);
-					this.pitch += Math.min(Math.max(rot * 1.5, -maxrot), maxrot) * delta;
-				}
+				}*/
 
 				// Move and rotate
 				this.myrot.x += this.pitch * 0.004 * delta;
