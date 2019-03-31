@@ -66,7 +66,7 @@ export default class TitleScene extends Scene {
 		const menu = {
 			title: {
 				x: 0, y: 0, sub: [
-					{type: 'label', value: 'Forever Flight', y: 15, size: 3.6},
+					{type: 'label', value: 'Voyager', y: 15, size: 3.6},
 					{type: 'label', value: 'Click to start', y: -15, size: 1.8},
 					{type: 'model', name: 'player', value: currentPlayer, x: 0, y: 0, z: -50},
 					{
