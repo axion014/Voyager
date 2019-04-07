@@ -366,6 +366,8 @@ export default class MainScene extends Scene {
 
 			// Camera control
 
+			const lerprate = 0.995 ** delta;
+			this.cameraPosition.setLength(this.cameraPosition.length() * lerprate + (750 - this.player.v * 300) * (1 - lerprate));
 			this.camera.position.addVectors(this.player.position, this.cameraPosition);
 			this.camera.lookAt(this.player.position);
 
