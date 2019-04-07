@@ -17,14 +17,14 @@ function minify(dest) {
 		.pipe(plumber())
 		.pipe(uglify())
 		.pipe(rename({extname: '.min.js'}))
-  	.pipe(gulp.dest('./' + dest + '/'));
+		.pipe(gulp.dest('./' + dest + '/'));
 }
 
 async function $build(dest) {
 	try {
 		const bundle = await rollup.rollup({
-    	input: './src/main.js',
-    	plugins: [
+			input: './src/main.js',
+			plugins: [
 				resolve(),
 				babel({
 					plugins: [
@@ -35,19 +35,19 @@ async function $build(dest) {
 				babel({
 					presets: [
 						["@babel/preset-env", {
-      				"modules": false
-    				}]
+							modules: false
+						}]
 					]
 				})
-    	]
-  	});
+			]
+		});
 
 		await bundle.write({
-    	file: './' + dest + '/re-flight.js',
-    	format: 'iife',
-    	name: 'library',
-    	sourcemap: true
-  	});
+			file: './' + dest + '/re-flight.js',
+			format: 'iife',
+			name: 'library',
+			sourcemap: true
+		});
 
 		return minify(dest);
 	} catch(e) {
@@ -73,7 +73,7 @@ function glslminify() {
 		.pipe(plumber())
 		.pipe(glsl({format: 'raw'}))
 		.pipe(rename({extname: '.min.glsl'}))
-  	.pipe(gulp.dest('data'));
+		.pipe(gulp.dest('data'));
 }
 
 gulp.task(glslminify);
