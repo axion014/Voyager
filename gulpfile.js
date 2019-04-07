@@ -37,6 +37,11 @@ async function $build(dest) {
 						["@babel/preset-env", {
 							modules: false
 						}]
+					],
+					plugins: [
+						["@babel/plugin-transform-template-literals", {
+							loose: true
+						}]
 					]
 				})
 			]
