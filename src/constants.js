@@ -1,6 +1,6 @@
 
 export const minimapScale = 1 / 50;
-export const raderRadius = 1500;
+export const raderRadius = 5000;
 
 export const windScaleY = 30;
 export const bossHPGaugeFadeTime = 300;
