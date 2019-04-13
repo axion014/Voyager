@@ -59,17 +59,15 @@ function registerSkill(klass) {
 	byID[klass.id] = klass;
 };
 
-export class Empty extends Skill { // dont modify, this module is so special
+registerSkill(class extends Skill { // dont modify, this module is so special
 	static id = 'Empty';
 	static skillName = 'Uninstall';
 	static place = ['top', 'core', 'front'];
 	static unlockedLevel = 0;
 	static getDescription(level) {return '';}
-}
+});
 
-registerSkill(Empty);
-
-export class ExtraArmor extends Skill {
+registerSkill(class extends Skill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.user.armor *= [1.175, 1.19, 1.205][level];
@@ -81,11 +79,9 @@ export class ExtraArmor extends Skill {
 	static getDescription(level) {
 		return 'Reduce damage taken by ' + [15, 16, 17][level] + '%.';
 	}
-}
+});
 
-registerSkill(ExtraArmor);
-
-export class Spear extends Skill {
+registerSkill(class extends Skill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.user.sharpness *= [1.25, 1.27, 1.28][level];
@@ -97,11 +93,9 @@ export class Spear extends Skill {
 	static getDescription(level) {
 		return 'Increase damage on ramming into enemy by ' + [25, 27, 28][level] + '%.';
 	}
-}
+});
 
-registerSkill(Spear);
-
-export class Acrobat extends Skill {
+registerSkill(class extends Skill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.user.speed *= [1.2, 1.213, 1.22][level];
@@ -114,15 +108,13 @@ export class Acrobat extends Skill {
 	static getDescription(level) {
 		return 'Greatly increase your mobility.';
 	}
-}
+});
 
-registerSkill(Acrobat);
-
-export class SelfRepair extends DeactivatableSkill {
+registerSkill(class extends DeactivatableSkill {
 	update() {
 		if (!this.active) return;
-		var costrate = [100, 150, 200][this.level];
-		var amount = Math.min([0.001, 0.00125, 0.0015][this.level], this.user.maxhp - this.user.hp, this.user.energy / costrate);
+		const costrate = [100, 150, 200][this.level];
+		const amount = Math.min([0.001, 0.00125, 0.0015][this.level], this.user.maxhp - this.user.hp, this.user.energy / costrate);
 		this.user.energy -= amount * costrate;
 		this.user.hp += amount;
 	}
@@ -133,11 +125,9 @@ export class SelfRepair extends DeactivatableSkill {
 	static getDescription(level) {
 		return 'With this skill, your HP is no longer limited. Higher level one is faster but less energy efficient. Can toggle on/off by pushing activate key.';
 	}
-}
+});
 
-registerSkill(SelfRepair);
-
-export class ExtraGenerator extends Skill {
+registerSkill(class extends Skill {
 	update() {
 		this.user.energy += Math.min([0.6, 0.63, 0.65][this.level], this.user.maxenergy - this.user.energy);
 	}
@@ -148,11 +138,10 @@ export class ExtraGenerator extends Skill {
 	static getDescription(level) {
 		return 'Allows you to use skills more by increasing energy replenish speed.';
 	}
-}
+});
 
-registerSkill(ExtraGenerator);
 
-export class Glitch extends Skill {
+registerSkill(class extends Skill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		user.applyRotation = function() {
@@ -169,11 +158,9 @@ export class Glitch extends Skill {
 	getDescription(level) {
 		return 'Do not use as this can completely break the game.';
 	}
-}
+});
 
-registerSkill(Glitch);
-
-export class OverHeating extends DeactivatableSkill {
+registerSkill(class extends DeactivatableSkill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.activated = false;
@@ -198,11 +185,9 @@ export class OverHeating extends DeactivatableSkill {
 	static getDescription(level) {
 		return 'Sacrifice your HP and increase firepower by ' + [20, 25, 30] + '%. Can toggle on/off by pushing activate key.';
 	}
-}
+});
 
-registerSkill(OverHeating);
-
-export class Railgun extends ActiveSkill {
+registerSkill(class extends ActiveSkill {
 	update() {
 		super.update();
 		if (this.duration > 0) {
@@ -231,11 +216,9 @@ export class Railgun extends ActiveSkill {
 	static getDescription(level) {
 		return 'Shot deadly laser. Provides good firepower by consuming large amount of energy.';
 	}
-}
+});
 
-registerSkill(Railgun);
-
-export class ParticleCannon extends ActiveSkill {
+registerSkill(class extends ActiveSkill {
 	update() {
 		super.update();
 		if (this.duration > 0) {
@@ -290,11 +273,9 @@ export class ParticleCannon extends ActiveSkill {
 	static getDescription(level) {
 		return 'Powerful cannon that destroys ' + (level === 2 ? '' : 'almost ') + 'anything front of it.';
 	}
-}
+});
 
-registerSkill(ParticleCannon);
-
-export class Lasergun extends ActiveSkill {
+registerSkill(class extends ActiveSkill {
 	activate(trigger) {
 		if (!trigger || this.cooldown > 0) return;
 		this.cooldown = this.user.consumeEnergy([500, 630, 800][this.level], () => {
@@ -312,11 +293,9 @@ export class Lasergun extends ActiveSkill {
 	static getDescription(level) {
 		return 'The Laser can pierce enemies. Can deal massive damage against huge enemy by hitting their core.';
 	}
-}
+});
 
-registerSkill(Lasergun);
-
-export class BladeMinion extends Skill {
+registerSkill(class extends Skill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.instance = this.user.summons.create('blademinion', {
@@ -366,11 +345,9 @@ export class BladeMinion extends Skill {
 	static getDescription(level) {
 		return 'This blade will spawn out on activation and automatically chase your enemy. Can pull back with pushing activate key again.';
 	}
-}
+});
 
-registerSkill(BladeMinion);
-
-export class Reinforce extends ActiveSkill {
+registerSkill(class extends ActiveSkill {
 	activate() {
 		if (this.cooldown > 0) return;
 		this.cooldown = this.user.consumeEnergy([200, 750, 1500][this.level], () => {
@@ -400,6 +377,4 @@ export class Reinforce extends ActiveSkill {
 	static getDescription(level) {
 		return 'Larger fleet ascend you to the victory.';
 	}
-}
-
-registerSkill(Reinforce);
+});

@@ -37,12 +37,12 @@ export default class TitleScene extends Scene {
 		super();
 		let currentPlayer = assets.THREE_Model_GLTF[localStorage.getItem(PLAYER) || "player1"].clone();
 		const currentSkills = JSON.parse(localStorage.getItem(SKILLS)) || [
-			{klass: skills.Railgun, level: 0},
-			{klass: skills.Empty, level: 0},
-			{klass: skills.Empty, level: 0},
-			//{klass: skills.BladeMinion, level: 0},
-			//{klass: skills.Reinforce, level: 2},
-			{klass: skills.SelfRepair, level: 0}
+			{klass: skills.byID.Railgun, level: 0},
+			{klass: skills.byID.Empty, level: 0},
+			{klass: skills.byID.Empty, level: 0},
+			//{klass: skills.byID.BladeMinion, level: 0},
+			//{klass: skills.byID.Reinforce, level: 2},
+			{klass: skills.byID.SelfRepair, level: 0}
 		];
 		currentSkills.forEach(skill => {
 			if (skill.name) skill.klass = skills.byID[skill.name];
@@ -409,9 +409,9 @@ export default class TitleScene extends Scene {
 			this.skill.level = level;
 			const changeing = this.skill.klass !== currentSkills[this.target.index].klass || this.skill.level !== currentSkills[this.target.index].level;
 			this.ok.visible = changeing;
-			this.ok.text = currentSkills[this.target.index].klass === skills.Empty ? 'Install' : 'Replace';
+			this.ok.text = currentSkills[this.target.index].klass === skills.byID.Empty ? 'Install' : 'Replace';
 			this.ok.y = vh * 0.2;
-			if (klass === skills.Empty) {
+			if (klass === skills.byID.Empty) {
 				if (changeing) {
 					this.name.text = ' ';
 					this.ok.text = 'Uninstall';
