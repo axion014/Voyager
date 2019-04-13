@@ -161,9 +161,14 @@ export const units = {
 	player1: {
 		filename: 'fighter-1',
 		properties: {
-			myrot: {x: 0, y: 0, z1: 0, z2: 0}, pitch: 0, yaw: 0, v: 0.17, av: new Vector3(),
-			maxenergy: 2000, maxhp: 100, speed: 0.001, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5, isPlayer: true, excludeFromHitTest: true, explodeTime: 1000,
-			raycaster: new Raycaster(),
+			pitch: 0, yaw: 0, v: 0.17,
+			maxenergy: 2000, maxhp: 100, speed: 0.001, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5,
+			isPlayer: true, excludeFromHitTest: true, explodeTime: 1000,
+			init() {
+				this.myrot = {x: 0, y: 0, z1: 0, z2: 0};
+				this.av = new Vector3();
+				this.raycaster = new Raycaster();
+			},
 			update(delta) {
 				const reverse = this.myrot.z2 > Math.PI / 2;
 				const maxrot = (0.0017 - this.v * 0.001) * this.rotspeed;
