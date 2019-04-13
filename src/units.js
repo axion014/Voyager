@@ -168,6 +168,7 @@ export const units = {
 				this.myrot = {x: 0, y: 0, z1: 0, z2: 0};
 				this.av = new Vector3();
 				this.raycaster = new Raycaster();
+				this.targetingPosition = new Vector3();
 			},
 			update(delta) {
 				const reverse = this.myrot.z2 > Math.PI / 2;
@@ -176,8 +177,8 @@ export const units = {
 				if (Math.abs(this.myrot.x) > Math.PI / 2) this.myrot.z2 += (Math.PI - this.myrot.z2) * (1 - 0.95 ** delta);
 				else this.myrot.z2 *= 0.95 ** delta;
 
-				const targetingPosition = get(Vector3).set(mouseX / vw * 2 - 1, -mouseY / vh * 2 + 1, 0).unproject(this.scene.camera);
-				const targetingDirection = get(Vector3).copy(targetingPosition).sub(this.scene.camera.position).normalize();
+				this.targetingPosition.set(mouseX / vw * 2 - 1, -mouseY / vh * 2 + 1, 0).unproject(this.scene.camera);
+				const targetingDirection = get(Vector3).copy(this.targetingPosition).sub(this.scene.camera.position).normalize();
 				const targetingRay = get(Ray).set(this.scene.camera.position, targetingDirection);
 				free(targetingDirection);
 
@@ -198,16 +199,16 @@ export const units = {
 					}, {d: Infinity, enm: null, pos: get(Vector3)}));
 					free(enemyPosition);
 				}
-				if (targetingEnemy) targetingPosition.copy(targetingEnemyPosition);
+				if (targetingEnemy) this.targetingPosition.copy(targetingEnemyPosition);
 				else {
 					const plane = get(Plane).set(THREE_Utils.Axis.y, -this.position.y);
-					targetingRay.intersectPlane(plane, targetingPosition);
+					targetingRay.intersectPlane(plane, this.targetingPosition);
 					free(plane);
 				}
 				if (this.opponents.elements.length !== 0) free(targetingEnemyPosition);
 				// targetingRay.closestPointToPoint(this.position, targetingPosition);
 
-				const pos = get(Vector3).copy(targetingPosition).project(this.scene.camera);
+				const pos = get(Vector3).copy(this.targetingPosition).project(this.scene.camera);
 				this.targetMarker.position.set(pos.x * vw / 2, pos.y * vh / 2, 0);
 				free(pos);
 				this.targetMarker.strokeColor = this.mode === 'back' ? "#a44" : "#444";
@@ -217,7 +218,7 @@ export const units = {
 						this.pitch += maxrot * (this.mode === 'back' ? 2 : 1 - (this.myrot.x + (this.myrot.x > 0 ? -Math.PI : Math.PI)) / 1.6) * delta;
 					} else this.pitch -= maxrot * (this.mode === 'back' ? 2 : -this.myrot.x / 1.6) * delta;
 				} else {
-					const d = get(Vector3).copy(targetingPosition).sub(this.position);
+					const d = get(Vector3).copy(this.targetingPosition).sub(this.position);
 					this.scene.debugText('targetingPosition', `targetingPosition: {x: ${d.x.toFixed(2)}, y: ${d.y.toFixed(2)}, z: ${d.z.toFixed(2)}}`);
 					const b = (this.mode === 'back') !== reverse ? -1 : 1;
 					const pitch = normalizeAngle(Math.atan2(-d.y, Math.sqrt(d.x * d.x + d.z * d.z) * b) - this.myrot.x - this.pitch);
@@ -227,7 +228,7 @@ export const units = {
 					this.yaw += Math.min(Math.max(yaw * 1.5, -maxrot), maxrot) * delta;
 				}
 
-				free(targetingPosition, targetingRay);
+				free(targetingRay);
 
 				const direction = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
 

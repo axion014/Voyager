@@ -367,9 +367,12 @@ export default class MainScene extends Scene {
 			// Camera control
 
 			const lerprate = 0.995 ** delta;
-			this.cameraPosition.setLength(this.cameraPosition.length() * lerprate + (750 - this.player.v * 300) * (1 - lerprate));
-			this.camera.position.addVectors(this.player.position, this.cameraPosition);
-			this.camera.lookAt(this.player.position);
+			const targetLength = 500 - this.player.v * 250 + Math.min(this.player.position.distanceTo(this.player.targetingPosition), 1000) * 0.5;
+			this.cameraPosition.setLength(this.cameraPosition.length() * lerprate + targetLength * (1 - lerprate));
+			const focalPosition = get(Vector3).copy(this.player.position).lerp(this.player.targetingPosition, 0.1);
+			this.camera.position.addVectors(focalPosition, this.cameraPosition);
+			this.camera.lookAt(focalPosition);
+			free(focalPosition);
 
 			this.allyManager.elements.forEach(ally => {
 				if (ally.excludeFromHitTest) return;
