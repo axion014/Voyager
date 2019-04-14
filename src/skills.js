@@ -19,7 +19,7 @@ class Skill {
 	static unlockedLevel = -1; // works similar to variable above but can change sometimes
 }
 
-class ActiveSkill extends Skill {
+export class ActiveSkill extends Skill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.cooldown = 0;
@@ -36,7 +36,7 @@ class ActiveSkill extends Skill {
 
 };
 
-class DeactivatableSkill extends Skill {
+export class DeactivatableSkill extends Skill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.active = false;

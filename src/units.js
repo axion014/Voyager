@@ -10,6 +10,7 @@ import {SymmetricTriangle} from "w3g/geometries";
 import {minimapScale, raderRadius, bossHPGaugeFadeTime} from "./constants";
 import ElementManager from "./elementmanager";
 import {testOBBSphere, testCupsuleSphere} from "./collision";
+import {ActiveSkill} from "./skills";
 
 /*
  * About units
@@ -303,19 +304,17 @@ export const units = {
 					this.av.multiplyScalar(0.998 ** delta);
 				}
 
-
-				if (keys.Space) this.consumeEnergy(1.5, () => {
-					this.attack(6);
-					this.scene.shakeScreen(2);
-				});
-
+				if (this.primary instanceof ActiveSkill) {
+					if (keys.Space) this.primary.activate();
+				} else if (this.primary) this.primary.active = keys.Space;
 				this.sub.forEach(sub => {
 					if (sub.active === false) return;
 					sub.update();
 				});
 
-				if (keys.KeyA) opt(opt(this.sub, keys.ShiftLeft ? 2 : 0), 'activate')(keyDown.keyA);
-				if (keys.KeyD) opt(opt(this.sub, keys.ShiftLeft ? 3 : 1), 'activate')(keyDown.keyD);
+				if (keyDown.KeyZ) this.player.sub.some(sub => {
+					if ((sub instanceof ActiveSkill) && sub !== this.player.primary) return sub.activate();
+				});
 
 				this.energy = Math.min(this.energy + 2 * delta, this.maxenergy);
 				this.scene.gauge_e.value = this.energy;
@@ -353,15 +352,6 @@ export const units = {
 			},
 			getDamage(rawdmg) {
 				return rawdmg;
-			},
-			attack(atk) {
-				const a = Math.random() * Math.PI * 2;
-				const v = get(Vector3).set(Math.sin(a), Math.cos(a), 0);
-				const q = get(Quaternion).copy(this.quaternion);
-				THREE_Utils.rotate(q, v, Math.sqrt(Math.random() * 0.0009));
-				v.copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).setLength(this.geometry.boundingBox.max.z).add(this.position);
-				this.allies.bulletManager.create('bullet', v, q, {v: 1.02, atk: this.getDamage(atk)});
-				free(v, q);
 			},
 			beam(atk, exps, expt, radius, effect) {
 				const vec = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
