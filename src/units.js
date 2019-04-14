@@ -189,7 +189,7 @@ export const units = {
 					({enm: targetingEnemy, pos: targetingEnemyPosition} = this.opponents.elements.reduce((o, enm) => {
 						enemyPosition.copy(enm.position).add(enm.geometry.boundingSphere.center);
 						let targetingPriority = targetingRay.distanceToPoint(enemyPosition);
-						if (targetingPriority > enm.geometry.boundingSphere.radius * enm.scale.x * 3) return o;
+						if (targetingPriority > Math.max(enm.geometry.boundingSphere.radius * enm.scale.x * 3, 20)) return o;
 						if (targetingPriority < o.d) {
 							o.d = targetingPriority;
 							o.enm = enm;
