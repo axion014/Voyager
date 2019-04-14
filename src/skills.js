@@ -278,8 +278,8 @@ registerSkill(class extends ActiveSkill {
 			}
 		}
 	}
-	activate(trigger) {
-		if (!trigger || this.cooldown > 0) return;
+	activate() {
+		if (this.cooldown > 0) return;
 		this.cooldown = this.user.consumeEnergy([1000, 1200, 1600][this.level], () => {
 			this.delay = [5, 8, 12][this.level];
 			this.user.rotspeed /= [2, 4, 8][this.level];
@@ -299,8 +299,8 @@ registerSkill(class extends ActiveSkill {
 });
 
 registerSkill(class extends ActiveSkill {
-	activate(trigger) {
-		if (!trigger || this.cooldown > 0) return;
+	activate() {
+		if (this.cooldown > 0) return;
 		this.cooldown = this.user.consumeEnergy([500, 630, 800][this.level], () => {
 			this.user.summons.bulletManager.createBullet('laser', {
 				position: this.user.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.user.quaternion).normalize(), this.user.geometry.boundingBox.max.z), quaternion: this.user.quaternion,
@@ -342,8 +342,7 @@ registerSkill(class extends Skill {
 			this.instance2.material.color.set(0x111111);
 		}
 	}
-	activate(trigger) {
-		if (!trigger) return;
+	activate() {
 		if (this.instance.active || (this.level >= 2 && this.instance2.active)) {
 			this.instance.target = this.user;
 			this.instance2.target = this.user;
