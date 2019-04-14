@@ -221,7 +221,7 @@ registerSkill(class extends ActiveSkill {
 		}
 	}
 	activate() {
-		if (this.cooldown > 0) return;
+		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([150, 250, 320][this.level], () => {
 			this.duration = 3;
 			this.effect = this.scene.effectManager.ray(this.user, [
@@ -231,6 +231,7 @@ registerSkill(class extends ActiveSkill {
 			], 7, (t, m) => 1 - t / m);
 			return 15;
 		}, 0);
+		return true;
 	}
 	static id = 'Railgun';
 	static skillName = 'Railgun';
@@ -279,7 +280,7 @@ registerSkill(class extends ActiveSkill {
 		}
 	}
 	activate() {
-		if (this.cooldown > 0) return;
+		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([1000, 1200, 1600][this.level], () => {
 			this.delay = [5, 8, 12][this.level];
 			this.user.rotspeed /= [2, 4, 8][this.level];
@@ -288,6 +289,7 @@ registerSkill(class extends ActiveSkill {
 			], this.delay, (t, m) => t / m);
 			return [250, 300, 400][this.level];
 		}, 0);
+		return true;
 	}
 	static id = 'ParticleCannon';
 	static skillName = 'Particle cannon';
@@ -300,7 +302,7 @@ registerSkill(class extends ActiveSkill {
 
 registerSkill(class extends ActiveSkill {
 	activate() {
-		if (this.cooldown > 0) return;
+		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([500, 630, 800][this.level], () => {
 			this.user.summons.bulletManager.createBullet('laser', {
 				position: this.user.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.user.quaternion).normalize(), this.user.geometry.boundingBox.max.z), quaternion: this.user.quaternion,
@@ -308,6 +310,7 @@ registerSkill(class extends ActiveSkill {
 			});
 			return [180, 200, 240][this.level];
 		}, 0);
+		return true;
 	}
 	static id = 'Lasergun';
 	static skillName = 'Laser gun';
@@ -346,9 +349,9 @@ registerSkill(class extends Skill {
 		if (this.instance.active || (this.level >= 2 && this.instance2.active)) {
 			this.instance.target = this.user;
 			this.instance2.target = this.user;
-			return;
+			return false;
 		}
-		if (!this.user.targetingEnemy) return;
+		if (!this.user.targetingEnemy) return false;
 		this.user.consumeEnergy([280, 280, 600][this.level], () => {
 			this.instance.active = true;
 			this.instance.target = this.user.targetingEnemy;
@@ -359,6 +362,7 @@ registerSkill(class extends Skill {
 				this.instance2.quaternion.copy(this.user.quaternion).rotateY(-0.5);
 			} else this.instance.quaternion = this.user.quaternion.clone();
 		});
+		return true;
 	}
 	static id = 'BladeMinion';
 	static skillName = 'Anti-material blade';
@@ -371,7 +375,7 @@ registerSkill(class extends Skill {
 
 registerSkill(class extends ActiveSkill {
 	activate() {
-		if (this.cooldown > 0) return;
+		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([200, 750, 1500][this.level], () => {
 			const repeat = [2, 4, 6][this.level];
 			for (let i = 0; i < repeat; i++) {
@@ -390,6 +394,7 @@ registerSkill(class extends ActiveSkill {
 			}
 			return [2000, 2400, 3000][this.level];
 		}, 0);
+		return true;
 	}
 	static id = 'Reinforce';
 	static skillName = 'Reinforce';
