@@ -1,9 +1,10 @@
-import {Vector4} from "three";
+import {Quaternion, Vector3, Vector4} from "three";
 
 import ShaderPass from "w3g/three-effect/ShaderPass";
 import FadeShader from "w3g/three-effect/FadeShader";
 
-import {Axis} from "w3g/threeutil";
+import {Axis, rotate} from "w3g/threeutil";
+import {get, free} from "w3g/utils";
 
 class Skill {
 	constructor(user, scene, level) {
@@ -184,6 +185,28 @@ registerSkill(class extends DeactivatableSkill {
 	static place = ['top', 'core'];
 	static getDescription(level) {
 		return 'Sacrifice your HP and increase firepower by ' + [20, 25, 30] + '%. Can toggle on/off by pushing activate key.';
+	}
+});
+
+registerSkill(class extends DeactivatableSkill {
+	update() {
+		this.user.consumeEnergy(1.5, () => {
+			const a = Math.random() * Math.PI * 2;
+			const v = get(Vector3).set(Math.sin(a), Math.cos(a), 0);
+			const q = get(Quaternion).copy(this.user.quaternion);
+			rotate(q, v, Math.sqrt(Math.random() * 0.0009));
+			v.copy(Axis.z).applyQuaternion(this.user.quaternion)
+				.setLength(this.user.geometry.boundingBox.max.z).add(this.user.position);
+			this.user.allies.bulletManager.create('bullet', v, q, {v: 1.02, atk: this.getDamage(atk)});
+			free(v, q);
+			this.scene.shakeScreen(2);
+		});
+	}
+	static id = 'Machinegun';
+	static skillName = 'Machinegun';
+	static place = ['front', 'wing'];
+	static getDescription(level) {
+		return 'Shoot bullets with high rate of fire.';
 	}
 });
 
