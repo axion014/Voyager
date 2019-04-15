@@ -73,6 +73,7 @@ registerSkill(class extends Skill { // dont modify, this module is so special
 	static skillName = 'Uninstall';
 	static place = ['top', 'core', 'front'];
 	static unlockedLevel = 0;
+	static getCost(level) {return 0;}
 	static getDescription(level) {return '';}
 });
 
@@ -85,6 +86,7 @@ registerSkill(class extends Skill {
 	static skillName = 'Extra armor';
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'Reduce damage taken by ' + [15, 16, 17][level] + '%.';
 	}
@@ -99,6 +101,7 @@ registerSkill(class extends Skill {
 	static skillName = 'Spear';
 	static place = ['front'];
 	static unlockedLevel = 0;
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'Increase damage on ramming into enemy by ' + [25, 27, 28][level] + '%.';
 	}
@@ -114,6 +117,7 @@ registerSkill(class extends Skill {
 	static skillName = 'Acrobat';
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'Greatly increase your mobility.';
 	}
@@ -134,6 +138,7 @@ registerSkill(class extends DeactivatableSkill {
 	static skillName = 'Self repair';
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'With this skill, your HP is no longer limited. Higher level one is faster but less energy efficient. Can toggle on/off by pushing activate key.';
 	}
@@ -150,6 +155,7 @@ registerSkill(class extends Skill {
 	static skillName = 'Extra generator';
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'Allows you to use skills more by increasing energy replenish speed.';
 	}
@@ -197,6 +203,7 @@ registerSkill(class extends DeactivatableSkill {
 	static id = 'OverHeating';
 	static skillName = 'Overheating';
 	static place = ['top', 'core'];
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'Sacrifice your HP and increase firepower by ' + [20, 25, 30] + '%. Can toggle on/off by pushing activate key.';
 	}
@@ -219,6 +226,7 @@ registerSkill(class extends DeactivatableSkill {
 	static id = 'Machinegun';
 	static skillName = 'Machinegun';
 	static place = ['front', 'wing'];
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'Shoot bullets with high rate of fire.';
 	}
@@ -251,6 +259,7 @@ registerSkill(class extends ActiveSkill {
 	static skillName = 'Railgun';
 	static place = ['front'];
 	static unlockedLevel = 1;
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'Shot deadly laser. Provides good firepower by consuming large amount of energy.';
 	}
@@ -309,6 +318,7 @@ registerSkill(class extends ActiveSkill {
 	static skillName = 'Particle cannon';
 	static place = ['front'];
 	static unlockedLevel = 0;
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'Powerful cannon that destroys ' + (level === 2 ? '' : 'almost ') + 'anything front of it.';
 	}
@@ -330,6 +340,7 @@ registerSkill(class extends ActiveSkill {
 	static skillName = 'Laser gun';
 	static place = ['front'];
 	static unlockedLevel = 0;
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'The Laser can pierce enemies. Can deal massive damage against huge enemy by hitting their core.';
 	}
@@ -382,6 +393,7 @@ registerSkill(class extends Skill {
 	static skillName = 'Anti-material blade';
 	static usingModels = ['blademinion'];
 	static place = ['top'];
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'This blade will spawn out on activation and automatically chase your enemy. Can pull back with pushing activate key again.';
 	}
@@ -415,6 +427,7 @@ registerSkill(class extends ActiveSkill {
 	static usingModels = ['assaultdrone'];
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
+	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
 		return 'Larger fleet ascend you to the victory.';
 	}

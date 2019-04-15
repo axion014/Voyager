@@ -23,6 +23,7 @@ import {get, free} from "w3g/utils";
 import * as skills from "./skills";
 import MainScene from "./mainscene";
 import {Mark} from "./geometries";
+import {units} from "./units";
 import {PLAYER, SKILLS} from "./constants";
 
 const BASE_Z = 100;
@@ -31,11 +32,13 @@ export default class TitleScene extends Scene {
 
 	labels = [];
 	points = [];
+	slots = [];
 	time = 0;
 
 	constructor() {
 		super();
-		let currentPlayer = assets.THREE_Model_GLTF[localStorage.getItem(PLAYER) || "player1"].clone();
+		let currentPlayer = localStorage.getItem(PLAYER) || "player1";
+		let playerModel = assets.THREE_Model_GLTF[currentPlayer].clone();
 		const currentSkills = JSON.parse(localStorage.getItem(SKILLS)) || [
 			{klass: skills.byID.Railgun, level: 0},
 			{klass: skills.byID.Empty, level: 0},
@@ -44,9 +47,7 @@ export default class TitleScene extends Scene {
 			//{klass: skills.byID.Reinforce, level: 2},
 			{klass: skills.byID.SelfRepair, level: 0}
 		];
-		currentSkills.forEach(skill => {
-			if (skill.name) skill.klass = skills.byID[skill.name];
-		});
+		let shipCost = 0;
 		let selectedStage;
 		let selectedDifficulty = "normal";
 		const start = () => {
@@ -67,12 +68,15 @@ export default class TitleScene extends Scene {
 				}
 			));
 		};
+		const updateShipCostLabel = () => {
+			this.shipCostLabel.text = `Cost: ${shipCost}/${units[currentPlayer].maxCost}`;
+		}
 		const menu = {
 			title: {
 				x: 0, y: 0, sub: [
 					{type: 'label', value: 'Voyager', y: 15, size: 3.6},
 					{type: 'label', value: 'Click to start', y: -15, size: 1.8},
-					{type: 'model', name: 'player', value: currentPlayer, x: 0, y: 0, z: -50},
+					{type: 'model', name: 'player', value: playerModel, x: 0, y: 0, z: -50},
 					{
 						type: 'model', value: new Mesh(
 							new CircleBufferGeometry(10000, 100),
@@ -160,13 +164,14 @@ export default class TitleScene extends Scene {
 					{type: 'label', value: '(You cannot select ship in this version)', y: -4, size: 0.8},
 					{type: 'label', value: '<', x: -12, size: 2.5},
 					{type: 'label', value: '>', x: 12, size: 2.5},
-					{type: 'label', value: 'Modify Ship', y: -8, size: 1.8, link: 'shipmodify'},
+					{type: 'label', value: 'Modify Ship', y: -8, size: 1.8, link: 'shipmodify', callback: updateShipCostLabel},
 					{type: 'label', value: 'Main Menu', y: -16, size: 1.8, link: 'main'},
 				]
 			},
 			shipmodify: {
 				x: 0, y: 0, z: -40, sub: [
 					{type: 'label', value: 'Ship Modify', y: 14, size: 3.6},
+					{type: 'label', name: 'shipCostLabel', value: '', y: 9, size: 1.8},
 					{type: 'point', parent: 'player', index: 0, place: "front", position: new Vector3(1.5, -1, 27)},
 					{type: 'point', parent: 'player', index: 1, place: "front", position: new Vector3(-1.5, -1, 27)},
 					{type: 'point', parent: 'player', index: 2, place: "top", position: new Vector3(0, 3, -5)},
@@ -276,6 +281,7 @@ export default class TitleScene extends Scene {
 					if (selects.callback) label.addEventListener('click', () => {
 						if (Math.abs(this.camera.position.z - label.position.z - 50) < 1) selects.callback();
 					});
+					if(selects.name) this[selects.name] = label;
 					this.labels.push(label);
 				} else if (selects.type === 'model') {
 					const add = (parent, models) => {
@@ -289,6 +295,7 @@ export default class TitleScene extends Scene {
 					}
 					add(this.threeScene, [selects]);
 				} else if (selects.type === 'point') {
+					this.slots[selects.index] = selects;
 					const scene = this;
 					class EquipSlot extends Group {
 						constructor(options) {
@@ -321,9 +328,17 @@ export default class TitleScene extends Scene {
 		});
 		this.addEventListener('click', moveToMain);
 
+		for (let i = 0; i < currentSkills.length; i++) {
+			const skill = currentSkills[i];
+			if (skill.name) skill.klass = byID[skill.name];
+			shipCost += skill.klass.getCost(skill.level);
+		}
+
 		equipmentEdit.skill = {};
-		equipmentEdit.name = new Label("", {y: vh * 0.19});
+		equipmentEdit.name = new Label("", {y: vh * 0.24});
 		equipmentEdit.add(equipmentEdit.name);
+		equipmentEdit.cost = new Label("", {y: vh * 0.18});
+		equipmentEdit.add(equipmentEdit.cost);
 		equipmentEdit.description = new LabelArea(" ", {
 			width: vw * 0.42,
 			font: "18px 'HiraKakuProN-W6'"
@@ -384,9 +399,13 @@ export default class TitleScene extends Scene {
 		equipmentEdit.ok.position.y = -vh * 0.2;
 
 		equipmentEdit.ok.addEventListener('click', () => {
+			const oldskill = currentSkills[equipmentEdit.target.index];
+			shipCost -= oldskill.klass.getCost(oldskill.level);
+			shipCost += equipmentEdit.skill.klass.getCost(equipmentEdit.skill.level);
 			currentSkills[equipmentEdit.target.index] = {klass: equipmentEdit.skill.klass, level: equipmentEdit.skill.level};
 			currentSkills.forEach(skill => skill.name = skill.klass.id);
 			localStorage.setItem(SKILLS, JSON.stringify(currentSkills));
+			updateShipCostLabel();
 			equipmentEdit.close();
 		});
 
@@ -421,7 +440,11 @@ export default class TitleScene extends Scene {
 					this.ok.text = 'Uninstall';
 					this.ok.y = vh * 0.06;
 				} else this.name.text = 'No module';
-			} else this.name.text = klass.skillName + ' ' + (level + 1);
+				this.cost.text = ' ';
+			} else {
+				this.name.text = klass.skillName + ' ' + (level + 1);
+				this.cost.text = "Cost: " + klass.getCost(level);
+			}
 			this.description.text = klass.getDescription(level);
 		};
 	}

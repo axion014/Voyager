@@ -161,6 +161,7 @@ function setQuaternionFromDirectionVector(q, v) {
 export const units = {
 	player1: {
 		filename: 'fighter-1',
+		maxCost: 1500,
 		properties: {
 			pitch: 0, yaw: 0, v: 0.17,
 			maxenergy: 2000, maxhp: 100, speed: 0.001, minspeed: 0.17, rotspeed: 1, weight: 100, hitSphere: 5,
