@@ -303,9 +303,14 @@ export default class TitleScene extends Scene {
 							this.hitTest = hitTestEllipse;
 							this.radius = 16;
 							this.data = options.data;
+							this.mirror = options.mirror;
 							this.visible = false;
 							this.add(new Mark({strokeColor: "#4a4", strokeWidth: 1, width: 48, height: 48}));
 							this.add(new Ellipse({fillColor: "#4a4", radius: 16, opacity: 0.5}));
+							if (this.mirror) {
+								this.link = THREE_Utils.createMeshLine([0, 0, 0, 0], {color: "#4a4", lineWidth: 2}, true);
+								this.add(this.link);
+							}
 							this.addEventListener('click', () => {
 								scene.interactive = false;
 								back.interactive = true;
@@ -323,6 +328,12 @@ export default class TitleScene extends Scene {
 					slot.position.z =　-1;
 					this.UIScene.add(slot);
 					this.points.push(slot);
+					if (selects.mirror) {
+						const mirrorslot = new EquipSlot({data: selects, mirror: slot});
+						mirrorslot.position.z =　-1;
+						this.UIScene.add(mirrorslot);
+						this.points.push(mirrorslot);
+					}
 				}
 			});
 		});
@@ -331,7 +342,7 @@ export default class TitleScene extends Scene {
 		for (let i = 0; i < currentSkills.length; i++) {
 			const skill = currentSkills[i];
 			if (skill.name) skill.klass = byID[skill.name];
-			shipCost += skill.klass.getCost(skill.level);
+			shipCost += skill.klass.getCost(skill.level) * (this.slots[i].mirror ? 2 : 1);
 		}
 
 		equipmentEdit.skill = {};
@@ -400,8 +411,8 @@ export default class TitleScene extends Scene {
 
 		equipmentEdit.ok.addEventListener('click', () => {
 			const oldskill = currentSkills[equipmentEdit.target.index];
-			shipCost -= oldskill.klass.getCost(oldskill.level);
-			shipCost += equipmentEdit.skill.klass.getCost(equipmentEdit.skill.level);
+			shipCost -= oldskill.klass.getCost(oldskill.level) * (equipmentEdit.target.mirror ? 2 : 1);
+			shipCost += equipmentEdit.skill.klass.getCost(equipmentEdit.skill.level) * (equipmentEdit.target.mirror ? 2 : 1);
 			currentSkills[equipmentEdit.target.index] = {klass: equipmentEdit.skill.klass, level: equipmentEdit.skill.level};
 			currentSkills.forEach(skill => skill.name = skill.klass.id);
 			localStorage.setItem(SKILLS, JSON.stringify(currentSkills));
@@ -443,7 +454,7 @@ export default class TitleScene extends Scene {
 				this.cost.text = ' ';
 			} else {
 				this.name.text = `${klass.skillName} ${level + 1}`;
-				this.cost.text = `Cost: ${klass.getCost(level)`;
+				this.cost.text = `Cost: ${klass.getCost(level) * (this.target.mirror ? 2 : 1)}`;
 			}
 			this.description.text = klass.getDescription(level);
 		};
@@ -463,9 +474,12 @@ export default class TitleScene extends Scene {
 		const v = get(Vector3);
 		this.points.forEach(point => {
 			v.copy(point.data.position);
+			if (point.mirror) v.x = -v.x;
 			const pos = this[point.data.parent].localToWorld(v).project(this.camera);
 			point.position.x = pos.x * vw / 2;
 			point.position.y = pos.y * vh / 2;
+			if (point.mirror) THREE_Utils.setMeshLineGeometry(point.link,
+				[0, 0, point.mirror.position.x - point.position.x, point.mirror.position.y - point.position.y], true);
 		});
 		free(v);
 	}

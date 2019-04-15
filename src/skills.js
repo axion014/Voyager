@@ -77,6 +77,27 @@ registerSkill(class extends Skill { // dont modify, this module is so special
 	static getDescription(level) {return '';}
 });
 
+registerSkill(class extends ActiveSkill {
+	constructor(user, scene, level, position, klass) {
+		super(user, scene, 0);
+		this.instance1 = new klass(user, scene, level, position);
+		const mirrored = get(Vector3).copy(position);
+		mirrored.x = -mirrored.x;
+		this.instance2 = new klass(user, scene, level, mirrored);
+		free(mirrored);
+	}
+	activate() {
+		const result = this.instance1.activate() || this.instance2.activate();
+		return result;
+	}
+	update() {
+		this.instance1.update();
+		this.instance2.update();
+	}
+	static id = 'Fork';
+	static place = [];
+});
+
 registerSkill(class extends Skill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
