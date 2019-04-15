@@ -128,7 +128,6 @@ registerSkill(class extends DeactivatableSkill {
 		super(user, scene, level);
 	}
 	update() {
-		if (!this.active) return;
 		const costrate = [100, 150, 200][this.level];
 		const amount = Math.min([0.001, 0.00125, 0.0015][this.level], this.user.maxhp - this.user.hp, this.user.energy / costrate);
 		this.user.energy -= amount * costrate;

@@ -221,8 +221,7 @@ export default class MainScene extends Scene {
 				this.mark = new Mark({width: 30, height: 30, opacity: 0.5, strokeWidth: 1, strokeColor: '#000'});
 				this.minimap.add(this.mark);
 
-				this.target = new Mark({width: 30, height: 30, opacity: 0.7, strokeWidth: 1});
-				this.target.visible = false;
+				this.target = new Mark({width: 30, height: 30, opacity: 0.7, strokeWidth: 1, visible: false});
 				this.UIScene.add(this.target);
 				this.player.targetMarker = this.target;
 
@@ -445,8 +444,9 @@ export default class MainScene extends Scene {
 			if (this.player.hp <= 0) {
 				this.player = null;
 
-				this.resulttext.text = 'Score: ' + Math.max(this.score, 0).toFixed(0)
-					+ '\nKill: ' + this.enemyManager.deathcount + '(' + (this.enemyManager.deathcount / this.enemyManager.spawncount * 100).toFixed(1) + '%)'
+				this.resulttext.text = `Score: ${
+					Math.max(this.score, 0).toFixed(0)}\nKill: ${this.enemyManager.deathcount}(${
+					(this.enemyManager.deathcount / this.enemyManager.spawncount * 100).toFixed(1)}%)`;
 				this.resulttitle.text = 'Game Over';
 				changeToResultScreenMode();
 			} else if (this.stage !== 'arcade' && goals[0].enable) {
@@ -465,11 +465,11 @@ export default class MainScene extends Scene {
 						else if (this.score >= this.rate[2]) rate = 'Good';
 						else if (this.score >= this.rate[1]) rate = 'Decent';
 						else rate = 'Bad';
-						this.resulttext.text = 'Score: ' + Math.max(this.score, 0).toFixed(0)
-							+ (this.enemyManager.spawncount !== 0 ? '\nKill: ' + this.enemyManager.deathcount + '('
-							+ (this.enemyManager.deathcount / this.enemyManager.spawncount * 100).toFixed(1) + '%)' : '')
-							+ '\nLife: ' + (player.hp / player.maxhp * 100).toFixed(1) + '%'
-							+ '\nRate: ' + rate;
+						this.resulttext.text = `Score: ${Math.max(this.score, 0).toFixed(0)}${
+							(this.enemyManager.spawncount !== 0 ?
+								`\nKill: ${this.enemyManager.deathcount}(${(this.enemyManager.deathcount / this.enemyManager.spawncount * 100).toFixed(1)}%)` :
+								'')
+							}\nLife: ${(player.hp / player.maxhp * 100).toFixed(1)}%\nRate: ${rate}`;
 						changeToResultScreenMode();
 						this.goaled = true;
 					} else {

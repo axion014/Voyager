@@ -20,7 +20,7 @@ import {Label, LabelArea} from "w3g/uielements";
 import Easing from "w3g/easing";
 import {get, free} from "w3g/utils";
 
-import * as skills from "./skills";
+import {byID, byPlace} from "./skills";
 import MainScene from "./mainscene";
 import {Mark} from "./geometries";
 import {units} from "./units";
@@ -40,12 +40,12 @@ export default class TitleScene extends Scene {
 		let currentPlayer = localStorage.getItem(PLAYER) || "player1";
 		let playerModel = assets.THREE_Model_GLTF[currentPlayer].clone();
 		const currentSkills = JSON.parse(localStorage.getItem(SKILLS)) || [
-			{klass: skills.byID.Railgun, level: 0},
-			{klass: skills.byID.Empty, level: 0},
-			{klass: skills.byID.Empty, level: 0},
-			//{klass: skills.byID.BladeMinion, level: 0},
-			//{klass: skills.byID.Reinforce, level: 2},
-			{klass: skills.byID.SelfRepair, level: 0}
+			{name: 'Railgun', level: 0},
+			{name: 'Empty', level: 0},
+			{name: 'Empty', level: 0},
+			{name: 'BladeMinion', level: 0},
+			{name: 'Reinforce', level: 2},
+			{name: 'SelfRepair', level: 0}
 		];
 		let shipCost = 0;
 		let selectedStage;
@@ -355,26 +355,26 @@ export default class TitleScene extends Scene {
 		});
 
 		left.addEventListener('click', () => {
-			let index = skills.byPlace[equipmentEdit.target.place].indexOf(equipmentEdit.skill.klass);
+			let index = byPlace[equipmentEdit.target.place].indexOf(equipmentEdit.skill.klass);
 			let klass;
 			do {
 				if (index === 0) {
-					klass = skills.byPlace[equipmentEdit.target.place][index = skills.byPlace[equipmentEdit.target.place].length - 1];
+					klass = byPlace[equipmentEdit.target.place][index = byPlace[equipmentEdit.target.place].length - 1];
 				} else {
-					klass = skills.byPlace[equipmentEdit.target.place][--index];
+					klass = byPlace[equipmentEdit.target.place][--index];
 				}
 			} while (klass.unlockedLevel < 0);
 			equipmentEdit.updateCurrent(klass, Math.min(equipmentEdit.skill.level, klass.unlockedLevel));
 		});
 
 		right.addEventListener('click', () => {
-			let index = skills.byPlace[equipmentEdit.target.place].indexOf(equipmentEdit.skill.klass);
+			let index = byPlace[equipmentEdit.target.place].indexOf(equipmentEdit.skill.klass);
 			let klass;
 			do {
-				if (index === skills.byPlace[equipmentEdit.target.place].length - 1) {
-					klass = skills.byPlace[equipmentEdit.target.place][index = 0];
+				if (index === byPlace[equipmentEdit.target.place].length - 1) {
+					klass = byPlace[equipmentEdit.target.place][index = 0];
 				} else {
-					klass = skills.byPlace[equipmentEdit.target.place][++index];
+					klass = byPlace[equipmentEdit.target.place][++index];
 				}
 			} while (klass.unlockedLevel < 0);
 			equipmentEdit.updateCurrent(klass, Math.min(equipmentEdit.skill.level, klass.unlockedLevel));
@@ -396,7 +396,7 @@ export default class TitleScene extends Scene {
 		equipmentEdit.add(down);
 
 		equipmentEdit.ok = new Label();
-		equipmentEdit.ok.position.y = -vh * 0.2;
+		equipmentEdit.ok.y = -vh * 0.2;
 
 		equipmentEdit.ok.addEventListener('click', () => {
 			const oldskill = currentSkills[equipmentEdit.target.index];
@@ -432,9 +432,9 @@ export default class TitleScene extends Scene {
 			this.skill.level = level;
 			const changeing = this.skill.klass !== currentSkills[this.target.index].klass || this.skill.level !== currentSkills[this.target.index].level;
 			this.ok.visible = changeing;
-			this.ok.text = currentSkills[this.target.index].klass === skills.byID.Empty ? 'Install' : 'Replace';
+			this.ok.text = currentSkills[this.target.index].klass === byID.Empty ? 'Install' : 'Replace';
 			this.ok.y = vh * 0.2;
-			if (klass === skills.byID.Empty) {
+			if (klass === byID.Empty) {
 				if (changeing) {
 					this.name.text = ' ';
 					this.ok.text = 'Uninstall';
@@ -442,8 +442,8 @@ export default class TitleScene extends Scene {
 				} else this.name.text = 'No module';
 				this.cost.text = ' ';
 			} else {
-				this.name.text = klass.skillName + ' ' + (level + 1);
-				this.cost.text = "Cost: " + klass.getCost(level);
+				this.name.text = `${klass.skillName} ${level + 1}`;
+				this.cost.text = `Cost: ${klass.getCost(level)`;
 			}
 			this.description.text = klass.getDescription(level);
 		};
