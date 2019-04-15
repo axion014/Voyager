@@ -229,13 +229,13 @@ export default class MainScene extends Scene {
 
 				this.gauge_h = new Gauge({
 					strokeColor: '#aaa', gaugeColor: 'rgb(255, 64, 64)', gaugeOpacity: 0.3,
-					x: 80 - vw / 2, y: 100 - vh / 2, value: 100, maxValue: 100, strokeWidth: 1, width: 128, height: 16
+					x: 80 - vw / 2, y: 100 - vh / 2, value: 100, maxValue: 100, strokeWidth: 2, width: 128, height: 16
 				});
 				this.UIScene.add(this.gauge_h);
 
 				this.gauge_e = new Gauge({
 					strokeColor: '#aaa', gaugeColor: 'rgb(64, 64, 255)', gaugeOpacity: 0.3,
-					x: 80 - vw / 2, y: 80 - vh / 2, value: 2000, maxValue: 2000, strokeWidth: 1, width: 128, height: 16
+					x: 80 - vw / 2, y: 80 - vh / 2, value: 2000, maxValue: 2000, strokeWidth: 2, width: 128, height: 16
 				});
 				this.UIScene.add(this.gauge_e);
 
@@ -499,7 +499,7 @@ export default class MainScene extends Scene {
 
 
 		function updateMessageBoxPlacement() {
-			this.msgbox.position.x = 0.5 * vx * this.msgbox.live;
+			this.msgbox.position.x = (-vx / 2) * this.msgbox.live;
 			this.msgbox.position.y = vh - 0.5 * vy * 0.3 * this.msgbox.live;
 			this.msgbox.width = vw / 10 + vw / 1.3 * this.msgbox.live;
 			this.msgbox.height = vh / 12 + vh / 8 * this.msgbox.live;

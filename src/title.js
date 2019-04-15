@@ -444,12 +444,12 @@ export default class TitleScene extends Scene {
 			const changeing = this.skill.klass !== currentSkills[this.target.index].klass || this.skill.level !== currentSkills[this.target.index].level;
 			this.ok.visible = changeing;
 			this.ok.text = currentSkills[this.target.index].klass === byID.Empty ? 'Install' : 'Replace';
-			this.ok.y = vh * 0.2;
+			this.ok.y = -vh * 0.2;
 			if (klass === byID.Empty) {
 				if (changeing) {
 					this.name.text = ' ';
 					this.ok.text = 'Uninstall';
-					this.ok.y = vh * 0.06;
+					this.ok.y = -vh * 0.06;
 				} else this.name.text = 'No module';
 				this.cost.text = ' ';
 			} else {
