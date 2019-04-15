@@ -58,10 +58,14 @@ export default class TitleScene extends Scene {
 
 			this.addEasing(new Easing(fade.uniforms.color.value).add({w: 1}, 1250, Easing.LINEAR));
 			this.addEasing(
-				new Easing(zoomblur.uniforms.strength)
-					.add({value: 16}, 1250, Easing.LINEAR)
-					.trigger(() => MainScene.createAndEnter(currentSkills, selectedStage, selectedDifficulty))
-			);
+				new Easing(zoomblur.uniforms.strength).add({value: 16}, 1250, Easing.LINEAR).trigger(() => {
+					for (let i = 0; i < currentSkills.length; i++) {
+						currentSkills[i].position = this.slots[i].position;
+						currentSkills[i].mirror = this.slots[i].mirror;
+					}
+					MainScene.createAndEnter(currentSkills, selectedStage, selectedDifficulty);
+				}
+			));
 		};
 		const menu = {
 			title: {

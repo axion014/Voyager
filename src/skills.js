@@ -1,4 +1,4 @@
-import {Quaternion, Vector3, Vector4} from "three";
+import {Group, Quaternion, Vector3, Vector4} from "three";
 
 import ShaderPass from "w3g/three-effect/ShaderPass";
 import FadeShader from "w3g/three-effect/FadeShader";
@@ -7,10 +7,15 @@ import {Axis, rotate} from "w3g/threeutil";
 import {get, free} from "w3g/utils";
 
 class Skill {
-	constructor(user, scene, level) {
+	constructor(user, scene, level, position, object) {
 		this.user = user;
 		this.scene = scene;
 		this.level = level;
+		if (position) {
+			this.threeObject = object || new Group();
+			this.threeObject.position.copy(position);
+			this.user.add(this.threeObject);
+		}
 	}
 	update() {}
 	static place = ['core']; // any number of string id which shows where this module can be installed
@@ -20,8 +25,8 @@ class Skill {
 }
 
 export class ActiveSkill extends Skill {
-	constructor(user, scene, level) {
-		super(user, scene, level);
+	constructor(user, scene, level, position, object) {
+		super(user, scene, level, position, object);
 		this.cooldown = 0;
 	}
 	update() {
@@ -37,8 +42,8 @@ export class ActiveSkill extends Skill {
 };
 
 export class DeactivatableSkill extends Skill {
-	constructor(user, scene, level) {
-		super(user, scene, level);
+	constructor(user, scene, level, position, object) {
+		super(user, scene, level, position, object);
 		this.active = false;
 	}
 	activate() {
@@ -61,6 +66,9 @@ function registerSkill(klass) {
 };
 
 registerSkill(class extends Skill { // dont modify, this module is so special
+	constructor(user, scene, level) {
+		super(user, scene, level);
+	}
 	static id = 'Empty';
 	static skillName = 'Uninstall';
 	static place = ['top', 'core', 'front'];
@@ -112,6 +120,9 @@ registerSkill(class extends Skill {
 });
 
 registerSkill(class extends DeactivatableSkill {
+	constructor(user, scene, level) {
+		super(user, scene, level);
+	}
 	update() {
 		if (!this.active) return;
 		const costrate = [100, 150, 200][this.level];
@@ -129,6 +140,9 @@ registerSkill(class extends DeactivatableSkill {
 });
 
 registerSkill(class extends Skill {
+	constructor(user, scene, level) {
+		super(user, scene, level);
+	}
 	update() {
 		this.user.energy += Math.min([0.6, 0.63, 0.65][this.level], this.user.maxenergy - this.user.energy);
 	}
@@ -322,8 +336,8 @@ registerSkill(class extends ActiveSkill {
 });
 
 registerSkill(class extends Skill {
-	constructor(user, scene, level) {
-		super(user, scene, level);
+	constructor(user, scene, level, position) {
+		super(user, scene, level, position);
 		this.instance = this.user.summons.create('blademinion', {
 			position: this.user.position.clone(),
 			active: false,
