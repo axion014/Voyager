@@ -147,6 +147,65 @@ export class UnitManager extends ElementManager {
 		this.deathcount++;
 		this.remove(i);
 	}
+
+	beam(position, quaternion, atk, exps, expt, radius, effect) {
+		const vec = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(quaternion).normalize();
+
+		// 距離で並べかえる
+		this.opponents.elements.sort((a, b) => {
+			position.distanceToSquared(a.position) - position.distanceToSquared(b.position);
+		});
+
+		let hit;
+
+		if (radius === 0) {
+			const raycaster = get(Raycaster);
+			raycaster.set(position, vec);
+			this.opponents.elements.forEach(enemy => hit = raycaster.intersectObject(enemy).first);
+		} else {
+			const projectionMatrix = get(Matrix4).makeOrthographic(-radius, radius, radius, -radius, 0, 10000);
+			const viewMatrix = get(Matrix4).getInverse(this.matrixWorld);
+			const canvas = phina.graphics.Canvas().setSize(radius * 2, radius * 2);
+
+			function matrix4ToString(mat) {
+				let str = "";
+				for (let i = 0; i < 4; i++) {
+					str += "| ";
+					for (let j = 0; j < 4; j++) str += mat.elements[i + j * 4] + " ";
+					str += "|\n";
+				}
+				return str;
+			}
+
+			const position = get(Vector3);
+			const mvpMatrix = get(Matrix4);
+			const tmpColor = get(Color);
+			this.opponents.elements.forEach((enemy, index) => {
+				mvpMatrix.copy(projectionMatrix).multiply(viewMatrix).multiply(enemy.matrixWorld);
+
+				position.copy(enemy.geometry.boundingSphere.center).applyMatrix4(mvpMatrix);
+				console.log(enemy.geometry.boundingSphere.center, matrix4ToString(mvpMatrix), position.z)
+
+				if (position.z > 0) {
+					console.log(position.x, position.y, enemy.geometry.boundingSphere.radius)
+					canvas.fillStyle = tmpColor.set(index + 1).getStyle();
+					canvas.fillCircle(position.x + radius, position.y + radius, enemy.geometry.boundingSphere.radius);
+				}
+			});
+			free(position, mvpMatrix, tmpColor, projectionMatrix, viewMatrix);
+
+			const data = canvas.context.getImageData(0, 0, radius * 2 * window.devicePixelRatio, radius * 2 * window.devicePixelRatio).data;
+			for (let i = 0; i < data.length; i += 4) {
+				const index = data[i] << 16 + data[i + 1] << 8 + data[i + 2];
+				if (index !== 0) console.log(index);
+			}
+		}
+		if (hit) {
+			this.scene.effectManager.hit(hit.point, exps, expt);
+			hit.object.hp -= this.getDamage(atk) / this.scene.difficulty;
+		}
+		free(vec);
+	}
 }
 
 const loadedunit = {};
@@ -353,63 +412,6 @@ export const units = {
 			},
 			getDamage(rawdmg) {
 				return rawdmg;
-			},
-			beam(atk, exps, expt, radius, effect) {
-				const vec = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
-
-				// 距離で並べかえる
-				this.opponents.elements.sort((a, b) => {
-					this.position.distanceToSquared(a.position) - this.position.distanceToSquared(b.position);
-				});
-
-				let hit;
-
-				if (radius === 0) {
-					this.raycaster.set(this.position, vec);
-					this.opponents.elements.forEach(enemy => hit = this.raycaster.intersectObject(enemy).first);
-				} else {
-					const projectionMatrix = get(Matrix4).makeOrthographic(-radius, radius, radius, -radius, 0, 10000);
-					const viewMatrix = get(Matrix4).getInverse(this.matrixWorld);
-					const canvas = phina.graphics.Canvas().setSize(radius * 2, radius * 2);
-
-					function matrix4ToString(mat) {
-						let str = "";
-						for (let i = 0; i < 4; i++) {
-							str += "| ";
-							for (let j = 0; j < 4; j++) str += mat.elements[i + j * 4] + " ";
-							str += "|\n";
-						}
-						return str;
-					}
-
-					const position = get(Vector3);
-					const mvpMatrix = get(Matrix4);
-					const tmpColor = get(Color);
-					this.opponents.elements.forEach((enemy, index) => {
-						mvpMatrix.copy(projectionMatrix).multiply(viewMatrix).multiply(enemy.matrixWorld);
-
-						position.copy(enemy.geometry.boundingSphere.center).applyMatrix4(mvpMatrix);
-						console.log(enemy.geometry.boundingSphere.center, matrix4ToString(mvpMatrix), position.z)
-
-						if (position.z > 0) {
-							console.log(position.x, position.y, enemy.geometry.boundingSphere.radius)
-							canvas.fillStyle = tmpColor.set(index + 1).getStyle();
-							canvas.fillCircle(position.x + radius, position.y + radius, enemy.geometry.boundingSphere.radius);
-						}
-					});
-					free(position, mvpMatrix, tmpColor, projectionMatrix, viewMatrix);
-
-					const data = canvas.context.getImageData(0, 0, radius * 2 * window.devicePixelRatio, radius * 2 * window.devicePixelRatio).data;
-					for (let i = 0; i < data.length; i += 4) {
-						const index = data[i] << 16 + data[i + 1] << 8 + data[i + 2];
-						if (index !== 0) console.log(index);
-					}
-				}
-				if (hit) {
-					this.scene.effectManager.hit(hit.point, exps, expt);
-					hit.object.hp -= this.getDamage(atk) / this.scene.difficulty;
-				}
-				free(vec);
 			},
 			consumeEnergy(amount, f, defaultreturn) {
 				if (this.energy >= amount) {
