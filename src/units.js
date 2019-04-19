@@ -10,7 +10,6 @@ import {SymmetricTriangle} from "w3g/geometries";
 import {minimapScale, raderRadius, bossHPGaugeFadeTime} from "./constants";
 import ElementManager from "./elementmanager";
 import {testOBBSphere, testCupsuleSphere} from "./collision";
-import {ActiveSkill} from "./skills";
 
 /*
  * About units
@@ -366,7 +365,7 @@ export const units = {
 					this.av.multiplyScalar(0.998 ** delta);
 				}
 
-				if (this.primary instanceof ActiveSkill) {
+				if (this.primary.type === 'active') {
 					if (keys.Space) this.primary.activate();
 				} else if (this.primary) this.primary.active = keys.Space;
 				this.sub.forEach(sub => {
@@ -375,7 +374,7 @@ export const units = {
 				});
 
 				if (keyDown.KeyZ) this.player.sub.some(sub => {
-					if ((sub instanceof ActiveSkill) && sub !== this.player.primary) return sub.activate();
+					if (sub.type === 'active' && sub !== this.player.primary) return sub.activate();
 				});
 
 				this.energy = Math.min(this.energy + 2 * delta, this.maxenergy);

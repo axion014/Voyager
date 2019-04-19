@@ -27,7 +27,7 @@ import EffectManager from "./effects";
 import BulletManager from "./bullet";
 import ObstacleManager from "./obstacle";
 import WindManager from "./wind";
-import {byID, ActiveSkill, DeactivatableSkill} from "./skills";
+import {byID} from "./skills";
 import {
 	bossHPGaugeFadeTime, messageDelay, gridDivisions,
 	maxAlliedBullets, maxEnemyBullets, bulletRemovalMargin, bulletRetainingRadius
@@ -107,7 +107,7 @@ export default class MainScene extends Scene {
 					new byID.Fork(this.player, this, sub.level, sub.position, sub.klass) :
 					new sub.klass(this.player, this, sub.level, sub.position));
 				this.player.primary = this.player.sub.find(
-					sub => (sub instanceof ActiveSkill) || (sub instanceof DeactivatableSkill));
+					sub => (sub.type === 'active' || sub.type === 'toggle') && (sub.getDamage));
 			}, async () => { // Stage loading
 				if (this.stage !== 'arcade') {
 					if (!assets.STAGE[this.stage]) {
