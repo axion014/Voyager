@@ -16,7 +16,7 @@ import {get, free} from "w3g/utils";
 import {vw, vh} from "w3g/main";
 import assets, {loadResources} from "w3g/loading";
 import {Rectangle, Ellipse, SymmetricTriangle} from "w3g/geometries";
-import {Label, Gauge, textAlign} from "w3g/uielements";
+import {Label, Gauge, DebugTexts, textAlign} from "w3g/uielements";
 import Easing from "w3g/easing";
 import {keyDown} from "w3g/input";
 import Scene from "w3g/scene";
@@ -276,7 +276,7 @@ export default class MainScene extends Scene {
 				});
 				this.UIScene.add(this.resulttext);
 
-				this.debugtexts = new Group();
+				this.debugtexts = new DebugTexts();
 				this.debugtexts.position.x = 16 - vw / 2;
 				this.debugtexts.position.y = vh / 2 - 36;
 				this.debugtexts.visible = false;
@@ -522,17 +522,5 @@ export default class MainScene extends Scene {
 		const angle = Math.random() * Math.PI * 2;
 		this.camera.position.x += Math.sin(angle) * amount;
 		this.camera.position.z += Math.cos(angle) * amount;
-	}
-	debugText(id, text) {
-		if (this.debugtexts.userData[id]) {
-			this.debugtexts.userData[id].text = text;
-			return;
-		}
-		const label = new Label(text, {
-			align: textAlign.left, font: "16px 'HiraKakuProN-W3'",
-			fillStyle: 'hsla(0, 0%, 0%, 0.8)', y: -this.debugtexts.children.length * 24
-		});
-		this.debugtexts.add(label);
-		this.debugtexts.userData[id] = label;
 	}
 }

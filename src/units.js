@@ -280,7 +280,7 @@ export const units = {
 					} else this.pitch -= maxrot * (this.mode === 'back' ? 2 : -this.myrot.x / 1.6) * delta;
 				} else {
 					const d = get(Vector3).copy(this.targetingPosition).sub(this.position);
-					this.scene.debugText('targetingPosition', `targetingPosition: {x: ${d.x.toFixed(2)}, y: ${d.y.toFixed(2)}, z: ${d.z.toFixed(2)}}`);
+					this.scene.debug('player.targetingPosition', THREE_Utils.toString(d));
 					const b = (this.mode === 'back') !== reverse ? -1 : 1;
 					const pitch = normalizeAngle(Math.atan2(-d.y, Math.sqrt(d.x * d.x + d.z * d.z) * b) - this.myrot.x - this.pitch);
 					const yaw = normalizeAngle(Math.atan2(d.x, d.z) * b + Math.PI - this.myrot.y);
@@ -337,6 +337,8 @@ export const units = {
 				this.myrot.x = normalizeAngle(this.myrot.x);
 				this.myrot.y = normalizeAngle(this.myrot.y);
 				this.applyRotation();
+
+				this.scene.debug('player.quaternion', THREE_Utils.toString(this.quaternion));
 
 				if (pointing) this.consumeEnergy(this.speed * 3 * delta, () => { // Speed up
 					if (this.scene.space) this.av.addScaledVector(direction, this.speed * delta);
