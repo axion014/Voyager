@@ -81,7 +81,7 @@ export default class TitleScene extends Scene {
 						type: 'model', value: new Mesh(
 							new CircleBufferGeometry(10000, 100),
 							new MeshBasicMaterial({map: assets.THREE_Texture.plane})
-						), x: 0, y: 1000, z: 0, init: model => THREE_Utils.rotateX(model, -Math.PI / 2)
+						), x: 0, y: 1000, z: 0, init: model => model.rotateX(-Math.PI / 2)
 					}
 				]
 			},
@@ -154,7 +154,7 @@ export default class TitleScene extends Scene {
 					{
 						type: 'model', value: assets.THREE_Model_GLTF.airballoon.clone(),
 						x: 0, y: 0, z: 0,
-						init: (model) => THREE_Utils.rotate(model, new Vector3(1, -1, -1).normalize(), 1)
+						init: model => model.rotateOnAxis(new Vector3(1, -1, -1).normalize(), 1)
 					},
 				]
 			},
@@ -195,15 +195,15 @@ export default class TitleScene extends Scene {
 					{type: 'label', value: 'Back', y: -8, size: 1.8, link: 'main'},
 					{
 						type: 'model', value: assets.THREE_Model_GLTF.enem1.clone(), x: 8, y: -4, z: 0,
-						init: model => THREE_Utils.rotate(model, new Vector3(1, -1, -1).normalize(), 1)
+						init: model => model.rotateOnAxis(new Vector3(1, -1, -1).normalize(), 1)
 					},
 					{
 						type: 'model', value: assets.THREE_Model_GLTF.enem1.clone(), x: -8, y: 4, z: 0,
-						init: model => THREE_Utils.rotate(model, new Vector3(1, -1, -1).normalize(), 1)
+						init: model => model.rotateOnAxis(new Vector3(1, -1, -1).normalize(), 1)
 					},
 					{
 						type: 'model', value: assets.THREE_Model_GLTF.enem1.clone(), x: -10, y: -12, z: 40,
-						init: model => THREE_Utils.rotate(model, new Vector3(1, -1, -1).normalize(), 1)
+						init: model => model.rotateOnAxis(new Vector3(1, -1, -1).normalize(), 1)
 					}
 				]
 			},

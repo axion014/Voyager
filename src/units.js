@@ -424,9 +424,9 @@ export const units = {
 			applyRotation() {
 				this.quaternion.set(0, 0, 0, 1);
 				// The order is important, even with quaternion.
-				THREE_Utils.rotateY(this, this.myrot.y);
-				THREE_Utils.rotateX(this, this.myrot.x);
-				THREE_Utils.rotateZ(this, this.myrot.z1 + this.myrot.z2);
+				this.rotateY(this.myrot.y);
+				this.rotateX(this.myrot.x);
+				this.rotateZ(this.myrot.z1 + this.myrot.z2);
 			}
 		}
 	},

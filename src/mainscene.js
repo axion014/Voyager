@@ -315,10 +315,10 @@ export default class MainScene extends Scene {
 		this.effectManager.update(delta);
 
 		if (!this.player) {
-			THREE_Utils.rotateAbsY(this.camera, delta * -0.0001);
+			this.camera.rotateOnWorldAxis(THREE_Utils.Axis.Y, delta * -0.0001);
 		} else if (this.goaled) {
 			this.player.flare('enterframe');
-			THREE_Utils.rotateAbsY(this.camera, delta * -0.0001);
+			this.camera.rotateOnWorldAxis(THREE_Utils.Axis.Y, delta * -0.0001);
 		} else {
 			if (this.stage === 'arcade') { // Arcade mode (random enemy spawn)
 				if (this.enemyManager.count === 0) {
