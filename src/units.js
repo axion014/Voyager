@@ -365,9 +365,11 @@ export const units = {
 					this.av.multiplyScalar(0.998 ** delta);
 				}
 
-				if (this.primary.type === 'active') {
-					if (keys.Space) this.primary.activate();
-				} else if (this.primary) this.primary.active = keys.Space;
+				if (this.primary) {
+					if (this.primary.type === 'active') {
+						if (keys.Space) this.primary.activate();
+					} else this.primary.active = keys.Space;
+				}
 				this.sub.forEach(sub => {
 					if (sub.active === false) return;
 					sub.update();
