@@ -237,9 +237,9 @@ export const units = {
 				if (Math.abs(this.myrot.x) > Math.PI / 2) this.myrot.z2 += (Math.PI - this.myrot.z2) * (1 - 0.95 ** delta);
 				else this.myrot.z2 *= 0.95 ** delta;
 
-				this.targetingPosition.set(mouseX / vw * 2 - 1, -mouseY / vh * 2 + 1, 0).unproject(this.scene.camera);
-				const targetingDirection = get(Vector3).copy(this.targetingPosition).sub(this.scene.camera.position).normalize();
-				const targetingRay = get(Ray).set(this.scene.camera.position, targetingDirection);
+				this.targetingPosition.set(mouseX / vw * 2 - 1, -mouseY / vh * 2 + 1, 0).unproject(this.scene.camerabeforescreenshake);
+				const targetingDirection = get(Vector3).copy(this.targetingPosition).sub(this.scene.camerabeforescreenshake.position).normalize();
+				const targetingRay = get(Ray).set(this.scene.camerabeforescreenshake.position, targetingDirection);
 				free(targetingDirection);
 
 				let targetingEnemy, targetingEnemyPosition;

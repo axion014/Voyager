@@ -302,6 +302,7 @@ export default class MainScene extends Scene {
 				this.camera.fov = 100;
 				this.camera.rotateY(Math.PI);
 				this.camera.rotateX(-Math.PI / 2);
+				this.camerabeforescreenshake = this.camera.clone();
 			}
 		]);
 	}
@@ -376,6 +377,7 @@ export default class MainScene extends Scene {
 			const focalPosition = get(Vector3).copy(this.player.position).lerp(this.player.targetingPosition, 0.1);
 			this.camera.position.addVectors(focalPosition, this.cameraPosition);
 			this.camera.lookAt(focalPosition);
+			this.camerabeforescreenshake.copy(this.camera);
 			free(focalPosition);
 
 			this.allyManager.elements.forEach(ally => {
