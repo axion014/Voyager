@@ -366,12 +366,12 @@ export const units = {
 				}
 
 				if (this.primary) {
-					if (this.primary.type === 'active') {
+					if (this.primary.getType() === 'active') {
 						if (keys.Space) this.primary.activate();
 					} else this.primary.active = keys.Space;
 				}
 				this.sub.forEach(sub => {
-					if (!sub.active) return;
+					if (sub.getType() === 'toggle' && !sub.active) return;
 					sub.update(delta);
 				});
 
