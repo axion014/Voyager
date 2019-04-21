@@ -1,5 +1,5 @@
 import {
-	Mesh,
+	Mesh, Group,
 	IcosahedronGeometry, SphereGeometry, CylinderGeometry,
 	ShaderMaterial, MeshBasicMaterial,
 	Quaternion, Color,
@@ -8,6 +8,7 @@ import {
 
 import ElementManager from "./elementmanager";
 import assets from "w3g/loading";
+import {Axis} from "w3g/threeutil";
 
 export default class EffectManager extends ElementManager {
 
@@ -146,17 +147,16 @@ class RayManager extends ElementManager {
 	}
 
 	ray(g, a, b, c, d) {
-		g.geometry.boundingBox || g.geometry.computeBoundingBox();
+		g.geometry && (g.geometry.boundingBox || g.geometry.computeBoundingBox());
 		const self = this;
+		const length = 1000;
 		if (d) {
 			const upperSphere = new Mesh(new SphereGeometry(c, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2));
-			upperSphere.position.y = 500;
-			const ray = new Mesh(
-				new CylinderGeometry(c, c, 1000, 20, 10),
+			upperSphere.position.y = length / 2;
+			const ray = Object.assign(new Mesh(
+				new CylinderGeometry(c, c, length, 20, 10),
 				new MeshBasicMaterial({color: a, opacity: b, transparent: true})
-			).$safe({
-				generator: g,
-				offset: 500 + c + g.geometry.boundingBox.max.z,
+			), {
 				time: d,
 				update(delta) {
 					this.time -= delta;
@@ -165,60 +165,49 @@ class RayManager extends ElementManager {
 						self.elements.erase(this);
 						return;
 					}
-					this.move(this.generator.position.clone().add(Axis.z.clone().applyQuaternion(
-							this.generator.quaternion).setLength(this.offset)));
-					this.quaternion.set(0, 0, 0, 1);
-					this.rotateY(Math.PI);
-					this.rotateX(Math.PI / 2);
-					this.quaternion.premultiply(this.generator.quaternion);
 				}
 			});
+			ray.position.copy(Axis.z).multiply(length / 2 + c + (g.geometry ? g.geometry.boundingBox.max.z : 0));
+			ray.rotateY(Math.PI);
+			ray.rotateX(Math.PI / 2);
 			ray.geometry.mergeMesh(upperSphere);
-			this.threescene.add(ray);
+			g.add(ray);
 			this.add(ray);
 			return ray;
 		}
 		const data = a;
-		const rays = [];
-		rays.$safe({
-			generator: g,
-			offset: 500 + data.reduce((a, b) => a > b.radius ? a : b.radius, 0) + g.geometry.boundingBox.max.z,
+		const rays = new Group();
+		Object.assign(rays, {
 			time: 0,
 			timeMax: b,
 			radiusfunc: c,
 			update(delta) {
 				this.time += delta;
-
-				const scale = rays.radiusfunc(this.time, this.timeMax);
-				this.forEach(ray => {
-					if (this.time >= this.timeMax) {
-						ray.parent.remove(ray);
-						return;
-					}
-					ray.move(this.generator.position.clone().add(Axis.z.clone().applyQuaternion(
-						this.generator.quaternion).setLength(this.offset)));
-					ray.quaternion.copy(new Quaternion());
-					ray.rotateY(Math.PI);
-					ray.rotateX(Math.PI / 2);
-					ray.quaternion.premultiply(this.generator.quaternion);
-					ray.scale.x = ray.scale.z = scale;
-				});
-				if (this.time >= this.timeMax) self.remove(self.elements.indexOf(this));
+				this.scale.x = this.scale.z = this.radiusfunc(this.time, this.timeMax);
+				if (this.time >= this.timeMax) {
+					this.parent.remove(this);
+					self.remove(self.elements.indexOf(this));
+				}
 			}
 		});
+		const offset = length / 2 + data.reduce((a, b) => Math.max(a, b.radius), 0) + (g.geometry ? g.geometry.boundingBox.max.z : 0);
 		data.forEach(data => {
 			const upperSphere = new Mesh(new SphereGeometry(data.radius, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2));
-			upperSphere.position.y = 500;
+			upperSphere.position.y = length / 2;
 			const ray = new Mesh(
-				new CylinderGeometry(data.radius, data.radius, 1000, 20, 10),
+				new CylinderGeometry(data.radius, data.radius, length, 20, 10),
 				new MeshBasicMaterial({color: data.color, opacity: data.opacity, transparent: true})
 			);
+			ray.position.copy(Axis.z).applyQuaternion(g.quaternion).multiply(offset);
 			ray.geometry.mergeMesh(upperSphere);
-			this.threescene.add(ray);
-			rays.push(ray);
+			rays.add(ray);
 		});
 
+		rays.rotateY(Math.PI);
+		rays.rotateX(Math.PI / 2);
+		g.add(rays);
 		this.add(rays);
 		return rays;
 	}
+	update() {}
 }
