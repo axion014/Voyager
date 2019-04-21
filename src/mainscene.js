@@ -99,7 +99,7 @@ export default class MainScene extends Scene {
 				const list = {THREE_Model_GLTF: []};
 				skills.forEach(sub => {
 					if (sub.klass.usingModels) sub.klass.usingModels.forEach(name => {
-						if (!assets.THREE_Model_GLTF[name]) asset.THREE_Model_GLTF.push(name);
+						if (!assets.THREE_Model_GLTF[name]) list.THREE_Model_GLTF.push(name);
 					});
 				});
 				await loadResources(list);
@@ -107,7 +107,7 @@ export default class MainScene extends Scene {
 					new byID.Fork(this.player, this, sub.level, sub.position, sub.klass) :
 					new sub.klass(this.player, this, sub.level, sub.position));
 				this.player.primary = this.player.sub.find(
-					sub => (sub.type === 'active' || sub.type === 'toggle') && (sub.getDamage));
+					sub => (sub.getType() === 'active' || sub.getType() === 'toggle') && sub.getDamage || (sub.constructor === byID.Fork && sub.instance1.getDamage));
 			}, async () => { // Stage loading
 				if (this.stage !== 'arcade') {
 					if (!assets.STAGE[this.stage]) {
@@ -223,7 +223,7 @@ export default class MainScene extends Scene {
 				this.mark = new Mark({width: 30, height: 30, opacity: 0.5, strokeWidth: 1, strokeColor: '#000'});
 				this.minimap.add(this.mark);
 
-				this.target = new Mark({width: 30, height: 30, opacity: 0.7, strokeWidth: 1, visible: false});
+				this.target = new Mark({width: 30, height: 30, opacity: 0.7, strokeWidth: 1});
 				this.UIScene.add(this.target);
 				this.player.targetMarker = this.target;
 
@@ -316,10 +316,10 @@ export default class MainScene extends Scene {
 		this.effectManager.update(delta);
 
 		if (!this.player) {
-			this.camera.rotateOnWorldAxis(THREE_Utils.Axis.Y, delta * -0.0001);
+			this.camera.rotateOnWorldAxis(THREE_Utils.Axis.y, delta * -0.0001);
 		} else if (this.goaled) {
 			this.player.flare('enterframe');
-			this.camera.rotateOnWorldAxis(THREE_Utils.Axis.Y, delta * -0.0001);
+			this.camera.rotateOnWorldAxis(THREE_Utils.Axis.y, delta * -0.0001);
 		} else {
 			if (this.stage === 'arcade') { // Arcade mode (random enemy spawn)
 				if (this.enemyManager.count === 0) {

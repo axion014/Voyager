@@ -371,7 +371,7 @@ export const units = {
 					} else this.primary.active = keys.Space;
 				}
 				this.sub.forEach(sub => {
-					if (sub.active === false) return;
+					if (!sub.active) return;
 					sub.update(delta);
 				});
 
