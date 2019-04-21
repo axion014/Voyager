@@ -4,15 +4,16 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "regenerator-runtime": "^0.13.1",
+    "regenerator-runtime": "^0.13.2",
     "three": "^0.101.1",
     "w3g": "git+https://github.com/axion014/w3g.git"
   },
   "devDependencies": {
-    "@babel/core": "^7.3.4",
+    "@babel/core": "^7.4.3",
     "@babel/plugin-external-helpers": "^7.2.0",
-    "@babel/plugin-proposal-class-properties": "^7.3.4",
-    "@babel/preset-env": "^7.3.4",
+    "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@babel/plugin-transform-template-literals": "^7.2.0",
+    "@babel/preset-env": "^7.4.3",
     "del": "^3.0.0",
     "gulp": "^4.0.0",
     "gulp-glsl": "^1.2.4",
@@ -21,10 +22,10 @@
     "gulp-rename": "^1.4.0",
     "gulp-uglify": "^3.0.2",
     "gulp-webserver": "^0.9.1",
-    "rollup": "^1.6.0",
+    "rollup": "^1.10.1",
     "rollup-plugin-babel": "^4.3.2",
-    "rollup-plugin-commonjs": "^9.2.1",
-    "rollup-plugin-node-resolve": "^4.0.1",
+    "rollup-plugin-commonjs": "^9.3.4",
+    "rollup-plugin-node-resolve": "^4.2.3",
     "through": "^2.3.8"
   },
   "scripts": {
