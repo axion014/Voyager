@@ -18,9 +18,7 @@ class Skill {
 		}
 	}
 	update() {}
-	getType() {
-		return 'passive';
-	}
+	getType() {return 'passive';}
 	static place = ['core']; // any number of string id which shows where this module can be installed
 
 	static maxLevel = 2; // level of this module never be more than the max level(permanent)
@@ -41,10 +39,8 @@ class ActiveSkill extends Skill {
 			//console.log('Active Skill ' + this.className + ' seems not implemented');
 		}
 	}
-	getType() {
-		return 'active';
-	}
-};
+	getType() {return 'active';}
+}
 
 class DeactivatableSkill extends Skill {
 	constructor(user, scene, level, position, object) {
@@ -54,10 +50,8 @@ class DeactivatableSkill extends Skill {
 	activate() {
 		this.active = !this.active;
 	}
-	getType() {
-		return 'toggle';
-	}
-};
+	getType() {return 'toggle';}
+}
 
 export const byPlace = {};
 export const byID = {};
@@ -71,7 +65,7 @@ function registerSkill(klass) {
 		byPlace[place].push(klass);
 	});
 	byID[klass.id] = klass;
-};
+}
 
 registerSkill(class extends Skill { // dont modify, this module is so special
 	constructor(user, scene, level) {
