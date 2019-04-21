@@ -56,7 +56,7 @@ export default class BulletManager extends ElementManager {
 		if (k && this.materials[n].length !== 0) bullet.material = this.materials[n].pop();
 		bullet.position.copy(p);
 		bullet.quaternion.copy(q);
-		bullet.velocity = get(Vector3).copy(Axis.z).applyQuaternion(bullet.quaternion).setLength(bullet.v);
+		bullet.velocity = get(Vector3).copy(Axis.z).applyQuaternion(bullet.quaternion).multiplyScalar(bullet.v);
 		bullet.name = n;
 		bullet.scale.multiplyScalar(bullet.size * bulletScale);
 		this.scene.threeScene.add(bullet);

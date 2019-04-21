@@ -473,6 +473,7 @@ export default class TitleScene extends Scene {
 
 		const v = get(Vector3);
 		this.points.forEach(point => {
+			if (!point.visible) return;
 			v.copy(point.data.position);
 			if (point.mirror) v.x = -v.x;
 			const pos = this[point.data.parent].localToWorld(v).project(this.camera);
