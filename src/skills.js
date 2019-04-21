@@ -32,8 +32,8 @@ class ActiveSkill extends Skill {
 		super(user, scene, level, position, object);
 		this.cooldown = 0;
 	}
-	update() {
-		if (this.cooldown > 0) this.cooldown--;
+	update(delta) {
+		this.cooldown = Math.max(this.cooldown - delta, 0);
 	}
 	activate() {
 		if (this.cooldown === 0) {
@@ -98,9 +98,9 @@ registerSkill(class extends ActiveSkill {
 		const result = this.instance1.activate() || this.instance2.activate();
 		return result;
 	}
-	update() {
-		this.instance1.update();
-		this.instance2.update();
+	update(delta) {
+		this.instance1.update(delta);
+		this.instance2.update(delta);
 	}
 	getType() {
 		return this.instance1.getType();
@@ -159,9 +159,9 @@ registerSkill(class extends DeactivatableSkill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 	}
-	update() {
+	update(delta) {
 		const costrate = [100, 150, 200][this.level];
-		const amount = Math.min([0.001, 0.00125, 0.0015][this.level], this.user.maxhp - this.user.hp, this.user.energy / costrate);
+		const amount = Math.min([0.00003, 0.00004, 0.00005][this.level] * delta, this.user.maxhp - this.user.hp, this.user.energy / costrate);
 		this.user.energy -= amount * costrate;
 		this.user.hp += amount;
 	}
@@ -179,8 +179,8 @@ registerSkill(class extends Skill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 	}
-	update() {
-		this.user.energy += Math.min([0.6, 0.63, 0.65][this.level], this.user.maxenergy - this.user.energy);
+	update(delta) {
+		this.user.energy += Math.min([0.01, 0.0105, 0.011][this.level] * delta, this.user.maxenergy - this.user.energy);
 	}
 	static id = 'ExtraGenerator';
 	static skillName = 'Extra generator';
@@ -241,8 +241,12 @@ registerSkill(class extends DeactivatableSkill {
 });
 
 registerSkill(class extends DeactivatableSkill {
-	update() {
-		this.user.consumeEnergy(1.5, () => {
+	constructor(user, scene, level, position) {
+		super(user, scene, level, position);
+		this.cooldown = 0;
+	}
+	update(delta) {
+		for (this.cooldown -= delta; this.cooldown <= 0; this.cooldown += 30) this.user.consumeEnergy(1.5, () => {
 			const a = Math.random() * Math.PI * 2;
 			const v = get(Vector3).set(Math.sin(a), Math.cos(a), 0);
 			const q = get(Quaternion).copy(this.user.quaternion);
@@ -264,25 +268,24 @@ registerSkill(class extends DeactivatableSkill {
 });
 
 registerSkill(class extends ActiveSkill {
-	update() {
-		super.update();
+	update(delta) {
+		super.update(delta);
 		if (this.duration > 0) {
-			this.duration--;
+			this.duration -= delta;
 			//const angle = Math.randfloat(0, Math.PI * 2);
-			this.scene.shakeScreen(this.duration * 8);
-			this.user.beam([36, 45, 50][this.level], 3, 25, 0, this.effect);
+			this.scene.shakeScreen(this.duration * 0.1);
 		}
 	}
 	activate() {
 		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([150, 250, 320][this.level], () => {
-			this.duration = 3;
+			this.duration = 100;
 			this.effect = this.scene.effectManager.ray(this.user, [
 				{color: 0xffffff, opacity: 0.2, radius: 1},
 				{color: 0x00ffff, opacity: 0.2, radius: 2},
 				{color: 0x0000ff, opacity: 0.2, radius: 4}
-			], 7, (t, m) => 1 - t / m);
-			return 15;
+			], 100, (t, m) => 1 - t / m);
+			return 500;
 		}, 0);
 		return true;
 	}
@@ -297,20 +300,19 @@ registerSkill(class extends ActiveSkill {
 });
 
 registerSkill(class extends ActiveSkill {
-	update() {
-		super.update();
+	update(delta) {
+		super.update(delta);
 		if (this.duration > 0) {
-			this.duration--;
+			this.duration -= delta;
 			//const angle = Math.random() * Math.PI * 2;
 			this.scene.shakeScreen(this.duration);
-			this.user.beam([10, 12, 15][this.level], 2, 15, [20, 25, 30][this.level], this.effect);
-			if (this.duration === 0) {
+			if (this.duration <= 0) {
 				this.user.rotspeed *= [2, 4, 8][this.level];
 			}
 		} else if (this.delay > 0) {
-			this.delay--;
-			if (this.delay === 0) {
-				this.duration = [20, 30, 40][this.level];
+			this.delay -= delta;
+			if (this.delay <= 0) {
+				this.duration = [600, 900, 1200][this.level];
 				// flash effect
 				const fade = new ShaderPass(new FadeShader());
 				fade.uniforms.color.value.set(1, 1, 1, 0.8);
@@ -329,19 +331,19 @@ registerSkill(class extends ActiveSkill {
 					{color: 0xff8888, opacity: 0.2, radius: [12, 15, 18][this.level]},
 					{color: 0xff4444, opacity: 0.2, radius: [16, 20, 24][this.level]},
 					{color: 0xff0000, opacity: 0.2, radius: [20, 25, 30][this.level]}
-				], [25, 35, 45][this.level], (t, m) => t < 4 ? 2 : (t < 6 ? 0.25 : 1 - (t - 6) / (m - 6)));
+				], [750, 1000, 1400][this.level], (t, m) => t < 120 ? 2 : (t < 180 ? 0.25 : 1 - (t - 180) / (m - 180)));
 			}
 		}
 	}
 	activate() {
 		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([1000, 1200, 1600][this.level], () => {
-			this.delay = [5, 8, 12][this.level];
+			this.delay = [150, 240, 360][this.level];
 			this.user.rotspeed /= [2, 4, 8][this.level];
 			this.scene.effectManager.ray(this.user, [
 				{color: 0xffffff, opacity: 0.8, radius: [3, 3.75, 5][this.level]},
 			], this.delay, (t, m) => t / m);
-			return [250, 300, 400][this.level];
+			return [7500, 9000, 12000][this.level];
 		}, 0);
 		return true;
 	}
@@ -361,9 +363,9 @@ registerSkill(class extends ActiveSkill {
 		this.cooldown = this.user.consumeEnergy([500, 630, 800][this.level], () => {
 			this.user.summons.bulletManager.createBullet('laser', {
 				position: this.user.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.user.quaternion).normalize(), this.user.geometry.boundingBox.max.z), quaternion: this.user.quaternion,
-				v: 18, atk: [60, 70, 75][this.level], pierce: true, size: 2
+				v: 1, atk: [60, 70, 75][this.level], pierce: true, size: 2
 			});
-			return [180, 200, 240][this.level];
+			return [5400, 6000, 720][this.level];
 		}, 0);
 		return true;
 	}
@@ -439,7 +441,7 @@ registerSkill(class extends ActiveSkill {
 				this.user.summons.create('assaultdrone', {
 					position: this.user.position.clone().sub(Axis.z.clone().applyQuaternion(this.user.quaternion).setLength(500)).add(Axis.x.clone().applyQuaternion(this.user.quaternion).setLength(((repeat - 1) / 2 - i) * 150)),
 					quaternion: this.user.quaternion.clone(),
-					expire: [2000, 1800, 1500][this.level],
+					expire: [60000, 54000, 45000][this.level],
 					hp: [8, 10, 11][this.level],
 					chase: [0.06, 0.07, 0.08][this.level],
 					v: [5.6, 6, 6.3][this.level],
@@ -449,7 +451,7 @@ registerSkill(class extends ActiveSkill {
 					atk: [7, 8, 8.5][this.level]
 				});
 			}
-			return [2000, 2400, 3000][this.level];
+			return [60000, 72000, 90000][this.level];
 		}, 0);
 		return true;
 	}

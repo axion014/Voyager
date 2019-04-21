@@ -372,7 +372,7 @@ export const units = {
 				}
 				this.sub.forEach(sub => {
 					if (sub.active === false) return;
-					sub.update();
+					sub.update(delta);
 				});
 
 				if (keyDown.KeyZ) this.player.sub.some(sub => {
