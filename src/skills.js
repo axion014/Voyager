@@ -240,17 +240,19 @@ registerSkill(class extends DeactivatableSkill {
 		this.cooldown = 0;
 	}
 	update(delta) {
+		const v = get(Vector3);
+		const q = get(Quaternion);
+		const d = get(Vector3);
+		this.threeObject.updateWorldMatrix();
 		for (this.cooldown -= delta; this.cooldown <= 0; this.cooldown += 30) this.user.consumeEnergy(1.5, () => {
 			const a = Math.random() * Math.PI * 2;
-			const v = get(Vector3).set(Math.sin(a), Math.cos(a), 0);
-			const q = get(Quaternion).copy(this.user.quaternion);
-			rotate(q, v, Math.sqrt(Math.random() * 0.0009));
-			v.copy(Axis.z).applyQuaternion(this.user.quaternion)
-				.setLength(this.user.geometry.boundingBox.max.z).add(this.user.position);
+			rotate(q.copy(this.user.quaternion), v.set(Math.sin(a), Math.cos(a), 0), Math.sqrt(Math.random() * 0.0009));
+			v.setFromMatrixPosition(this.threeObject.matrixWorld)
+				.add(d.copy(Axis.z).applyQuaternion(q).multiplyScalar(-this.cooldown));
 			this.user.allies.bulletManager.create('bullet', v, q, {v: 1.02, atk: this.getDamage(atk)});
-			free(v, q);
 			this.scene.shakeScreen(2);
 		});
+		free(v, q, d);
 	}
 	static id = 'Machinegun';
 	static skillName = 'Machinegun';
