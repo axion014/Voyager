@@ -13,4 +13,4 @@ export const bulletRemovalMargin = 50;
 export const bulletRetainingRadius = 3500;
 
 export const PLAYER = "player-0.1";
-export const SKILLS = "skills-0.1" // retrieve key for current set of skills
+export const EQUIPMENTS = "equipments-0.1" // retrieve key for current set of equipments

@@ -6,7 +6,7 @@ import FadeShader from "w3g/three-effect/FadeShader";
 import {Axis, rotate} from "w3g/threeutil";
 import {get, free} from "w3g/utils";
 
-class Skill {
+class Equipment {
 	constructor(user, scene, level, position, object) {
 		this.user = user;
 		this.scene = scene;
@@ -25,7 +25,7 @@ class Skill {
 	static unlockedLevel = -1; // works similar to variable above but can change sometimes
 }
 
-class ActiveSkill extends Skill {
+class ActivatableEquipment extends Equipment {
 	constructor(user, scene, level, position, object) {
 		super(user, scene, level, position, object);
 		this.cooldown = 0;
@@ -36,13 +36,13 @@ class ActiveSkill extends Skill {
 	activate() {
 		if (this.cooldown === 0) {
 			//this.activate();
-			//console.log('Active Skill ' + this.className + ' don't seem to be implemented');
+			//console.log('Activatable Equipment ' + this.className + ' don't seem to be implemented');
 		}
 	}
 	getType() {return 'active';}
 }
 
-class DeactivatableSkill extends Skill {
+class ToggleableEquipment extends Equipment {
 	constructor(user, scene, level, position, object) {
 		super(user, scene, level, position, object);
 		this.active = false;
@@ -56,7 +56,7 @@ class DeactivatableSkill extends Skill {
 export const byPlace = {};
 export const byID = {};
 
-function registerSkill(klass) {
+function registerEquipment(klass) {
 	let lvlfrom = klass;
 	while(lvlfrom.unlockedLevel === undefined) lvlfrom = lvlfrom.prototype.superClass;
 	klass.unlockedLevel = lvlfrom.unlockedLevel;
@@ -67,19 +67,19 @@ function registerSkill(klass) {
 	byID[klass.id] = klass;
 }
 
-registerSkill(class extends Skill { // dont modify, this module is so special
+registerEquipment(class extends Equipment { // dont modify, this module is so special
 	constructor(user, scene, level) {
 		super(user, scene, level);
 	}
 	static id = 'Empty';
-	static skillName = 'Uninstall';
+	static equipmentName = 'Uninstall';
 	static place = ['top', 'core', 'front', 'wing'];
 	static unlockedLevel = 0;
 	static getCost(level) {return 0;}
 	static getDescription(level) {return '';}
 });
 
-registerSkill(class extends ActiveSkill {
+registerEquipment(class extends ActivatableEquipment {
 	constructor(user, scene, level, position, klass) {
 		super(user, scene, 0);
 		this.instance1 = new klass(user, scene, level, position);
@@ -103,13 +103,13 @@ registerSkill(class extends ActiveSkill {
 	static place = [];
 });
 
-registerSkill(class extends Skill {
+registerEquipment(class extends Equipment {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.user.armor *= [1.175, 1.19, 1.205][level];
 	}
 	static id = 'ExtraArmor';
-	static skillName = 'Hardened alloy hull';
+	static equipmentName = 'Hardened alloy hull';
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -118,13 +118,13 @@ registerSkill(class extends Skill {
 	}
 });
 
-registerSkill(class extends Skill {
+registerEquipment(class extends Equipment {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.user.sharpness *= [1.5, 1.53, 1.54][level];
 	}
 	static id = 'Spear';
-	static skillName = 'Sharpened frontal hull';
+	static equipmentName = 'Sharpened frontal hull';
 	static place = ['front'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -133,14 +133,14 @@ registerSkill(class extends Skill {
 	}
 });
 
-registerSkill(class extends Skill {
+registerEquipment(class extends Equipment {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.user.speed *= [1.2, 1.213, 1.22][level];
 		this.user.rotspeed *= [1.3, 1.32, 1.33][level];
 	}
 	static id = 'Acrobat';
-	static skillName = 'Aerodynamically optimal wings';
+	static equipmentName = 'Aerodynamically optimal wings';
 	static place = ['top', 'wing'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -149,7 +149,7 @@ registerSkill(class extends Skill {
 	}
 });
 
-registerSkill(class extends DeactivatableSkill {
+registerEquipment(class extends ToggleableEquipment {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 	}
@@ -160,7 +160,7 @@ registerSkill(class extends DeactivatableSkill {
 		this.user.hp += amount;
 	}
 	static id = 'SelfRepair';
-	static skillName = 'Self repair package';
+	static equipmentName = 'Self repair package';
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -169,7 +169,7 @@ registerSkill(class extends DeactivatableSkill {
 	}
 });
 
-registerSkill(class extends Skill {
+registerEquipment(class extends Equipment {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 	}
@@ -177,7 +177,7 @@ registerSkill(class extends Skill {
 		this.user.energy += Math.min([0.01, 0.0105, 0.011][this.level] * delta, this.user.maxenergy - this.user.energy);
 	}
 	static id = 'ExtraGenerator';
-	static skillName = 'Extra generator';
+	static equipmentName = 'Extra generator';
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -186,13 +186,13 @@ registerSkill(class extends Skill {
 	}
 });
 
-registerSkill(class extends Skill {
+registerEquipment(class extends Equipment {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		user.maxenergy += [400, 430, 450][level];
 	}
 	static id = 'ExtraBattery';
-	static skillName = 'Extra battery';
+	static equipmentName = 'Extra battery';
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -201,13 +201,13 @@ registerSkill(class extends Skill {
 	}
 });
 
-registerSkill(class extends Skill {
+registerEquipment(class extends Equipment {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		user.precision *= [1.8, 1.9, 2][level];
 	}
 	static id = 'PrecisionBonus';
-	static skillName = 'Vector adjuster array';
+	static equipmentName = 'Vector adjuster array';
 	static place = ['front'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -216,7 +216,7 @@ registerSkill(class extends Skill {
 	}
 });
 
-registerSkill(class extends Skill {
+registerEquipment(class extends Equipment {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		user.applyRotation = function() {
@@ -227,7 +227,7 @@ registerSkill(class extends Skill {
 		};
 	}
 	static id = 'Glitch';
-	static skillName = 'DEF-���� glitch';
+	static equipmentName = 'DEF-���� glitch';
 	static place = ['core'];
 	//unlockedLevel: 0,
 	static getCost(level) {return [100, 120, 150][level];}
@@ -236,7 +236,7 @@ registerSkill(class extends Skill {
 	}
 });
 
-registerSkill(class extends DeactivatableSkill {
+registerEquipment(class extends ToggleableEquipment {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.activated = false;
@@ -256,7 +256,7 @@ registerSkill(class extends DeactivatableSkill {
 		this.activated = false;
 	}
 	static id = 'OverHeating';
-	static skillName = 'Barrel overheating';
+	static equipmentName = 'Barrel overheating';
 	static place = ['top', 'core'];
 	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
@@ -264,7 +264,7 @@ registerSkill(class extends DeactivatableSkill {
 	}
 });
 
-registerSkill(class extends DeactivatableSkill {
+registerEquipment(class extends ToggleableEquipment {
 	constructor(user, scene, level, position) {
 		super(user, scene, level, position);
 		this.cooldown = 0;
@@ -285,15 +285,16 @@ registerSkill(class extends DeactivatableSkill {
 		free(v, q, d);
 	}
 	static id = 'Machinegun';
-	static skillName = 'Machinegun';
+	static equipmentName = 'Machinegun';
 	static place = ['front', 'wing'];
 	static getCost(level) {return [100, 120, 150][level];}
+	static unlockedLevel = 0;
 	static getDescription(level) {
 		return 'Shoot bullets with high rate of fire.';
 	}
 });
 
-registerSkill(class extends ActiveSkill {
+registerEquipment(class extends ActivatableEquipment {
 	getDamage() {
 		return [1, 1.3, 1.5][this.level];
 	}
@@ -322,7 +323,7 @@ registerSkill(class extends ActiveSkill {
 		return true;
 	}
 	static id = 'Railgun';
-	static skillName = 'Railgun';
+	static equipmentName = 'Railgun';
 	static place = ['front', 'wing'];
 	static unlockedLevel = 1;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -331,7 +332,7 @@ registerSkill(class extends ActiveSkill {
 	}
 });
 
-registerSkill(class extends ActiveSkill {
+registerEquipment(class extends ActivatableEquipment {
 	getDamage() {
 		return [0.3, 0.4, 0.5][this.level];
 	}
@@ -386,7 +387,7 @@ registerSkill(class extends ActiveSkill {
 		return true;
 	}
 	static id = 'ParticleCannon';
-	static skillName = 'Particle cannon';
+	static equipmentName = 'Particle cannon';
 	static place = ['front'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -395,7 +396,7 @@ registerSkill(class extends ActiveSkill {
 	}
 });
 
-registerSkill(class extends ActiveSkill {
+registerEquipment(class extends ActivatableEquipment {
 	getDamage() {
 		return [60, 70, 75][this.level];
 	}
@@ -412,7 +413,7 @@ registerSkill(class extends ActiveSkill {
 		return true;
 	}
 	static id = 'Lasergun';
-	static skillName = 'Laser gun';
+	static equipmentName = 'Laser gun';
 	static place = ['front', 'wing'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -421,7 +422,7 @@ registerSkill(class extends ActiveSkill {
 	}
 });
 
-registerSkill(class extends Skill {
+registerEquipment(class extends ActivatableEquipment {
 	constructor(user, scene, level, position) {
 		super(user, scene, level, position);
 		this.instance = this.user.allies.create('blademinion', this.user.position, this.user.quaternion);
@@ -462,7 +463,7 @@ registerSkill(class extends Skill {
 		return true;
 	}
 	static id = 'BladeMinion';
-	static skillName = 'Anti-material blade slots';
+	static equipmentName = 'Anti-material blade slots';
 	static usingModels = ['blademinion'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -472,7 +473,7 @@ registerSkill(class extends Skill {
 	}
 });
 
-registerSkill(class extends ActiveSkill {
+registerEquipment(class extends ActivatableEquipment {
 	activate() {
 		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([200, 750, 1500][this.level], () => {
@@ -498,7 +499,7 @@ registerSkill(class extends ActiveSkill {
 		return true;
 	}
 	static id = 'Reinforce';
-	static skillName = 'Reinforce';
+	static equipmentName = 'Reinforce';
 	static usingModels = ['assaultdrone'];
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;

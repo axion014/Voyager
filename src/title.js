@@ -20,11 +20,11 @@ import {Label, LabelArea} from "w3g/uielements";
 import Easing from "w3g/easing";
 import {get, free} from "w3g/utils";
 
-import {byID, byPlace} from "./skills";
+import {byID, byPlace} from "./equipments";
 import MainScene from "./mainscene";
 import {Mark} from "./geometries";
 import {units} from "./units";
-import {PLAYER, SKILLS} from "./constants";
+import {PLAYER, EQUIPMENTS} from "./constants";
 
 const BASE_Z = 100;
 
@@ -39,7 +39,7 @@ export default class TitleScene extends Scene {
 		super();
 		let currentPlayer = localStorage.getItem(PLAYER) || "player1";
 		let playerModel = assets.THREE_Model_GLTF[currentPlayer].clone();
-		const currentSkills = JSON.parse(localStorage.getItem(SKILLS)) || [
+		const currentEquipments = JSON.parse(localStorage.getItem(EQUIPMENTS)) || [
 			{name: 'Railgun', level: 0},
 			{name: 'Empty', level: 0},
 			{name: 'Empty', level: 0},
@@ -60,11 +60,11 @@ export default class TitleScene extends Scene {
 			this.addEasing(new Easing(fade.uniforms.color.value).add({w: 1}, 1250, Easing.LINEAR));
 			this.addEasing(
 				new Easing(zoomblur.uniforms.strength).add({value: 16}, 1250, Easing.LINEAR).trigger(() => {
-					for (let i = 0; i < currentSkills.length; i++) {
-						currentSkills[i].position = this.slots[i].position;
-						currentSkills[i].mirror = this.slots[i].mirror;
+					for (let i = 0; i < currentEquipments.length; i++) {
+						currentEquipments[i].position = this.slots[i].position;
+						currentEquipments[i].mirror = this.slots[i].mirror;
 					}
-					MainScene.createAndEnter(currentSkills, selectedStage, selectedDifficulty);
+					MainScene.createAndEnter(currentEquipments, selectedStage, selectedDifficulty);
 				}
 			));
 		};
@@ -320,7 +320,7 @@ export default class TitleScene extends Scene {
 								scene.UIScene.add(equipmentEdit);
 								equipmentEdit.children.forEach(child => child.interactive = true);
 								scene.addEasing(new Easing(equipmentEdit).add({opacity: 1}, 250, Easing.LINEAR));
-								equipmentEdit.updateCurrent(currentSkills[this.data.index].klass, currentSkills[this.data.index].level);
+								equipmentEdit.updateCurrent(currentEquipments[this.data.index].klass, currentEquipments[this.data.index].level);
 							});
 						}
 					}
@@ -339,13 +339,13 @@ export default class TitleScene extends Scene {
 		});
 		this.addEventListener('click', moveToMain);
 
-		for (let i = 0; i < currentSkills.length; i++) {
-			const skill = currentSkills[i];
-			if (skill.name) skill.klass = byID[skill.name];
-			shipCost += skill.klass.getCost(skill.level) * (this.slots[i].mirror ? 2 : 1);
+		for (let i = 0; i < currentEquipments.length; i++) {
+			const equipment = currentEquipments[i];
+			if (equipment.name) equipment.klass = byID[equipment.name];
+			shipCost += equipment.klass.getCost(equipment.level) * (this.slots[i].mirror ? 2 : 1);
 		}
 
-		equipmentEdit.skill = {};
+		equipmentEdit.equipment = {};
 		equipmentEdit.name = new Label("", {y: vh * 0.24});
 		equipmentEdit.add(equipmentEdit.name);
 		equipmentEdit.cost = new Label("", {y: vh * 0.18});
@@ -366,7 +366,7 @@ export default class TitleScene extends Scene {
 		});
 
 		left.addEventListener('click', () => {
-			let index = byPlace[equipmentEdit.target.place].indexOf(equipmentEdit.skill.klass);
+			let index = byPlace[equipmentEdit.target.place].indexOf(equipmentEdit.equipment.klass);
 			let klass;
 			do {
 				if (index === 0) {
@@ -375,11 +375,11 @@ export default class TitleScene extends Scene {
 					klass = byPlace[equipmentEdit.target.place][--index];
 				}
 			} while (klass.unlockedLevel < 0);
-			equipmentEdit.updateCurrent(klass, Math.min(equipmentEdit.skill.level, klass.unlockedLevel));
+			equipmentEdit.updateCurrent(klass, Math.min(equipmentEdit.equipment.level, klass.unlockedLevel));
 		});
 
 		right.addEventListener('click', () => {
-			let index = byPlace[equipmentEdit.target.place].indexOf(equipmentEdit.skill.klass);
+			let index = byPlace[equipmentEdit.target.place].indexOf(equipmentEdit.equipment.klass);
 			let klass;
 			do {
 				if (index === byPlace[equipmentEdit.target.place].length - 1) {
@@ -388,17 +388,17 @@ export default class TitleScene extends Scene {
 					klass = byPlace[equipmentEdit.target.place][++index];
 				}
 			} while (klass.unlockedLevel < 0);
-			equipmentEdit.updateCurrent(klass, Math.min(equipmentEdit.skill.level, klass.unlockedLevel));
+			equipmentEdit.updateCurrent(klass, Math.min(equipmentEdit.equipment.level, klass.unlockedLevel));
 		});
 
 		up.addEventListener('click', () => {
-			if (equipmentEdit.skill.level < equipmentEdit.skill.klass.unlockedLevel)
-				equipmentEdit.updateCurrent(equipmentEdit.skill.klass, equipmentEdit.skill.level + 1);
+			if (equipmentEdit.equipment.level < equipmentEdit.equipment.klass.unlockedLevel)
+				equipmentEdit.updateCurrent(equipmentEdit.equipment.klass, equipmentEdit.equipment.level + 1);
 		});
 
 		down.addEventListener('click', () => {
-			if (equipmentEdit.skill.level > 0)
-				equipmentEdit.updateCurrent(equipmentEdit.skill.klass, equipmentEdit.skill.level - 1);
+			if (equipmentEdit.equipment.level > 0)
+				equipmentEdit.updateCurrent(equipmentEdit.equipment.klass, equipmentEdit.equipment.level - 1);
 		});
 
 		equipmentEdit.add(left);
@@ -410,12 +410,12 @@ export default class TitleScene extends Scene {
 		equipmentEdit.ok.y = -vh * 0.2;
 
 		equipmentEdit.ok.addEventListener('click', () => {
-			const oldskill = currentSkills[equipmentEdit.target.index];
-			shipCost -= oldskill.klass.getCost(oldskill.level) * (equipmentEdit.target.mirror ? 2 : 1);
-			shipCost += equipmentEdit.skill.klass.getCost(equipmentEdit.skill.level) * (equipmentEdit.target.mirror ? 2 : 1);
-			currentSkills[equipmentEdit.target.index] = {klass: equipmentEdit.skill.klass, level: equipmentEdit.skill.level};
-			currentSkills.forEach(skill => skill.name = skill.klass.id);
-			localStorage.setItem(SKILLS, JSON.stringify(currentSkills));
+			const oldequipment = currentEquipments[equipmentEdit.target.index];
+			shipCost -= oldequipment.klass.getCost(oldequipment.level) * (equipmentEdit.target.mirror ? 2 : 1);
+			shipCost += equipmentEdit.equipment.klass.getCost(equipmentEdit.equipment.level) * (equipmentEdit.target.mirror ? 2 : 1);
+			currentEquipments[equipmentEdit.target.index] = {klass: equipmentEdit.equipment.klass, level: equipmentEdit.equipment.level};
+			currentEquipments.forEach(equipment => equipment.name = equipment.klass.id);
+			localStorage.setItem(EQUIPMENTS, JSON.stringify(currentEquipments));
 			updateShipCostLabel();
 			equipmentEdit.close();
 		});
@@ -439,11 +439,11 @@ export default class TitleScene extends Scene {
 			);
 		};
 		equipmentEdit.updateCurrent = function(klass, level) {
-			this.skill.klass = klass;
-			this.skill.level = level;
-			const changeing = this.skill.klass !== currentSkills[this.target.index].klass || this.skill.level !== currentSkills[this.target.index].level;
+			this.equipment.klass = klass;
+			this.equipment.level = level;
+			const changeing = this.equipment.klass !== currentEquipments[this.target.index].klass || this.equipment.level !== currentEquipments[this.target.index].level;
 			this.ok.visible = changeing;
-			this.ok.text = currentSkills[this.target.index].klass === byID.Empty ? 'Install' : 'Replace';
+			this.ok.text = currentEquipments[this.target.index].klass === byID.Empty ? 'Install' : 'Replace';
 			this.ok.y = -vh * 0.2;
 			if (klass === byID.Empty) {
 				if (changeing) {
@@ -453,7 +453,7 @@ export default class TitleScene extends Scene {
 				} else this.name.text = 'No module';
 				this.cost.text = ' ';
 			} else {
-				this.name.text = `${klass.skillName} ${level + 1}`;
+				this.name.text = `${klass.equipmentName} ${level + 1}`;
 				this.cost.text = `Cost: ${klass.getCost(level) * (this.target.mirror ? 2 : 1)}`;
 			}
 			this.description.text = klass.getDescription(level);

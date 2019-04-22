@@ -27,7 +27,7 @@ import EffectManager from "./effects";
 import BulletManager from "./bullet";
 import ObstacleManager from "./obstacle";
 import WindManager from "./wind";
-import {byID} from "./skills";
+import {byID} from "./equipments";
 import {
 	bossHPGaugeFadeTime, messageDelay, gridDivisions,
 	maxAlliedBullets, maxEnemyBullets, bulletRemovalMargin, bulletRetainingRadius
@@ -53,7 +53,7 @@ export default class MainScene extends Scene {
 	bossdefeated = true;
 	cameraPosition = new Vector3(0, 650, -200);
 
-	constructor(skills, stage, difficulty) {
+	constructor(equipments, stage, difficulty) {
 		super();
 
 		this.stage = stage || 'arcade';
@@ -97,13 +97,13 @@ export default class MainScene extends Scene {
 				// console.log(player)
 				this.player.add(new AxesHelper(1000));
 				const list = {THREE_Model_GLTF: []};
-				skills.forEach(sub => {
+				equipments.forEach(sub => {
 					if (sub.klass.usingModels) sub.klass.usingModels.forEach(name => {
 						if (!assets.THREE_Model_GLTF[name]) list.THREE_Model_GLTF.push(name);
 					});
 				});
 				await loadResources(list);
-				this.player.sub = skills.map(sub => sub.mirror ?
+				this.player.sub = equipments.map(sub => sub.mirror ?
 					new byID.Fork(this.player, this, sub.level, sub.position, sub.klass) :
 					new sub.klass(this.player, this, sub.level, sub.position));
 				this.player.primary = this.player.sub.find(
