@@ -249,7 +249,7 @@ registerSkill(class extends DeactivatableSkill {
 			rotate(q.copy(this.user.quaternion), v.set(Math.sin(a), Math.cos(a), 0), Math.sqrt(Math.random() * 0.0009));
 			v.setFromMatrixPosition(this.threeObject.matrixWorld)
 				.add(d.copy(Axis.z).applyQuaternion(q).multiplyScalar(-this.cooldown));
-			this.user.allies.bulletManager.create('bullet', v, q, {v: 1.02, atk: this.getDamage(atk)});
+			this.user.allies.bulletManager.create('bullet', v, q, {v: 1.02, atk: this.getDamage()});
 			this.scene.shakeScreen(2);
 		});
 		free(v, q, d);
@@ -264,6 +264,9 @@ registerSkill(class extends DeactivatableSkill {
 });
 
 registerSkill(class extends ActiveSkill {
+	getDamage() {
+		return [1, 1.3, 1.5][this.level];
+	}
 	update(delta) {
 		super.update(delta);
 		if (this.duration > 0) {
@@ -296,6 +299,9 @@ registerSkill(class extends ActiveSkill {
 });
 
 registerSkill(class extends ActiveSkill {
+	getDamage() {
+		return [0.3, 0.4, 0.5][this.level];
+	}
 	update(delta) {
 		super.update(delta);
 		if (this.duration > 0) {
@@ -354,12 +360,15 @@ registerSkill(class extends ActiveSkill {
 });
 
 registerSkill(class extends ActiveSkill {
+	getDamage() {
+		return [60, 70, 75][this.level];
+	}
 	activate() {
 		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([500, 630, 800][this.level], () => {
 			const v = get(Vector3).addVectors(this.user.position, this.threeObject.position);
 			this.user.allies.bulletManager.createBullet('laser', v, this.user.quaternion, {
-				v: 1, atk: [60, 70, 75][this.level], pierce: true, size: 2
+				v: 1, atk: this.getDamage(), pierce: true, size: 2
 			});
 			free(v);
 			return [5400, 6000, 720][this.level];
