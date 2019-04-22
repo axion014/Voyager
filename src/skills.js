@@ -211,16 +211,16 @@ registerSkill(class extends DeactivatableSkill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
 		this.activated = false;
-		var original = this.user.getDamage;
-		this.user.getDamage = rawdmg => {
+		const original = this.user.primary.getDamage;
+		this.user.primary.getDamage = () => {
 			if (this.active) {
 				if (!this.activated) {
 					this.activated = true;
 					this.user.hp -= [0.02, 0.036, 0.056][level];
 				}
-				return original(rawdmg) * [1.2, 1.25, 1.3][level];
+				return original() * [1.2, 1.25, 1.3][level];
 			}
-			return original(rawdmg);
+			return original();
 		};
 	}
 	update() {
