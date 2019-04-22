@@ -89,8 +89,8 @@ registerSkill(class extends ActiveSkill {
 		free(mirrored);
 	}
 	activate() {
-		const result = this.instance1.activate() || this.instance2.activate();
-		return result;
+		const result = this.instance1.activate();
+		return this.instance2.activate() || result;
 	}
 	update(delta) {
 		this.instance1.update(delta);
