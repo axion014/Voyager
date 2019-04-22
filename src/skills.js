@@ -273,6 +273,9 @@ registerSkill(class extends ActiveSkill {
 			this.duration -= delta;
 			//const angle = Math.randfloat(0, Math.PI * 2);
 			this.scene.shakeScreen(this.duration * 0.1);
+			const v = get(Vector3).addVectors(this.user.position, this.threeObject.position);
+			this.user.allies.beam(v, this.user.quaternion, this.getDamage() * delta, 3, 25, 0, this.effect);
+			free(v);
 		}
 	}
 	activate() {
@@ -308,6 +311,9 @@ registerSkill(class extends ActiveSkill {
 			this.duration -= delta;
 			//const angle = Math.random() * Math.PI * 2;
 			this.scene.shakeScreen(this.duration);
+			const v = get(Vector3).addVectors(this.user.position, this.threeObject.position);
+			this.user.allies.beam(v, this.user.quaternion, this.getDamage() * delta, 2, 15, [20, 25, 30][this.level], this.effect);
+			free(v);
 			if (this.duration <= 0) {
 				this.user.rotspeed *= [2, 4, 8][this.level];
 			}
