@@ -276,7 +276,7 @@ registerSkill(class extends ActiveSkill {
 		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([150, 250, 320][this.level], () => {
 			this.duration = 100;
-			this.effect = this.scene.effectManager.ray(this.user, [
+			this.effect = this.scene.effectManager.ray(this.threeObject, [
 				{color: 0xffffff, opacity: 0.2, radius: 1},
 				{color: 0x00ffff, opacity: 0.2, radius: 2},
 				{color: 0x0000ff, opacity: 0.2, radius: 4}
@@ -320,8 +320,8 @@ registerSkill(class extends ActiveSkill {
 						this.scene.off('enterframe', tmp);
 					}
 				});
-				this.scene.effectManager.ray(this.user, 0xffffff, 0.5, 500, 2);
-				this.effect = this.scene.effectManager.ray(this.user, [
+				this.scene.effectManager.ray(this.threeObject, 0xffffff, 0.5, 500, 2);
+				this.effect = this.scene.effectManager.ray(this.threeObject, [
 					{color: 0xffffff, opacity: 0.2, radius: [5, 6, 8][this.level]},
 					{color: 0xffcccc, opacity: 0.2, radius: [8, 10, 12][this.level]},
 					{color: 0xff8888, opacity: 0.2, radius: [12, 15, 18][this.level]},
@@ -336,7 +336,7 @@ registerSkill(class extends ActiveSkill {
 		this.cooldown = this.user.consumeEnergy([1000, 1200, 1600][this.level], () => {
 			this.delay = [150, 240, 360][this.level];
 			this.user.rotspeed /= [2, 4, 8][this.level];
-			this.scene.effectManager.ray(this.user, [
+			this.scene.effectManager.ray(this.threeObject, [
 				{color: 0xffffff, opacity: 0.8, radius: [3, 3.75, 5][this.level]},
 			], this.delay, (t, m) => t / m);
 			return [7500, 9000, 12000][this.level];
