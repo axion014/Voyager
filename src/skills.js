@@ -430,10 +430,11 @@ registerSkill(class extends ActiveSkill {
 		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([200, 750, 1500][this.level], () => {
 			const repeat = [2, 4, 6][this.level];
+			const v = get(Vector3);
 			for (let i = 0; i < repeat; i++) {
-				this.user.summons.create('assaultdrone', {
-					position: this.user.position.clone().sub(Axis.z.clone().applyQuaternion(this.user.quaternion).setLength(500)).add(Axis.x.clone().applyQuaternion(this.user.quaternion).setLength(((repeat - 1) / 2 - i) * 150)),
-					quaternion: this.user.quaternion.clone(),
+				v.subVectors(this.user.position, Axis.z.clone().applyQuaternion(this.user.quaternion).setLength(500))
+					.add(Axis.x.clone().applyQuaternion(this.user.quaternion).setLength(((repeat - 1) / 2 - i) * 150));
+				this.user.allies.create('assaultdrone', v, this.user.quaternion, {
 					expire: [60000, 54000, 45000][this.level],
 					hp: [8, 10, 11][this.level],
 					chase: [0.06, 0.07, 0.08][this.level],
@@ -444,6 +445,7 @@ registerSkill(class extends ActiveSkill {
 					atk: [7, 8, 8.5][this.level]
 				});
 			}
+			free(v);
 			return [60000, 72000, 90000][this.level];
 		}, 0);
 		return true;
