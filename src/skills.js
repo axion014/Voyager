@@ -357,10 +357,11 @@ registerSkill(class extends ActiveSkill {
 	activate() {
 		if (this.cooldown > 0) return false;
 		this.cooldown = this.user.consumeEnergy([500, 630, 800][this.level], () => {
-			this.user.summons.bulletManager.createBullet('laser', {
-				position: this.user.position.clone().addScaledVector(Axis.z.clone().applyQuaternion(this.user.quaternion).normalize(), this.user.geometry.boundingBox.max.z), quaternion: this.user.quaternion,
+			const v = get(Vector3).addVectors(this.user.position, this.threeObject.position);
+			this.user.allies.bulletManager.createBullet('laser', v, this.user.quaternion, {
 				v: 1, atk: [60, 70, 75][this.level], pierce: true, size: 2
 			});
+			free(v);
 			return [5400, 6000, 720][this.level];
 		}, 0);
 		return true;
