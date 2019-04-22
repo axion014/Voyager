@@ -378,17 +378,13 @@ registerSkill(class extends ActiveSkill {
 registerSkill(class extends Skill {
 	constructor(user, scene, level, position) {
 		super(user, scene, level, position);
-		this.instance = this.user.summons.create('blademinion', {
-			position: this.user.position.clone(),
-			active: false,
-			stealth: true,
-			base: this,
-			hp: [50, 52, 52][level],
-			sharpness: [3, 3.1, 3.1][level]
-		});
+		this.instance = this.user.allies.create('blademinion', this.user.position, this.user.quaternion);
+		this.instance.base = this;
+		this.instance.hp = [50, 52, 54][level];
+		this.instance.sharpness = [3, 3.1, 3.2][level];
 		this.instance.material.color.set(0x111111);
-		if (level >= 2) {
-			this.instance2 = this.user.summons.create('blademinion', {
+		/*if (level >= 2) {
+			this.instance2 = this.user.allies.create('blademinion', {
 				position: this.user.position.clone(),
 				active: false,
 				stealth: true,
@@ -397,24 +393,25 @@ registerSkill(class extends Skill {
 				sharpness: [3, 3.1, 3.1][level]
 			});
 			this.instance2.material.color.set(0x111111);
-		}
+		}*/
 	}
 	activate() {
-		if (this.instance.active || (this.level >= 2 && this.instance2.active)) {
+		if (this.instance.active/* || (this.level >= 2 && this.instance2.active)*/) {
 			this.instance.target = this.user;
-			this.instance2.target = this.user;
+			//this.instance2.target = this.user;
 			return false;
 		}
 		if (!this.user.targetingEnemy) return false;
-		this.user.consumeEnergy([280, 280, 600][this.level], () => {
+		this.user.consumeEnergy([280, 300, 320][this.level], () => {
 			this.instance.active = true;
 			this.instance.target = this.user.targetingEnemy;
-			if (this.level >= 2) {
+			this.instance.position.add(this.threeObject.position);
+			/*if (this.level >= 2) {
 				this.instance2.active = true;
 				this.instance2.target = this.user.targetingEnemy;
-				this.instance.quaternion.copy(this.user.quaternion).rotateY(0.5);
+				this.instance.quaternion.rotateY(0.5);
 				this.instance2.quaternion.copy(this.user.quaternion).rotateY(-0.5);
-			} else this.instance.quaternion = this.user.quaternion.clone();
+			}*/
 		});
 		return true;
 	}
