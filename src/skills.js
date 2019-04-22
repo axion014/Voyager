@@ -186,6 +186,35 @@ registerSkill(class extends Skill {
 	}
 });
 
+registerSkill(class extends Skill {
+	constructor(user, scene, level) {
+		super(user, scene, level);
+		user.maxenergy += [400, 430, 450][level];
+	}
+	static id = 'ExtraBattery';
+	static skillName = 'Extra battery';
+	static place = ['top', 'core'];
+	static unlockedLevel = 0;
+	static getCost(level) {return [100, 120, 150][level];}
+	static getDescription(level) {
+		return 'Increase maximum energy storage.';
+	}
+});
+
+registerSkill(class extends Skill {
+	constructor(user, scene, level) {
+		super(user, scene, level);
+		user.precision *= [1.8, 1.9, 2][level];
+	}
+	static id = 'PrecisionBonus';
+	static skillName = 'Vector adjuster array';
+	static place = ['front'];
+	static unlockedLevel = 0;
+	static getCost(level) {return [100, 120, 150][level];}
+	static getDescription(level) {
+		return 'Improve precision of the main cannons.';
+	}
+});
 
 registerSkill(class extends Skill {
 	constructor(user, scene, level) {
