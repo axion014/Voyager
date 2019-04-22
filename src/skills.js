@@ -36,7 +36,7 @@ class ActiveSkill extends Skill {
 	activate() {
 		if (this.cooldown === 0) {
 			//this.activate();
-			//console.log('Active Skill ' + this.className + ' seems not implemented');
+			//console.log('Active Skill ' + this.className + ' don't seem to be implemented');
 		}
 	}
 	getType() {return 'active';}
@@ -73,7 +73,7 @@ registerSkill(class extends Skill { // dont modify, this module is so special
 	}
 	static id = 'Empty';
 	static skillName = 'Uninstall';
-	static place = ['top', 'core', 'front'];
+	static place = ['top', 'core', 'front', 'wing'];
 	static unlockedLevel = 0;
 	static getCost(level) {return 0;}
 	static getDescription(level) {return '';}
@@ -109,7 +109,7 @@ registerSkill(class extends Skill {
 		this.user.armor *= [1.175, 1.19, 1.205][level];
 	}
 	static id = 'ExtraArmor';
-	static skillName = 'Extra armor';
+	static skillName = 'Hardened alloy hull';
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
@@ -121,15 +121,15 @@ registerSkill(class extends Skill {
 registerSkill(class extends Skill {
 	constructor(user, scene, level) {
 		super(user, scene, level);
-		this.user.sharpness *= [1.25, 1.27, 1.28][level];
+		this.user.sharpness *= [1.5, 1.53, 1.54][level];
 	}
 	static id = 'Spear';
-	static skillName = 'Spear';
+	static skillName = 'Sharpened frontal hull';
 	static place = ['front'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
-		return 'Increase damage on ramming into enemy by ' + [25, 27, 28][level] + '%.';
+		return 'Increase damage on ramming into enemy by ' + [50, 53, 54][level] + '%.';
 	}
 });
 
@@ -140,12 +140,12 @@ registerSkill(class extends Skill {
 		this.user.rotspeed *= [1.3, 1.32, 1.33][level];
 	}
 	static id = 'Acrobat';
-	static skillName = 'Acrobat';
-	static place = ['top', 'core'];
+	static skillName = 'Aerodynamically optimal wings';
+	static place = ['top', 'wing'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
-		return 'Greatly increase your mobility.';
+		return 'Greatly increase your mobility in air.'; //TODO: Disable this on space
 	}
 });
 
@@ -160,12 +160,12 @@ registerSkill(class extends DeactivatableSkill {
 		this.user.hp += amount;
 	}
 	static id = 'SelfRepair';
-	static skillName = 'Self repair';
+	static skillName = 'Self repair package';
 	static place = ['top', 'core'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
-		return 'With this skill, your HP is no longer limited. Higher level one is faster but less energy efficient. Can toggle on/off by pushing activate key.';
+		return 'Regenerate your HP over time. Higher level one is faster but less energy efficient. Can be toggled on/off by pushing activate key.';
 	}
 });
 
@@ -182,7 +182,7 @@ registerSkill(class extends Skill {
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
-		return 'Allows you to use skills more by increasing energy replenish speed.';
+		return 'Increase energy replenish speed, allowing you to use skills more often.';
 	}
 });
 
@@ -198,11 +198,12 @@ registerSkill(class extends Skill {
 		};
 	}
 	static id = 'Glitch';
-	static skillName = 'The glitch';
+	static skillName = 'DEF-���� glitch';
 	static place = ['core'];
 	//unlockedLevel: 0,
+	static getCost(level) {return [100, 120, 150][level];}
 	getDescription(level) {
-		return 'Do not use as this can completely break the game.';
+		return 'Do not use this, it can completely break the game.';
 	}
 });
 
@@ -226,7 +227,7 @@ registerSkill(class extends DeactivatableSkill {
 		this.activated = false;
 	}
 	static id = 'OverHeating';
-	static skillName = 'Overheating';
+	static skillName = 'Barrel overheating';
 	static place = ['top', 'core'];
 	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
@@ -293,7 +294,7 @@ registerSkill(class extends ActiveSkill {
 	}
 	static id = 'Railgun';
 	static skillName = 'Railgun';
-	static place = ['front'];
+	static place = ['front', 'wing'];
 	static unlockedLevel = 1;
 	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
@@ -383,11 +384,11 @@ registerSkill(class extends ActiveSkill {
 	}
 	static id = 'Lasergun';
 	static skillName = 'Laser gun';
-	static place = ['front'];
+	static place = ['front', 'wing'];
 	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
 	static getDescription(level) {
-		return 'The Laser can pierce enemies. Can deal massive damage against huge enemy by hitting their core.';
+		return 'The Laser gun can pierce enemies. Can deal massive damage against huge enemies by hitting their core.';
 	}
 });
 
@@ -432,10 +433,11 @@ registerSkill(class extends Skill {
 		return true;
 	}
 	static id = 'BladeMinion';
-	static skillName = 'Anti-material blade';
+	static skillName = 'Anti-material blade slots';
 	static usingModels = ['blademinion'];
-	static place = ['top'];
+	static unlockedLevel = 0;
 	static getCost(level) {return [100, 120, 150][level];}
+	static place = ['top', 'wing'];
 	static getDescription(level) {
 		return 'This blade will spawn out on activation and automatically chase your enemy. Can pull back with pushing activate key again.';
 	}
