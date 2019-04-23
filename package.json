@@ -15,7 +15,7 @@
     "@babel/plugin-transform-template-literals": "^7.2.0",
     "@babel/preset-env": "^7.4.3",
     "del": "^3.0.0",
-    "gulp": "^4.0.0",
+    "gulp": "^4.0.1",
     "gulp-glsl": "^1.2.4",
     "gulp-jsonminify": "^1.1.0",
     "gulp-plumber": "^1.2.1",
