@@ -269,6 +269,9 @@ registerEquipment(class extends ToggleableEquipment {
 		super(user, scene, level, position);
 		this.cooldown = 0;
 	}
+	getDamage() {
+		return [6, 7, 8][this.level];
+	}
 	update(delta) {
 		const v = get(Vector3);
 		const q = get(Quaternion);
