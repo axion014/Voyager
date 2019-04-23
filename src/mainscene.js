@@ -108,6 +108,24 @@ export default class MainScene extends Scene {
 					new sub.klass(this.player, this, sub.level, sub.position));
 				this.player.primary = this.player.sub.find(
 					sub => (sub.getType() === 'active' || sub.getType() === 'toggle') && sub.getDamage || (sub.constructor === byID.Fork && sub.instance1.getDamage));
+				let buttons = 0;
+				this.player.sub.forEach(sub => {
+					if (sub.getType() === 'toggle' && sub !== this.player.primary) {
+						const button = new Ellipse({
+							x: 50 + buttons++ * 75 - vw / 2, y: -50 + vh / 2, radius: 30,
+							fillColor: '#44c', fillOpacity: 0.5, strokeColor: 'black', strokeWidth: 2
+						});
+						const label = new Label(sub.constructor.equipmentName, {font: "12px 'HiraKakuProN-W3'"});
+						button.add(label);
+						this.UIScene.add(button);
+						button.addEventListener('pointstart', () => {
+							sub.active = !sub.active;
+							const activecolor = get(Color).set('#44c');
+							button.fillColor = button.fillColor.equals(activecolor) ? '#c44' : activecolor;
+							free(activecolor);
+						});
+					}
+				});
 			}, async () => { // Stage loading
 				if (this.stage !== 'arcade') {
 					if (!assets.STAGE[this.stage]) {
