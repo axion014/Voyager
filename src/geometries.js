@@ -8,7 +8,8 @@ import {hitTestEllipse} from 'w3g/hittest';
 const plane = new PlaneBufferGeometry(1, 1);
 export class Mark extends Element {
 	constructor(options) {
-		const material = new MeshBasicMaterial({color: options.strokeColor});
+		const material = new MeshBasicMaterial();
+		material.color.set(options.strokeColor);
 
 		super(new Group(), options);
 
