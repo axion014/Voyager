@@ -233,12 +233,6 @@ export default class MainScene extends Scene {
 				});
 				this.UIScene.add(this.gauge_h);
 
-				this.gauge_e = new Gauge({
-					strokeColor: '#aaa', gaugeColor: 'rgb(64, 64, 255)', gaugeOpacity: 0.3,
-					x: 80 - vw / 2, y: 80 - vh / 2, value: 2000, maxValue: 2000, strokeWidth: 2, width: 128, height: 16
-				});
-				this.UIScene.add(this.gauge_e);
-
 				if (this.stage !== 'arcade') {
 					for(let i = 0; i < goalraders.length; i++) this.UIScene.add(goalraders[i]);
 					this.gauge_boss_h = new Gauge({

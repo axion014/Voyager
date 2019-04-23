@@ -380,7 +380,6 @@ export const units = {
 				});
 
 				this.energy = Math.min(this.energy + 2 * delta, this.maxenergy);
-				this.scene.gauge_e.value = this.energy;
 				this.scene.gauge_h.value = this.hp;
 
 				this.scene.windManager.forEach(wind => {
