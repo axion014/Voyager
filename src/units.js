@@ -339,9 +339,11 @@ export const units = {
 
 				this.scene.debug('player.quaternion', THREE_Utils.toString(this.quaternion));
 
-				if (pointing) this.consumeEnergy(this.speed * 3 * delta, () => { // Speed up
-					if (this.scene.space) this.av.addScaledVector(direction, this.speed * delta);
-					else this.v += this.speed * delta;
+				const speed = this.speed * Math.min(this.targetingPosition.distanceTo(this.position) / 1000, 1) * delta;
+
+				this.consumeEnergy(speed * 3, () => { // Speed up
+					if (this.scene.space) this.av.addScaledVector(direction, speed);
+					else this.v += speed;
 				});
 
 				if (!this.scene.space) {
