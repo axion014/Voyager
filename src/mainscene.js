@@ -452,7 +452,6 @@ export default class MainScene extends Scene {
 				this.addEasing(new Easing(this.minimap).add({opacity: 0}, 650, Easing.LINEAR));
 
 				this.addEasing(new Easing(this.gauge_h).add({opacity: 0}, 650, Easing.LINEAR));
-				this.addEasing(new Easing(this.gauge_e).add({opacity: 0}, 650, Easing.LINEAR));
 				if (this.msgbox) this.addEasing(new Easing(this.msgbox).add({opacity: 0}, 650, Easing.LINEAR));
 				this.addEasing(new Easing(this.mark).add({opacity: 0}, 650, Easing.LINEAR));
 			}
