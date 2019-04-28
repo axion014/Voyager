@@ -12,8 +12,10 @@ const rollup = require('rollup');
 const uglify = require('gulp-uglify');
 const webserver = require("gulp-webserver");
 
+const bundleName = 'voyager.js';
+
 function minify(dest) {
-	return gulp.src('./' + dest + '/re-flight.js')
+	return gulp.src('./' + dest + '/' + bundleName)
 		.pipe(plumber())
 		.pipe(uglify())
 		.pipe(rename({extname: '.min.js'}))
@@ -46,7 +48,7 @@ async function $build(dest) {
 		cache = bundle.cache;
 
 		await bundle.write({
-			file: './' + dest + '/re-flight.js',
+			file: './' + dest + '/' + bundleName,
 			format: 'iife',
 			name: 'library',
 			sourcemap: true
