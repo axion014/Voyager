@@ -20,10 +20,12 @@ function minify(dest) {
 		.pipe(gulp.dest('./' + dest + '/'));
 }
 
+let cache;
 async function $build(dest) {
 	try {
 		const bundle = await rollup.rollup({
 			input: './src/main.js',
+			cache: cache,
 			plugins: [
 				resolve(),
 				babel({
@@ -41,6 +43,7 @@ async function $build(dest) {
 				})
 			]
 		});
+		cache = bundle.cache;
 
 		await bundle.write({
 			file: './' + dest + '/re-flight.js',
