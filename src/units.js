@@ -377,8 +377,8 @@ export const units = {
 					sub.update(delta);
 				});
 
-				if (keyDown.KeyZ) this.player.sub.some(sub => {
-					if (sub.type === 'active' && sub !== this.player.primary) return sub.activate();
+				if (keyDown.KeyZ) this.sub.some(sub => {
+					if (sub.type === 'active' && sub !== this.primary) return sub.activate();
 				});
 
 				this.energy = Math.min(this.energy + 2 * delta, this.maxenergy);
