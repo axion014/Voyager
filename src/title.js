@@ -40,12 +40,12 @@ export default class TitleScene extends Scene {
 		let currentPlayer = localStorage.getItem(PLAYER) || "player1";
 		let playerModel = assets.THREE_Model_GLTF[currentPlayer].clone();
 		const currentEquipments = JSON.parse(localStorage.getItem(EQUIPMENTS)) || [
+			{name: 'Machinegun', level: 0},
 			{name: 'Railgun', level: 0},
-			{name: 'Empty', level: 0},
-			{name: 'Empty', level: 0},
 			{name: 'BladeMinion', level: 0},
-			{name: 'Reinforce', level: 2},
-			{name: 'SelfRepair', level: 0}
+			{name: 'Empty', level: 0},
+			{name: 'SelfRepair', level: 0},
+			{name: 'Empty', level: 0}
 		];
 		let shipCost = 0;
 		let selectedStage;
@@ -172,10 +172,12 @@ export default class TitleScene extends Scene {
 				x: 0, y: 0, z: -40, sub: [
 					{type: 'label', value: 'Ship Modify', y: 14, size: 3.6},
 					{type: 'label', name: 'shipCostLabel', value: '', y: 9, size: 1.8},
-					{type: 'point', parent: 'player', index: 0, place: "front", position: new Vector3(1.5, -1, 27)},
-					{type: 'point', parent: 'player', index: 1, place: "front", position: new Vector3(-1.5, -1, 27)},
-					{type: 'point', parent: 'player', index: 2, place: "top", position: new Vector3(0, 3, -5)},
-					{type: 'point', parent: 'player', index: 3, place: "core", position: new Vector3(0, 0, 0)},
+					{type: 'point', parent: 'player', index: 0, place: "front", position: new Vector3(1.5, -1, 27), mirror: true},
+					{type: 'point', parent: 'player', index: 1, place: "front", position: new Vector3(0, -1, 20)},
+					{type: 'point', parent: 'player', index: 2, place: "wing", position: new Vector3(6, 0.5, -9), mirror: true},
+					{type: 'point', parent: 'player', index: 3, place: "top", position: new Vector3(0, 3, -5)},
+					{type: 'point', parent: 'player', index: 4, place: "core", position: new Vector3(0, 0, 0)},
+					{type: 'point', parent: 'player', index: 5, place: "core", position: new Vector3(0, 0, -5)},
 					{type: 'label', value: 'Back', y: -12, size: 1.8, link: 'shipselect'},
 					{type: 'label', value: 'Main Menu', y: -16, size: 1.8, link: 'main'},
 				]
