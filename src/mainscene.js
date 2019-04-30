@@ -14,7 +14,7 @@ import FadeShader from "w3g/three-effect/FadeShader";
 import * as THREE_Utils from "w3g/threeutil";
 import {get, free} from "w3g/utils";
 import {vw, vh} from "w3g/main";
-import assets, {loadResources} from "w3g/loading";
+import assets, {loadResources, loadResource} from "w3g/loading";
 import {Rectangle, Ellipse, SymmetricTriangle} from "w3g/geometries";
 import {Label, Gauge, DebugTexts, textAlign} from "w3g/uielements";
 import Easing from "w3g/easing";
@@ -83,6 +83,7 @@ export default class MainScene extends Scene {
 				this.windManager = new WindManager(this.threeScene);
 
 				this.minimap = new Minimap();
+				if (this.stage !== 'arcade') this.message = new Label(" ");
 			}
 		], [
 			async () => { // Load Player
@@ -128,7 +129,7 @@ export default class MainScene extends Scene {
 				});
 			}, async () => { // Stage loading
 				if (this.stage !== 'arcade') {
-					if (!assets.STAGE[this.stage]) {
+					if (!assets.STAGE || !assets.STAGE[this.stage]) {
 						await loadResource("STAGE", this.stage, `data/stages/${this.stage}.min.json`);
 						const list = {THREE_Model_GLTF: []};
 						const stage = assets.STAGE[this.stage];
@@ -143,9 +144,9 @@ export default class MainScene extends Scene {
 					}
 					const stage = assets.STAGE[this.stage];
 					stagename = stage.name;
-					stage.enemys.forEach(this.enemyManager.createMulti);
-					stage.obstacles.forEach(this.obstacleManager.create);
-					stage.winds.forEach(this.windManager.create);
+					stage.enemys.forEach(this.enemyManager.createMulti, this.enemyManager);
+					stage.obstacles.forEach(this.obstacleManager.create, this.obstacleManager);
+					stage.winds.forEach(this.windManager.create, this.windManager);
 					stage.messages.forEach(imessage => {
 						const swapMessage = () => {
 							window.setTimeout(() => this.message.visible = false, imessage.time - messageDelay);
@@ -184,7 +185,7 @@ export default class MainScene extends Scene {
 								material.uniforms.time.value += delta;
 								if (!this.enable && this === goals[0] && (goals.length > 1 || scene.bossdefeated) && this.enemyManager.deathcount >= this.enemyManager.spawncount * this.kill) {
 									scene.addEasing(new Easing(material.uniforms.tex1_percentage).add({value: 1}, 1700, Easing.LINEAR));
-									goalraders[0].fillColor = 'hsl(190, 100%, 70%)';
+									this.minimap.getObject(this).fillColor = 'hsl(190, 100%, 70%)';
 									this.enable = true;
 								}
 							}
@@ -193,7 +194,6 @@ export default class MainScene extends Scene {
 						this.goals.push(mesh);
 						mesh.position.copy(goal.position);
 						this.minimap.addObject(mesh, {radius: 5, fillColor: '#aaa'});
-						goalraders.push(rader);
 					});
 					this.rate = stage.rate;
 					this.space = stage.space;
@@ -252,7 +252,6 @@ export default class MainScene extends Scene {
 				this.UIScene.add(this.gauge_h);
 
 				if (this.stage !== 'arcade') {
-					for(let i = 0; i < goalraders.length; i++) this.UIScene.add(goalraders[i]);
 					this.gauge_boss_h = new Gauge({
 						strokeColor: '#aaa', gaugeColor: 'rgb(200, 16, 16)', gaugeOpacity: 0.3,
 						y: vh / 2 - 20, strokeWidth: 1, width: vw / 1.2, height: 16, opacity: 0
@@ -265,9 +264,10 @@ export default class MainScene extends Scene {
 					});
 					this.msgbox.live = 0;
 					this.UIScene.add(this.msgbox);
-					this.message = new Label(" ", {
-						y: -vh / 2, font: "16px 'HiraKakuProN-W3'", fillStyle: 'hsl(0, 0%, 0%, 0.6)', align: textAlign.left
-					});
+					this.message.y = -vh / 2;
+					this.message.font = "16px 'HiraKakuProN-W3'";
+					this.message.fillStyle = 'hsl(0, 0%, 0%, 0.6)';
+					this.message.align = textAlign.left;
 					this.message.visible = false;
 					this.UIScene.add(this.message);
 				}
@@ -309,7 +309,7 @@ export default class MainScene extends Scene {
 				this.threeScene.add(plane);
 
 				//this.plane.rotateX(-Math.PI / 2);
-				if (this.stage !== 'arcade') for(let i = 0; i < goals.length; i++) this.threeScene.add(goals[i]);
+				if (this.stage !== 'arcade') for(let i = 0; i < this.goals.length; i++) this.threeScene.add(this.goals[i]);
 
 				this.camera.fov = 100;
 				this.camera.rotateY(Math.PI);
@@ -362,9 +362,8 @@ export default class MainScene extends Scene {
 					this.difficulty += 0.01;
 				}
 			} else {
-				const currentGoal = goals[goals.length - 1];
-				this.progress = player.position.dot(currentGoal.position) /
-					currentGoal.position.dot(currentGoal.position);
+				const currentGoal = this.goals[this.goals.length - 1];
+				this.progress = this.player.position.dot(currentGoal.position) / currentGoal.position.dot(currentGoal.position);
 			}
 			if (this.time % 20000 < delta) {
 				for (let i = 0; i < this.allyBulletManager.count; i++) {
@@ -464,7 +463,7 @@ export default class MainScene extends Scene {
 					(this.enemyManager.deathcount / this.enemyManager.spawncount * 100).toFixed(1)}%)`;
 				this.resulttitle.text = 'Game Over';
 				changeToResultScreenMode();
-			} else if (this.stage !== 'arcade' && goals[0].enable) {
+			} else if (this.stage !== 'arcade' && this.goals[0].enable) {
 				const v = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion);
 				const p = get(Vector3).copy(this.position)
 					.addScaledVector(v, -this.player.geometry.boundingBox.min.z +
@@ -511,14 +510,14 @@ export default class MainScene extends Scene {
 			while (this.enmBulletManager.count > maxEnemyBullets) this.enmBulletManager.remove(0);
 
 
-		function updateMessageBoxPlacement() {
-			this.msgbox.position.x = (-vx / 2) * this.msgbox.live;
-			this.msgbox.position.y = vh - 0.5 * vy * 0.3 * this.msgbox.live;
+		const updateMessageBoxPlacement = () => {
+			this.msgbox.position.x = (-vw / 2) * this.msgbox.live;
+			this.msgbox.position.y = vh - 0.5 * vh * 0.3 * this.msgbox.live;
 			this.msgbox.width = vw / 10 + vw / 1.3 * this.msgbox.live;
 			this.msgbox.height = vh / 12 + vh / 8 * this.msgbox.live;
-			this.message.position.x = 0.1 * vx * this.msgbox.live;
-			this.message.position.y = vh - 0.5 * vy * 0.3 * this.msgbox.live;
-		}
+			this.message.position.x = 0.1 * vw * this.msgbox.live;
+			this.message.position.y = vh - 0.5 * vh * 0.3 * this.msgbox.live;
+		};
 		if (this.stage !== 'arcade') {
 			if (this.message.visible) {
 				if (this.msgbox.live < 1) {
