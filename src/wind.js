@@ -2,6 +2,7 @@ import {Group, Mesh, RingGeometry, MeshBasicMaterial, Vector2, DoubleSide} from 
 
 import ElementManager from "./elementmanager";
 import {windScaleY} from "./constants";
+import {connect} from "w3g/utils";
 
 export default class WindManager extends ElementManager {
 
@@ -26,7 +27,7 @@ export default class WindManager extends ElementManager {
 		wind.mesh.position.set(wind.position.x, 0, wind.position.y);
 		connect(wind.position, "x", wind.group.position);
 		connect(wind.position, "y", wind.group.position, "z");
-		for (const i = -10000 * Math.sign(wind.v); Math.abs(i) <= 10000; i += wind.v * windScaleY) {
+		for (let i = -10000 * Math.sign(wind.v); Math.abs(i) <= 10000; i += wind.v * windScaleY) {
 			const ring = wind.mesh.clone();
 			wind.group.add(ring);
 			ring.rotateX(Math.PI / 2);
