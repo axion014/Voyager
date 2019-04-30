@@ -75,7 +75,11 @@ export default class TitleScene extends Scene {
 			title: {
 				x: 0, y: 0, sub: [
 					{type: 'label', value: 'Voyager', y: 15, size: 3.6},
-					{type: 'label', value: 'Click to start', y: -15, size: 1.8},
+					{type: 'label', value: 'Singleplayer', y: 8, size: 1.8, link: 'stageselect'},
+					{type: 'label', value: 'Multiplayer', y: 4, size: 1.8/*, link: 'shipselect'*/},
+					{type: 'label', value: 'How to play', y: -6, size: 1.8, link: 'help'},
+					{type: 'label', value: 'Settings', y: -10, size: 1.8, link: 'setting'},
+					{type: 'label', value: 'Credit', x: 12, y: -24, size: 1.5, link: 'credit'},
 					{type: 'model', name: 'player', value: playerModel, x: 0, y: 0, z: -50},
 					{
 						type: 'model', value: new Mesh(
@@ -83,22 +87,6 @@ export default class TitleScene extends Scene {
 							new MeshBasicMaterial({map: assets.THREE_Texture.plane})
 						), x: 0, y: 1000, z: 0, init: model => model.rotateX(-Math.PI / 2)
 					}
-				]
-			},
-			main: {
-				x: 50, y: -50, sub: [
-					{type: 'label', value: 'Main Menu', y: 14, size: 3.6},
-					{type: 'label', value: 'Campaign', y: 8, size: 1.8, link: 'difficulty'},
-					{type: 'label', value: 'Stage Select', y: 4, size: 1.8, link: 'stageselect'},
-					{type: 'label', value: 'Ship Select', size: 1.8, link: 'shipselect'},
-					{
-						type: 'label', value: 'Free Play', y: -4, size: 1.8, link: 'difficulty',
-						callback: () => selectedStage = 'arcade'
-					},
-					{type: 'label', value: 'How to play', y: -8, size: 1.8, link: 'help'},
-					{type: 'label', value: 'Settings', y: -12, size: 1.8, link: 'setting'},
-					{type: 'label', value: 'Credit', x: 8, y: -18, size: 1.5, link: 'credit'},
-					{type: 'label', value: 'Back', y: -16, size: 1.8, link: 'title'}
 				]
 			},
 			help: {
@@ -242,10 +230,6 @@ export default class TitleScene extends Scene {
 				Easing.inOut(dist / 125 + 2.5)
 			));
 		};
-		const moveToMain = () => {
-			moveTo(50, -50, 0);
-			this.removeEventListener('click', moveToMain);
-		};
 		const equipmentEdit = new Rectangle({
 			width: vw * 0.75,
 			height: vh * 0.75,
@@ -272,7 +256,6 @@ export default class TitleScene extends Scene {
 							if (Math.abs(this.camera.position.z - label.position.z - 50) >= 1) return;
 
 							moveTo(menu[selects.link].x, menu[selects.link].y, menu[selects.link].z || 0);
-							if (selects.link === 'title') this.addEventListener('click', moveToMain);
 
 							const movedToShipModify = selects.link === 'shipmodify';
 							this.points.forEach(point => point.visible = movedToShipModify);
@@ -339,7 +322,6 @@ export default class TitleScene extends Scene {
 				}
 			});
 		});
-		this.addEventListener('click', moveToMain);
 
 		for (let i = 0; i < currentEquipments.length; i++) {
 			const equipment = currentEquipments[i];
