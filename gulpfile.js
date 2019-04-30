@@ -13,17 +13,11 @@ const uglify = require('gulp-uglify');
 const webserver = require("gulp-webserver");
 
 const bundleName = 'voyager.js';
-
-function minify(dest) {
-	return gulp.src('./' + dest + '/' + bundleName)
-		.pipe(plumber())
-		.pipe(uglify())
-		.pipe(rename({extname: '.min.js'}))
-		.pipe(gulp.dest('./' + dest + '/'));
-}
+const buildFolder = 'build/';
 
 let cache;
-async function $build(dest) {
+
+gulp.task('jsbuild', async () => {
 	try {
 		const bundle = await rollup.rollup({
 			input: './src/main.js',
@@ -48,19 +42,21 @@ async function $build(dest) {
 		cache = bundle.cache;
 
 		await bundle.write({
-			file: './' + dest + '/' + bundleName,
+			file: buildFolder + bundleName,
 			format: 'iife',
 			name: 'library',
 			sourcemap: true
 		});
 
-		return minify(dest);
+		return gulp.src(buildFolder + bundleName)
+			.pipe(plumber())
+			.pipe(uglify())
+			.pipe(rename({extname: '.min.js'}))
+			.pipe(gulp.dest(buildFolder));
 	} catch(e) {
 		console.error(e);
 	}
-}
-
-gulp.task('jsbuild', $build.bind(null, 'build'));
+});
 
 function jsonminify() {
 	del.sync(['data/**/*.min.json']);
@@ -83,12 +79,11 @@ function glslminify() {
 
 gulp.task(glslminify);
 
-const test = gulp.parallel('jsonminify', 'glslminify', $build.bind(null, 'test'));
-gulp.task('test', test);
+const build = gulp.parallel('jsbuild', 'jsonminify', 'glslminify');
 
-gulp.task('build', gulp.parallel('jsbuild', 'jsonminify', 'glslminify'));
+gulp.task('build', build);
 
-gulp.task('jswatch', () => gulp.watch(['src/**/*'], test));
+gulp.task('jswatch', () => gulp.watch(['src/**/*'], build));
 gulp.task('jsonwatch', () => gulp.watch(['data/**/!(*.min).json'], jsonminify));
 gulp.task('glslwatch', () => gulp.watch(['data/**/!(*.min).glsl'], glslminify));
 
@@ -100,7 +95,7 @@ gulp.task(function open() {
 		.pipe(webserver({open: true}))
 });
 
-const server = gulp.series('test', gulp.parallel('watch', 'open'));
+const server = gulp.series('build', gulp.parallel('watch', 'open'));
 
 gulp.task('server', server);
 
