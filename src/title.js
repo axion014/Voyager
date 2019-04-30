@@ -34,6 +34,7 @@ export default class TitleScene extends Scene {
 	points = [];
 	slots = [];
 	time = 0;
+	position = 'title';
 
 	constructor() {
 		super();
@@ -138,12 +139,12 @@ export default class TitleScene extends Scene {
 			stageselect: {
 				x: -72, y: -25, sub: [
 					{type: 'label', value: 'Stage Select', y: 14, size: 2.5},
-					{type: 'label', value: 'Main Menu', y: -16, size: 1.8, link: 'main'},
 					{
 						type: 'model', value: assets.THREE_Model_GLTF.airballoon.clone(),
 						x: 0, y: 0, z: 0,
 						init: model => model.rotateOnAxis(new Vector3(1, -1, -1).normalize(), 1)
 					},
+					{type: 'label', value: 'Back', y: -16, size: 1.8, back: true}
 				]
 			},
 			shipselect: {
@@ -202,14 +203,14 @@ export default class TitleScene extends Scene {
 					{type: 'label', value: 'Settings', y: 14, size: 3.6},
 					{type: 'label', value: 'KeyBinding', y: 5, size: 1.8},
 					{type: 'label', value: 'Sound Volume', y: -5, size: 1.8},
-					{type: 'label', value: 'Back', y: -16, size: 1.8, link: 'main'}
+					{type: 'label', value: 'Back', y: -16, size: 1.8, back: true}
 				]
 			},
 			credit: {
 				x: 500, y: -500, sub: [
 					{type: 'label', value: 'Credit', y: 14, size: 3.6},
 					{type: 'label', value: 'Programing: axion014', y: 8, size: 1.8},
-					{type: 'label', value: 'Back', y: -16, size: 1.8, link: 'main'}
+					{type: 'label', value: 'Back', y: -16, size: 1.8, back: true}
 				]
 			}
 		}
@@ -235,6 +236,7 @@ export default class TitleScene extends Scene {
 			moveTo(menu[dest].x, menu[dest].y, menu[dest].z || 0);
 			const movedToShipModify = dest === 'shipselect';
 			this.points.forEach(point => point.visible = movedToShipModify);
+			this.prevPosition = this.position;
 			this.position = dest;
 		}
 		const equipmentEdit = new Rectangle({
@@ -262,6 +264,12 @@ export default class TitleScene extends Scene {
 						label.addEventListener('click', () => {
 							if (Math.abs(this.camera.position.z - label.position.z - 50) >= 1) return;
 							navigate(selects.link);
+						});
+					}
+					if (selects.back) {
+						label.addEventListener('click', () => {
+							if (Math.abs(this.camera.position.z - label.position.z - 50) >= 1) return;
+							navigate(this.prevPosition);
 						});
 					}
 					if (selects.callback) label.addEventListener('click', () => {
