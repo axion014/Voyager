@@ -230,6 +230,13 @@ export default class TitleScene extends Scene {
 				Easing.inOut(dist / 125 + 2.5)
 			));
 		};
+		const navigate = dest => {
+			console.log(`navigating to ${dest}`);
+			moveTo(menu[dest].x, menu[dest].y, menu[dest].z || 0);
+			const movedToShipModify = dest === 'shipselect';
+			this.points.forEach(point => point.visible = movedToShipModify);
+			this.position = dest;
+		}
 		const equipmentEdit = new Rectangle({
 			width: vw * 0.75,
 			height: vh * 0.75,
@@ -254,13 +261,7 @@ export default class TitleScene extends Scene {
 					if (selects.link) {
 						label.addEventListener('click', () => {
 							if (Math.abs(this.camera.position.z - label.position.z - 50) >= 1) return;
-
-							moveTo(menu[selects.link].x, menu[selects.link].y, menu[selects.link].z || 0);
-
-							const movedToShipModify = selects.link === 'shipmodify';
-							this.points.forEach(point => point.visible = movedToShipModify);
-
-							this.position = selects.link;
+							navigate(selects.link);
 						});
 					}
 					if (selects.callback) label.addEventListener('click', () => {
