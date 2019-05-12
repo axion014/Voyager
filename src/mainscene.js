@@ -133,7 +133,7 @@ export default class MainScene extends Scene {
 						await loadResource("STAGE", this.stage, `data/stages/${this.stage}.min.json`);
 						const list = {THREE_Model_GLTF: []};
 						const stage = assets.STAGE[this.stage];
-						stage.enemys.forEach(enemy => {
+						stage.enemies.forEach(enemy => {
 							if (!assets.THREE_Model_GLTF[enemy.name]) list.THREE_Model_GLTF.push(enemy.name);
 						});
 						if (stage.goals.length > 0 && (!assets.goalVertex)) list.GLSL = {
@@ -144,7 +144,7 @@ export default class MainScene extends Scene {
 					}
 					const stage = assets.STAGE[this.stage];
 					stagename = stage.name;
-					stage.enemys.forEach(this.enemyManager.createMulti, this.enemyManager);
+					stage.enemies.forEach(this.enemyManager.createMulti, this.enemyManager);
 					stage.obstacles.forEach(this.obstacleManager.create, this.obstacleManager);
 					stage.winds.forEach(this.windManager.create, this.windManager);
 					stage.messages.forEach(imessage => {

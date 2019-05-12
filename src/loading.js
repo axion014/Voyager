@@ -73,7 +73,7 @@ export function setupLoaders() {
 			}
 			return obj !== undefined ? obj : defaults;
 		})(await response.json(), {
-			enemys: [
+			enemies: [
 				{
 					position: obj => new Vector3(obj.x || 0, obj.y || 0, obj.z || 0),
 					rotation: obj => {
