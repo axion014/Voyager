@@ -52,16 +52,26 @@ export class UnitManager extends ElementManager {
 
 	create(build, position, quaternion, group, delay, targetProgress) {
 		if (typeof build === "string") build = {name: build};
+		if (!units[build.name]) throw new Error(`Unit ${build.name} not found`);
 		if (targetProgress) {
+			const pos = get(Vector3).copy(position);
+			const rot = get(Quaternion).copy(quaternion);
 			const checkForProgress = e => {
 				if (this.scene.progress > targetProgress) {
-					this.create(name, properties, group, delay);
+					this.create(build, pos, rot, group, delay);
 					this.removeEventListener('update', checkForProgress);
+					free(pos, rot);
 				}
 			};
 			this.addEventListener('update', checkForProgress);
-		} else if (delay) window.setTimeout(() => this.create(name, properties), delay);
-		else {
+		} else if (delay) {
+			const pos = get(Vector3).copy(position);
+			const rot = get(Quaternion).copy(quaternion);
+			window.setTimeout(() => {
+				this.create(build, pos, rot, group);
+				free(pos, rot);
+			}, delay);
+		} else {
 			this.spawncount++;
 			const unit = THREE_Utils.deepclone(getUnit(build.name).mesh, false, true);
 			Object.assign(unit, getUnit(build.name).properties, build.properties);
@@ -89,17 +99,20 @@ export class UnitManager extends ElementManager {
 
 	createMulti(build, position, quaternion, autospawn, km) {
 		if (typeof build === "string") build = {name: build};
+		if (!units[build.name]) throw new Error(`Unit ${build.name} not found`);
 		autospawn = Object.assign(getUnit(build.name).autospawn, autospawn);
 		const group = {size: 0, message: km};
 		this.groups.push(group);
 		const pos = get(Vector3).copy(position);
 		for(let i = 0; i < autospawn.rep; i++) {
 			this.create(build, pos, quaternion, group, autospawn.time, autospawn.progress);
-			if (autospawn.delay) {autospawn.time += autospawn.delay;}
+			if (autospawn.delay) autospawn.time += autospawn.delay;
 			//THREE.$add(properties, autospawn.options);
-			pos.x += Math.random() * autospawn.random.x * 2 - autospawn.random.x;
-			pos.y += Math.random() * autospawn.random.y * 2 - autospawn.random.y;
-			pos.z += Math.random() * autospawn.random.z * 2 - autospawn.random.z;
+			if (autospawn.random) {
+				pos.x += Math.random() * autospawn.random.x * 2 - autospawn.random.x;
+				pos.y += Math.random() * autospawn.random.y * 2 - autospawn.random.y;
+				pos.z += Math.random() * autospawn.random.z * 2 - autospawn.random.z;
+			}
 		}
 		free(pos);
 	}
