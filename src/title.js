@@ -343,7 +343,8 @@ export default class TitleScene extends Scene {
 		equipmentEdit.add(equipmentEdit.name);
 		equipmentEdit.cost = new Label("", {y: vh * 0.18});
 		equipmentEdit.add(equipmentEdit.cost);
-		equipmentEdit.description = new LabelArea(" ", {
+		equipmentEdit.description = new LabelArea("", {
+			x: -vw * 0.21,
 			width: vw * 0.42,
 			font: "18px 'HiraKakuProN-W6'"
 		});

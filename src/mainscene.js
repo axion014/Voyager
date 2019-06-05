@@ -83,7 +83,7 @@ export default class MainScene extends Scene {
 				this.windManager = new WindManager(this.threeScene);
 
 				this.minimap = new Minimap();
-				if (this.stage !== 'arcade') this.message = new Label(" ");
+				if (this.stage !== 'arcade') this.message = new Label("");
 			}
 		], [
 			async () => { // Load Player
@@ -283,7 +283,7 @@ export default class MainScene extends Scene {
 				});
 				this.UIScene.add(this.resulttitle);
 
-				this.resulttext = new Label(" ", {
+				this.resulttext = new Label("", {
 					font: "24px 'HiraKakuProN-W3'", fillStyle: 'hsla(0, 0%, 0%, 0.8)', opacity: 0
 				});
 				this.UIScene.add(this.resulttext);
