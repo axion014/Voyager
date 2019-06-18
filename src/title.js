@@ -231,12 +231,13 @@ export default class TitleScene extends Scene {
 				Easing.inOut(dist / 125 + 2.5)
 			));
 		};
-		const navigate = dest => {
+		this.history = [];
+		const navigate = (dest, pushToHistory) => {
 			console.log(`navigating to ${dest}`);
 			moveTo(menu[dest].x, menu[dest].y, menu[dest].z || 0);
 			const movedToShipModify = dest === 'shipselect';
 			this.points.forEach(point => point.visible = movedToShipModify);
-			this.prevPosition = this.position;
+			if (pushToHistory !== false) this.history.push(this.position);
 			this.position = dest;
 		}
 		const equipmentEdit = new Rectangle({
@@ -269,7 +270,7 @@ export default class TitleScene extends Scene {
 					if (selects.back) {
 						label.addEventListener('click', () => {
 							if (Math.abs(this.camera.position.z - label.position.z - 50) >= 1) return;
-							navigate(this.prevPosition);
+							navigate(this.history.pop(), false);
 						});
 					}
 					if (selects.callback) label.addEventListener('click', () => {
