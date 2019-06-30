@@ -438,7 +438,7 @@ export const units = {
 				return defaultreturn;
 			},
 			applyRotation() {
-				this.quaternion.set(0, 0, 0, 1);
+				this.quaternion.copy(THREE_Utils.Quaternion_IDENTITY);
 				// The order is important, even with quaternion.
 				this.rotateY(this.myrot.y);
 				this.rotateX(this.myrot.x);

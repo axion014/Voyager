@@ -458,7 +458,7 @@ export default class TitleScene extends Scene {
 		super.update(delta);
 		this.time += delta * (this.position === 'shipmodify' ? 0.2 : 1);
 		// Camera control
-		this.player.quaternion.set(0, 0, 0, 1);
+		this.player.quaternion.copy(THREE_Utils.Quaternion_IDENTITY);
 		this.player.rotateX(Math.sin(this.time * 0.00075) * 0.25);
 		this.player.rotateY(-Math.PI / 2 + this.time * 0.0004);
 

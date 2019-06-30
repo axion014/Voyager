@@ -1,6 +1,6 @@
 import {Vector3} from "three";
 
-import {Axis} from "w3g/threeutil";
+import {Axis, Vector3_ZERO} from "w3g/threeutil";
 import {get, free} from "w3g/utils";
 
 export function test2Cupsules(p1, p2, v1, v2, r) { // http://marupeke296.com/COL_3D_No27_CapsuleCapsule.html
@@ -40,7 +40,7 @@ export function testCupsuleSphere(pc, v, ps, r, usetmax) {
 }
 
 export function testOBBSphere(p1, p2, l, q, r) { // http://marupeke296.com/COL_3D_No12_OBBvsPoint.html
-	const vec = get(Vector3).set(0, 0, 0);
+	const vec = get(Vector3).copy(Vector2_ZERO);
 	const d = get(Vector3).copy(p2).sub(p1);
 	if (l.x > 0) {
 		const direct = get(Vector3).copy(Axis.x).applyQuaternion(q);
