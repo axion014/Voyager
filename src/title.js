@@ -203,6 +203,10 @@ export default class TitleScene extends Scene {
 					{type: 'label', value: 'Settings', y: 14, size: 3.6},
 					{type: 'label', value: 'KeyBinding', y: 5, size: 1.8},
 					{type: 'label', value: 'Sound Volume', y: -5, size: 1.8},
+					{
+						type: 'model', value: assets.THREE_Model_GLTF.enem2.clone(), x: 0, y: 0, z: -30,
+						init: model => model.rotateOnAxis(new Vector3(1, -1, -1).normalize(), 1)
+					},
 					{type: 'label', value: 'Back', y: -16, size: 1.8, back: true}
 				]
 			},
@@ -346,6 +350,8 @@ export default class TitleScene extends Scene {
 		equipmentEdit.add(equipmentEdit.cost);
 		equipmentEdit.description = new LabelArea("", {
 			x: -vw * 0.21,
+			y: -9,
+			align: textAlign.left,
 			width: vw * 0.42,
 			font: "18px 'HiraKakuProN-W6'"
 		});
@@ -444,7 +450,7 @@ export default class TitleScene extends Scene {
 				if (changeing) {
 					this.name.text = ' ';
 					this.ok.text = 'Uninstall';
-					this.ok.y = -vh * 0.06;
+					this.ok.y = 0;
 				} else this.name.text = 'No module';
 				this.cost.text = ' ';
 			} else {
@@ -480,7 +486,7 @@ export default class TitleScene extends Scene {
 		free(v);
 	}
 	static requiredResources = {
-		THREE_Model_GLTF: ['enem1', 'airballoon'],
+		THREE_Model_GLTF: ['enem1', 'enem2', 'airballoon'],
 		THREE_Texture: {plane: 'data/images/3.png'}
 	};
 }
