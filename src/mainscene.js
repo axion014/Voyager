@@ -138,10 +138,16 @@ export default class MainScene extends Scene {
 								enemy.build.includes(".") ? enemy.build.substring(0, enemy.build.indexOf(".")) : enemy.build
 							);
 						});
-						if (stage.goals.length > 0 && (!assets.goalVertex)) list.GLSL = {
-							goalVertex: "data/glsl/goalvertex.min.glsl",
-							goalFragment: "data/glsl/goalfrag.min.glsl"
-						};
+						if (stage.goals.length > 0 && (!assets.GLSL.goalVertex)) {
+							list.THREE_Texture = {
+								goal: "data/images/goal.png",
+								goal_disable: "data/images/goal_disable.png"
+							};
+							list.GLSL = {
+								goalVertex: "data/glsl/goalvertex.min.glsl",
+								goalFragment: "data/glsl/goalfrag.min.glsl"
+							};
+						}
 						await loadResources(list);
 					}
 					const stage = assets.STAGE[this.stage];
@@ -188,17 +194,18 @@ export default class MainScene extends Scene {
 							vertexShader: assets.GLSL.goalVertex,
 							fragmentShader: assets.GLSL.goalFragment
 						});
-						const mesh = new Mesh(Object.assign(new IcosahedronGeometry(goal.size, 2), material), {
-							size: goal.size, kill: goal.kill, message: goal.message, enable: false,
+						const mesh = Object.assign(new Mesh(new IcosahedronGeometry(goal.size, 2), material), {
+							size: goal.size, kill: goal.kill, message: goal.message, enable: false, scene: this,
 							update(delta) {
-								material.uniforms.time.value += delta;
-								if (!this.enable && this === goals[0] && (goals.length > 1 || scene.bossdefeated) && this.enemyManager.deathcount >= this.enemyManager.spawncount * this.kill) {
+								material.uniforms.time.value += delta * 0.0003;
+								if (!this.enable && this === this.scene.goals[0] && (this.scene.goals.length > 1 || scene.bossdefeated) &&
+									this.scene.enemyManager.deathcount >= this.scene.enemyManager.spawncount * this.kill) {
 									scene.addEasing(new Easing(material.uniforms.tex1_percentage).add({value: 1}, 1700, Easing.LINEAR));
-									this.minimap.getObject(this).fillColor = 'hsl(190, 100%, 70%)';
+									this.scene.minimap.getObject(this).fillColor = 'hsl(190, 100%, 70%)';
 									this.enable = true;
 								}
 							}
-						})
+						});
 						this.threeScene.add(mesh);
 						this.goals.push(mesh);
 						mesh.position.copy(goal.position);
@@ -473,14 +480,13 @@ export default class MainScene extends Scene {
 				this.resulttitle.text = 'Game Over';
 				changeToResultScreenMode();
 			} else if (this.stage !== 'arcade' && this.goals[0].enable) {
-				const v = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion);
-				const p = get(Vector3).copy(this.position)
-					.addScaledVector(v, -this.player.geometry.boundingBox.min.z +
-					this.player.geometry.boundingBox.max.x);
-				v.multiplyScalar(this.player.geometry.boundingBox.getSize().z -
-					this.player.geometry.boundingBox.getSize().x);
-				if (testCupsuleSphere(p, v, goals[0].position, this.player.geometry.boundingBox.max.x + goals[0].size / 2)) {
-					if (goals.length === 1) {
+				const t = get(Vector3);
+				const v = get(Vector3).copy(Axis.z).applyQuaternion(this.player.quaternion);
+				const p = get(Vector3).copy(this.player.position).addScaledVector(v,
+					-this.player.geometry.boundingBox.min.z + this.player.geometry.boundingBox.max.x);
+				v.multiplyScalar(this.player.geometry.boundingBox.getSize(t).z - t.x);
+				if (testCupsuleSphere(p, v, this.goals[0].position, this.player.geometry.boundingBox.max.x + this.goals[0].size / 2)) {
+					if (this.goals.length === 1) {
 						this.addEasing(new Easing(player).add({auto: 1}, 2000, Easing.LINEAR));
 						const rate = '';
 						this.score += this.rate[0] * player.hp / player.maxhp;
@@ -496,15 +502,15 @@ export default class MainScene extends Scene {
 						changeToResultScreenMode();
 						this.goaled = true;
 					} else {
-						const currentMessage = goals[0].message;
+						const currentMessage = this.goals[0].message;
 						window.setTimeout(() => this.message.text = currentMessage, 1000);
-						goals[0].parent.remove(goals[0]);
-						goals.shift();
-						goalraders[0].remove();
-						goalraders.shift();
+						this.goals[0].parent.remove(this.goals[0]);
+						this.goals.shift();
+						this.goalraders[0].remove();
+						this.goalraders.shift();
 					}
 				}
-				free(v, p);
+				free(t, v, p);
 			}
 
 			this.time += delta;
