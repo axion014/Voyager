@@ -134,7 +134,9 @@ export default class MainScene extends Scene {
 						const list = {THREE_Model_GLTF: []};
 						const stage = assets.STAGE[this.stage];
 						stage.enemies.forEach(enemy => {
-							if (!assets.THREE_Model_GLTF[enemy.name]) list.THREE_Model_GLTF.push(enemy.name);
+							if (!assets.THREE_Model_GLTF[enemy.name]) list.THREE_Model_GLTF.push(
+								enemy.build.includes(".") ? enemy.build.substring(0, enemy.build.indexOf(".")) : enemy.build
+							);
 						});
 						if (stage.goals.length > 0 && (!assets.goalVertex)) list.GLSL = {
 							goalVertex: "data/glsl/goalvertex.min.glsl",
@@ -144,7 +146,14 @@ export default class MainScene extends Scene {
 					}
 					const stage = assets.STAGE[this.stage];
 					stagename = stage.name;
-					stage.enemies.forEach(this.enemyManager.createMulti, this.enemyManager);
+					stage.enemies.forEach(enemy => {
+						if (enemy.build.includes(".")) {
+							const [model, buildid] = enemy.build.split(".");
+							enemy.build = units[model].builds[buildid];
+							if (!enemy.build) throw new Error(`Unit ${model} doesn't have build ${buildid}`);
+						}
+						this.enemyManager.createMulti(enemy.build, enemy.position, enemy.rotation, enemy.autospawn);
+					});
 					stage.obstacles.forEach(this.obstacleManager.create, this.obstacleManager);
 					stage.winds.forEach(this.windManager.create, this.windManager);
 					stage.messages.forEach(imessage => {
