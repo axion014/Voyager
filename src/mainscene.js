@@ -11,9 +11,9 @@ import {
 import ShaderPass from "w3g/three-effect/ShaderPass";
 import FadeShader from "w3g/three-effect/FadeShader";
 
-import * as THREE_Utils from "w3g/threeutil";
+import {Axis, rotateY, Quaternion_IDENTITY, toString as threeToString} from "w3g/threeutil";
 import {get, free} from "w3g/utils";
-import {vw, vh} from "w3g/main";
+import {vw, vh, currentFPS} from "w3g/main";
 import assets, {loadResources, loadResource} from "w3g/loading";
 import {Rectangle, Ellipse, SymmetricTriangle} from "w3g/geometries";
 import {Label, Gauge, DebugTexts, textAlign} from "w3g/uielements";
@@ -328,10 +328,10 @@ export default class MainScene extends Scene {
 		this.effectManager.update(delta);
 
 		if (!this.player) {
-			this.camera.rotateOnWorldAxis(THREE_Utils.Axis.y, delta * -0.0001);
+			this.camera.rotateOnWorldAxis(Axis.y, delta * -0.0001);
 		} else if (this.goaled) {
 			this.player.flare('enterframe');
-			this.camera.rotateOnWorldAxis(THREE_Utils.Axis.y, delta * -0.0001);
+			this.camera.rotateOnWorldAxis(Axis.y, delta * -0.0001);
 		} else {
 			if (this.stage === 'arcade') { // Arcade mode (random enemy spawn)
 				if (this.enemyManager.count === 0) {
@@ -350,7 +350,7 @@ export default class MainScene extends Scene {
 
 						position.set(Math.random() * 2000 - 1000, Math.random() * 200 - 100, Math.random() * 5000 - 1000)
 							.add(this.player.position);
-						THREE_Utils.rotateY(quaternion.copy(THREE_Utils.Quaternion_IDENTITY), Math.random() * Math.PI * 2);
+						rotateY(quaternion.copy(Quaternion_IDENTITY), Math.random() * Math.PI * 2);
 
 						autospawn.rep = quantity;
 						autospawn.random.setScalar(Math.cbrt(units[build.name].properties.size ** 3 * quantity) * 2);
@@ -411,7 +411,7 @@ export default class MainScene extends Scene {
 				this.camera.radius++;
 				this.camera.radius %= this.camera.radiuses.length;
 			}
-			this.camera.quaternion.copy(THREE_Utils.Quaternion_IDENTITY);
+			this.camera.quaternion.copy(Quaternion_IDENTITY);
 			this.camera.rotateZ(-player.myrot.z2 + (this.camera.radius !== 0 ? -player.myrot.z1 : 0));
 			this.camera.rotateX(-player.myrot.x);
 			this.camera.rotateY(player.myrot.y + Math.PI);

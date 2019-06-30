@@ -1,6 +1,6 @@
 import {Vector3, Quaternion, Ray, Raycaster, Plane} from "three";
 
-import * as THREE_Utils from "w3g/threeutil";
+import {Axis, deepclone, applyToAllMaterials, toString as threeToString, rotateX, rotateY} from "w3g/threeutil";
 import {normalizeAngle, opt, get, free} from "w3g/utils";
 import {vw, vh} from "w3g/main";
 import assets, {addFile} from "w3g/loading";
@@ -73,7 +73,7 @@ export class UnitManager extends ElementManager {
 			}, delay);
 		} else {
 			this.spawncount++;
-			const unit = THREE_Utils.deepclone(getUnit(build.name).mesh, false, true);
+			const unit = deepclone(getUnit(build.name).mesh, false, true);
 			Object.assign(unit, getUnit(build.name).properties, build.properties);
 			if (position) unit.position.copy(position);
 			if (quaternion) unit.quaternion.copy(quaternion);
@@ -148,7 +148,7 @@ export class UnitManager extends ElementManager {
 			}
 		}
 		unit.parent.remove(unit);
-		THREE_Utils.applyToAllMaterials(unit.material, m => m.dispose());
+		applyToAllMaterials(unit.material, m => m.dispose());
 		super.remove(i);
 		this.scene.minimap.removeObject(unit);
 	}
@@ -161,7 +161,7 @@ export class UnitManager extends ElementManager {
 	}
 
 	beam(position, quaternion, atk, exps, expt, radius, effect) {
-		const vec = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(quaternion).normalize();
+		const vec = get(Vector3).copy(Axis.z).applyQuaternion(quaternion).normalize();
 
 		// 距離で並べかえる
 		this.opponents.elements.sort((a, b) => {
@@ -223,8 +223,8 @@ export class UnitManager extends ElementManager {
 const loadedunit = {};
 
 function setQuaternionFromDirectionVector(q, v) {
-	const axis = get(Vector3).copy(THREE_Utils.Axis.z).cross(v).normalize();
-	const retquaternion = q.setFromAxisAngle(axis, Math.acos(THREE_Utils.Axis.z.dot(v)));
+	const axis = get(Vector3).copy(Axis.z).cross(v).normalize();
+	const retquaternion = q.setFromAxisAngle(axis, Math.acos(Axis.z.dot(v)));
 	free(axis);
 	return retquaternion;
 }
@@ -274,7 +274,7 @@ export const units = {
 				}
 				if (targetingEnemy) this.targetingPosition.copy(targetingEnemyPosition);
 				else {
-					const plane = get(Plane).set(THREE_Utils.Axis.y, -this.position.y);
+					const plane = get(Plane).set(Axis.y, -this.position.y);
 					targetingRay.intersectPlane(plane, this.targetingPosition);
 					free(plane);
 				}
@@ -303,7 +303,7 @@ export const units = {
 
 				free(targetingRay);
 
-				const direction = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
+				const direction = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion).normalize();
 
 				/*if (this.targetingEnemy && !this.targetingEnemy.parent) {
 					this.way = null;
@@ -403,7 +403,7 @@ export const units = {
 				});
 				// hit vs enemy
 				const t = get(Vector3);
-				const v = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion);
+				const v = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion);
 				const p = get(Vector3).copy(this.position)
 					.addScaledVector(v, -this.geometry.boundingBox.min.z + this.geometry.boundingBox.max.x);
 				v.multiplyScalar(this.geometry.boundingBox.getSize(t).z - this.geometry.boundingBox.getSize(t).x);
@@ -438,7 +438,7 @@ export const units = {
 				return defaultreturn;
 			},
 			applyRotation() {
-				this.quaternion.copy(THREE_Utils.Quaternion_IDENTITY);
+				this.quaternion.copy(Quaternion_IDENTITY);
 				// The order is important, even with quaternion.
 				this.rotateY(this.myrot.y);
 				this.rotateX(this.myrot.x);
@@ -462,7 +462,7 @@ export const units = {
 					free(directionVectorToTarget);
 				}
 
-				const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z);
+				const currentDirection = get(Vector3).copy(Axis.z);
 				if (this.scene.player && this.chase !== 0 && !this.scene.player.position.equals(this.position)) {
 					const spd = this.v * (this.mindist !== 0 ? Math.clamp((vecToTarget.length() - this.mindist) * 2 / this.mindist, -1, 1) : 1);
 					this.quaternion.slerp(quaternionToTarget, 1 - this.chase ** delta);
@@ -494,7 +494,7 @@ export const units = {
 		properties: {
 			hp: 75, v: 0.17, size: 15, chase: 0.0014, sharpness: 2, firerate: 15, explodeTime: 900, weight: 100,
 			update(delta) {
-				const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z);
+				const currentDirection = get(Vector3).copy(Axis.z);
 				if (this.scene.player && !this.scene.player.position.equals(this.position)) {
 					const directionVectorToTarget = get(Vector3)
 						.subVectors(this.scene.player.position, this.position).normalize();
@@ -532,12 +532,12 @@ export const units = {
 			update(delta) {
 				this.quaternion.premultiply(this.c);
 				this.rotateZ(this.r * delta);
-				const dir = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion);
+				const dir = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion);
 				this.position.addScaledVector(dir, this.v * delta);
 				free(dir);
 				if (this.time % this.firerate === 0) {
 					const q = get(Quaternion).copy(this.quaternion);
-					THREE_Utils.rotateX(q,
+					rotateX(q,
 						0.1 + (Math.PI - 0.1) * (this.time % (this.firerate * 8) / this.firerate / 8) / 20 * (Math.random() + 9));
 					this.allies.bulletManager.create('bullet', this.position, q, {v: 0.12, size: 0.5, atk: 5});
 					free(q);
@@ -556,7 +556,7 @@ export const units = {
 				this.scale.setScalar(2);
 			},
 			update(delta) {
-				const dir = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion).normalize();
+				const dir = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion).normalize();
 				this.position.addScaledVector(dir, this.v * delta);
 				free(dir);
 				const tmpVector = get(Vector3);
@@ -577,28 +577,28 @@ export const units = {
 				}
 				if (this.time % this.firerate1 === 9) {
 					const params = {v: 0.1, size: 2.5, atk: 15};
-					THREE_Utils.rotateY(tmpQuaternion.copy(this.quaternion), 1);
+					rotateY(tmpQuaternion.copy(this.quaternion), 1);
 					this.allies.bulletManager.create('bullet',
 						tmpVector.set(10, 0, -10).add(this.position), tmpQuaternion, params);
-					THREE_Utils.rotateY(tmpQuaternion, -2);
+					rotateY(tmpQuaternion, -2);
 					tmpVector.x -= 20;
 					this.allies.bulletManager.create('bullet', tmpVector, tmpQuaternion, params);
 				}
 				if (this.time % this.firerate2 === 11) {
 					const params = {v: 0.1, size: 2.5, atk: 15};
-					THREE_Utils.rotateY(tmpQuaternion.copy(this.quaternion), Math.PI / 2);
+					rotateY(tmpQuaternion.copy(this.quaternion), Math.PI / 2);
 					this.allies.bulletManager.create('bullet',
 						tmpVector.set(10, 0, 0).add(this.position), tmpQuaternion, params);
-					THREE_Utils.rotateY(tmpQuaternion, -Math.PI);
+					rotateY(tmpQuaternion, -Math.PI);
 					tmpVector.x -= 20;
 					this.allies.bulletManager.create('bullet', tmpVector, tmpQuaternion, params);
 				}
 				if (this.time % this.firerate2 === 22) {
 					const params = {v: 0.1, size: 2.5, atk: 15};
-					THREE_Utils.rotateY(tmpQuaternion.copy(this.quaternion), 3);
+					rotateY(tmpQuaternion.copy(this.quaternion), 3);
 					this.allies.bulletManager.create('bullet',
 						tmpVector.set(10, 0, 20).add(this.position), tmpQuaternion, params);
-					THREE_Utils.rotateY(tmpQuaternion, -6);
+					rotateY(tmpQuaternion, -6);
 					tmpVector.x -= 20;
 					this.allies.bulletManager.create('bullet', tmpVector, tmpQuaternion, params);
 				}
@@ -635,7 +635,7 @@ export const units = {
 						this.quaternion.slerp(quaternionToTarget, 1 - this.chase ** delta);
 						free(quaternionToTarget, directionToTarget);
 					}
-					const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z).applyQuaternion(this.quaternion);
+					const currentDirection = get(Vector3).copy(Axis.z).applyQuaternion(this.quaternion);
 					this.position.addScaledVector(currentDirection, this.v * delta);
 					free(currentDirection);
 				} else {
@@ -664,7 +664,7 @@ export const units = {
 					this.despawn = true;
 					return;
 				}
-				const currentDirection = get(Vector3).copy(THREE_Utils.Axis.z);
+				const currentDirection = get(Vector3).copy(Axis.z);
 				if (!this.target || this.target.hp <= 0 || !this.target.parent) {
 					if (this.opponents.elements.length !== 0) {
 						this.target = this.opponents.elements.reduce((o, enm) => {

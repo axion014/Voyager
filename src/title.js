@@ -11,7 +11,7 @@ import FadeShader from "w3g/three-effect/FadeShader";
 import ZoomblurShader from "w3g/three-effect/ZoomblurShader";
 
 import {hitTestEllipse} from 'w3g/hittest';
-import * as THREE_Utils from "w3g/threeutil";
+import {createMeshLine, setMeshLineGeometry, Quaternion_IDENTITY} from "w3g/threeutil";
 import Scene from "w3g/scene";
 import assets from "w3g/loading";
 import {vw, vh, threeComposer} from "w3g/main";
@@ -307,7 +307,7 @@ export default class TitleScene extends Scene {
 							this.add(new Mark({strokeColor: "#4a4", strokeWidth: 1, width: 48, height: 48}));
 							this.add(new Ellipse({fillColor: "#4a4", radius: 16, opacity: 0.5}));
 							if (this.mirror) {
-								this.link = THREE_Utils.createMeshLine([0, 0, 0, 0], {color: "#4a4", lineWidth: 2}, true);
+								this.link = createMeshLine([0, 0, 0, 0], {color: "#4a4", lineWidth: 2}, true);
 								this.add(this.link);
 							}
 							this.addEventListener('click', () => {
@@ -464,7 +464,7 @@ export default class TitleScene extends Scene {
 		super.update(delta);
 		this.time += delta * (this.position === 'shipmodify' ? 0.2 : 1);
 		// Camera control
-		this.player.quaternion.copy(THREE_Utils.Quaternion_IDENTITY);
+		this.player.quaternion.copy(Quaternion_IDENTITY);
 		this.player.rotateX(Math.sin(this.time * 0.00075) * 0.25);
 		this.player.rotateY(-Math.PI / 2 + this.time * 0.0004);
 
@@ -480,7 +480,7 @@ export default class TitleScene extends Scene {
 			const pos = this[point.data.parent].localToWorld(v).project(this.camera);
 			point.position.x = pos.x * vw / 2;
 			point.position.y = pos.y * vh / 2;
-			if (point.mirror) THREE_Utils.setMeshLineGeometry(point.link,
+			if (point.mirror) setMeshLineGeometry(point.link,
 				[0, 0, point.mirror.position.x - point.position.x, point.mirror.position.y - point.position.y], true);
 		});
 		free(v);
